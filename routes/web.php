@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 use App\Http\Controllers\Tenant\AuthController as TenantAuthController;
+use App\Models\Plan;
 use Inertia\Inertia;
 
 Route::inertia('/', 'welcome', [
@@ -12,6 +13,17 @@ Route::inertia('/', 'welcome', [
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
 });
+
+Route::get('/', function () {
+    $plans = Plan::with('features')
+        ->where('is_active', true)
+        ->orderBy('price', 'asc')
+        ->get();
+
+    return inertia('welcome', [
+        'plans' => $plans,
+    ]);
+})->name('home');
 
 require __DIR__ . '/web/users.php';
 require __DIR__ . '/web/roles.php';

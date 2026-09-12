@@ -9,4 +9,9 @@ class Plan extends Model
     protected $table = 'plans';
 
     protected $guarded = [];
+
+    public function features()
+    {
+        return $this->hasMany(PlanFeature::class);
+    }
 }
