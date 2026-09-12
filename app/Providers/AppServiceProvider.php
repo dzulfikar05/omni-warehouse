@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use App\Contracts\RoleContract;
+use App\Contracts\TenantContract;
 use App\Contracts\UserContract;
 use App\Services\RoleService;
+use App\Services\TenantService;
 use App\Services\UserService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
@@ -21,6 +23,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(UserContract::class, UserService::class);
         $this->app->bind(RoleContract::class, RoleService::class);
+        $this->app->bind(TenantContract::class, TenantService::class);
     }
 
     /**

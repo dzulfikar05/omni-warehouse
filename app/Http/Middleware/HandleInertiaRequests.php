@@ -47,6 +47,7 @@ class HandleInertiaRequests extends Middleware
                 'permissions' => $request->user()->getAllPermissions()->pluck('name'),
             ] : null,
         ],
+        'current_tenant' => app()->bound('current_tenant') ? app('current_tenant') : null,
         'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         'flash' => [
             'success' => fn () => $request->session()->get('success'),
