@@ -29,15 +29,14 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        // Isolasi login hanya untuk user yang terikat dengan tenant_id ini
         if (Auth::attempt(array_merge($credentials, ['tenant_id' => $tenant->id]))) {
             $request->session()->regenerate();
 
-            return redirect()->intended(route('tenant.dashboard', ['tenant_slug' => $tenant->slug]));
+            return redirect()->route('tenant.dashboard', ['tenant_slug' => $tenant->slug]);
         }
 
         return back()->withErrors([
-            'email' => 'Email atau password salah untuk perusahaan ini.',
+            'email' => 'Invalid email or password for this company account.',
         ]);
     }
 

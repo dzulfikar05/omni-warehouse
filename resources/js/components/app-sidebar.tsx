@@ -1,5 +1,11 @@
-import { Link, usePage } from '@inertiajs/react'; // Tambahkan usePage
-import { BookOpen, FolderGit2, LayoutGrid, UsersRound } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import {
+    BookOpen,
+    Building2,
+    FolderGit2,
+    LayoutGrid,
+    UsersRound,
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -13,53 +19,79 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
-import type { NavItem, User } from '@/types'; // Pastikan tipe User menyertakan permissions/roles
+import type { NavItem } from '@/types';
 
 export function AppSidebar() {
-    // Ambil data auth dari shared props Inertia
-    const { auth } = usePage().props as any;
+    const { auth, current_tenant } = usePage().props as any;
 
-    // Helper untuk mengecek permission
-    const can = (permission: string) => auth.user.permissions.includes(permission);
-    // Helper untuk mengecek role
-    const hasRole = (role: string) => auth.user.roles.includes(role);
+    const userPermissions: string[] = auth?.user?.permissions || [];
+    const userRoles: string[] = auth?.user?.roles || [];
+    const userTenantId = auth?.user?.tenant_id;
+
+    const can = (permission: string) => userPermissions.includes(permission);
+    const hasRole = (role: string) => userRoles.includes(role);
 
     const mainNavItems: NavItem[] = [];
 
-    if (can('dashboard.view')) {
+    const currentPathSlug = window.location.pathname.split('/')[1];
+    const activeTenantSlug =
+        current_tenant?.slug || (userTenantId ? currentPathSlug : null);
+
+    const isTenantUser = Boolean(current_tenant || userTenantId);
+
+    if (isTenantUser) {
+        // Tenant Sidebar Menu
         mainNavItems.push({
             title: 'Dashboard',
-            href: dashboard(),
+            href: activeTenantSlug
+                ? `/${activeTenantSlug}/dashboard`
+                : '/dashboard',
             icon: LayoutGrid,
         });
-    }
+    } else {
+        // Super Admin Sidebar Menu
+        if (can('dashboard.view') || hasRole('superadmin')) {
+            mainNavItems.push({
+                title: 'Dashboard',
+                href: '/dashboard',
+                icon: LayoutGrid,
+            });
+        }
 
-    if (can('users.view')) {
-        mainNavItems.push({
-            title: 'User',
-            href: '/users',
-            icon: UsersRound,
-        });
-    }
+        if (hasRole('superadmin')) {
+            mainNavItems.push({
+                title: 'Tenants',
+                href: '/admin/tenants',
+                icon: Building2,
+            });
+        }
 
-    if (hasRole('superadmin') || can('roles.view')) {
-        mainNavItems.push({
-            title: 'Role',
-            href: '/roles',
-            icon: FolderGit2,
-        });
+        if (can('users.view') || hasRole('superadmin')) {
+            mainNavItems.push({
+                title: 'Users',
+                href: '/users',
+                icon: UsersRound,
+            });
+        }
+
+        if (can('roles.view') || hasRole('superadmin')) {
+            mainNavItems.push({
+                title: 'Roles & Permissions',
+                href: '/roles',
+                icon: FolderGit2,
+            });
+        }
     }
 
     const footerNavItems: NavItem[] = [
         {
             title: 'Repository',
-            href: 'https://github.com/laravel/react-starter-kit',
+            href: 'https://github.com/dzulfikar05/omni-warehouse',
             icon: FolderGit2,
         },
         {
             title: 'Documentation',
-            href: 'https://laravel.com/docs/starter-kits#react',
+            href: 'https://laravel.com/docs',
             icon: BookOpen,
         },
     ];
@@ -70,7 +102,14 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
+                            <Link
+                                href={
+                                    activeTenantSlug
+                                        ? `/${activeTenantSlug}/dashboard`
+                                        : '/dashboard'
+                                }
+                                prefetch
+                            >
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>
@@ -79,7 +118,6 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                {/* Kirim mainNavItems yang sudah difilter */}
                 <NavMain items={mainNavItems} />
             </SidebarContent>
 

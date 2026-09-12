@@ -7,7 +7,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import AuthLayout from '@/layouts/auth-layout';
 
 type TenantProps = {
     id: number;
@@ -33,10 +32,7 @@ export default function TenantLogin({
     const activeTenant = propTenant || current_tenant;
 
     return (
-        <AuthLayout
-            title={`Log in to ${activeTenant?.name || 'your account'}`}
-            description="Enter your email and password below to log in"
-        >
+        <>
             <Head title={`Log in - ${activeTenant?.name || 'Tenant Portal'}`} />
 
             <div className="mb-2 text-center">
@@ -134,8 +130,6 @@ export default function TenantLogin({
                     {status}
                 </div>
             )}
-        </AuthLayout>
+        </>
     );
 }
-
-TenantLogin.layout = (page: React.ReactNode) => page;

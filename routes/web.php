@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 use App\Http\Controllers\Tenant\AuthController as TenantAuthController;
+use Inertia\Inertia;
 
 Route::inertia('/', 'welcome', [
     'canRegister' => Features::enabled(Features::registration()),
@@ -18,8 +19,9 @@ require __DIR__ . '/web/tenants.php';
 require __DIR__ . '/settings.php';
 
 
+
 Route::prefix('{tenant_slug}')->middleware(['identify_tenant'])->group(function () {
-    // Guest Tenant Routes
+    // Guest Routes
     Route::get('/login', [TenantAuthController::class, 'showLoginForm'])->name('tenant.login');
     Route::post('/login', [TenantAuthController::class, 'login']);
 
@@ -28,9 +30,7 @@ Route::prefix('{tenant_slug}')->middleware(['identify_tenant'])->group(function 
         Route::post('/logout', [TenantAuthController::class, 'logout'])->name('tenant.logout');
 
         Route::get('/dashboard', function () {
-            return inertia('Tenant/Dashboard', [
-                'tenant' => app('current_tenant'),
-            ]);
+            return Inertia::render('Tenant/Dashboard');
         })->name('tenant.dashboard');
     });
 });

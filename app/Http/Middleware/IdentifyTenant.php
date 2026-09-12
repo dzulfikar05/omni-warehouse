@@ -12,14 +12,21 @@ class IdentifyTenant
     public function handle(Request $request, Closure $next): Response
     {
         $tenantSlug = $request->route('tenant_slug');
+        $tenant = null;
 
-        $tenant = Tenant::with(['subscription.plan'])->where('slug', $tenantSlug)->first();
-
-        if (! $tenant) {
-            abort(404, 'Not Found.');
+        if ($tenantSlug) {
+            $tenant = Tenant::with(['subscription.plan'])->where('slug', $tenantSlug)->first();
+        } elseif (auth()->check() && auth()->user()->tenant_id) {
+            $tenant = auth()->user()->tenant;
         }
 
-        app()->instance('current_tenant', $tenant);
+        if (! $tenant && $tenantSlug) {
+            abort(404, 'Tenant account not found.');
+        }
+
+        if ($tenant) {
+            app()->instance('current_tenant', $tenant);
+        }
 
         return $next($request);
     }
