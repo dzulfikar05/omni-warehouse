@@ -15,4 +15,6 @@ interface TenantContract
     public function updateTenant(Tenant $tenant, array $data): Tenant;
 
     public function deleteTenant(Tenant $tenant): bool;
+
+    public function registerTenant(array $data): array;
 }

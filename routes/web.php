@@ -15,24 +15,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 Route::get('/', function () {
-    $plans = Plan::with('features')
-        ->where('is_active', true)
-        ->orderBy('price', 'asc')
-        ->get();
-
-    return inertia('welcome', [
-        'plans' => $plans,
-    ]);
+    $plans = Plan::with('features')->where('is_active', true)->orderBy('price', 'asc')->get();
+    return inertia('welcome', ['plans' => $plans]);
 })->name('home');
+
+Route::get('/register-tenant', [TenantAuthController::class, 'showRegisterForm'])->name('tenant.register');
+Route::post('/register-tenant', [TenantAuthController::class, 'register']);
 
 require __DIR__ . '/web/users.php';
 require __DIR__ . '/web/roles.php';
 require __DIR__ . '/web/tenants.php';
+require __DIR__ . '/web/plans.php';
 require __DIR__ . '/settings.php';
 
 
-
 Route::prefix('{tenant_slug}')->middleware(['identify_tenant'])->group(function () {
+    Route::get('/', [TenantAuthController::class, 'showTenantWelcome'])->name('tenant.welcome');
     // Guest Routes
     Route::get('/login', [TenantAuthController::class, 'showLoginForm'])->name('tenant.login');
     Route::post('/login', [TenantAuthController::class, 'login']);

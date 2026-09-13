@@ -13,7 +13,8 @@ createInertiaApp({
     layout: (name) => {
         const pageName = name.toLowerCase();
         switch (true) {
-            case pageName === 'welcome':
+            // case pageName === 'welcome':
+            case pageName === 'welcome' || pageName.endsWith('/welcome') || pageName.endsWith('/registersuccess'):
                 return null;
             // case pageName.startsWith('auth/'):
             case pageName.startsWith('auth/') || pageName.includes('/auth/'):

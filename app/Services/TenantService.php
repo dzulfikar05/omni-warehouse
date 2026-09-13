@@ -5,10 +5,13 @@ namespace App\Services;
 use App\Contracts\TenantContract;
 use App\Models\Subscription;
 use App\Models\Tenant;
+use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Spatie\Permission\Models\Role;
 
 class TenantService implements TenantContract
 {
@@ -93,6 +96,51 @@ class TenantService implements TenantContract
     {
         return DB::transaction(function () use ($tenant) {
             return $tenant->delete();
+        });
+    }
+
+
+    public function registerTenant(array $data): array
+    {
+        return DB::transaction(function () use ($data) {
+            $slug = Str::slug($data['company_name']);
+
+            $tenant = Tenant::create([
+                'name' => $data['company_name'],
+                'slug' => $slug,
+                'phone' => $data['phone'] ?? null,
+                'address' => $data['address'] ?? null,
+            ]);
+
+            Subscription::create([
+                'tenant_id' => $tenant->id,
+                'plan_id' => $data['plan_id'] ?? 1,
+                'status' => 'active',
+                'ends_at' => now()->addYear(),
+            ]);
+
+            $adminRole = Role::firstOrCreate([
+                'name' => 'Admin Gudang - ' . $tenant->name,
+                'guard_name' => 'web',
+            ], [
+                'tenant_id' => $tenant->id,
+                'desc' => 'Administrator penuh operasional gudang tenant',
+            ]);
+
+            $user = User::create([
+                'tenant_id' => $tenant->id,
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'username' => Str::slug($data['name']) . rand(100, 999),
+                'password' => Hash::make($data['password']),
+            ]);
+
+            $user->assignRole($adminRole);
+
+            return [
+                'tenant' => $tenant,
+                'user' => $user,
+            ];
         });
     }
 }

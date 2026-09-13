@@ -23,7 +23,6 @@ interface Props {
 }
 
 export default function Welcome({ plans = [] }: Props) {
-    // Helper to format currency to IDR or USD format
     const formatPrice = (price: number | string) => {
         const numericPrice = Number(price);
         if (isNaN(numericPrice) || numericPrice === 0) return 'Custom';
@@ -52,10 +51,10 @@ export default function Welcome({ plans = [] }: Props) {
 
                         <div className="flex items-center gap-4">
                             <Link
-                                href="/demo-tenant/login"
+                                href="/register-tenant"
                                 className="text-sm text-slate-300 hover:text-white flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-slate-800 transition"
                             >
-                                <Building2 size={16} /> Tenant Portal
+                                <Building2 size={16} /> Register Tenant
                             </Link>
                             <Link
                                 href="/login"
@@ -84,10 +83,10 @@ export default function Welcome({ plans = [] }: Props) {
 
                     <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
                         <Link
-                            href="/demo-tenant/login"
+                            href="/register-tenant"
                             className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3.5 rounded-xl font-semibold flex items-center gap-2 shadow-lg shadow-indigo-500/25 transition"
                         >
-                            Try Demo Tenant <ArrowRight size={18} />
+                            Start Free Trial <ArrowRight size={18} />
                         </Link>
                     </div>
                 </section>
@@ -157,7 +156,7 @@ export default function Welcome({ plans = [] }: Props) {
                                     </div>
 
                                     <Link
-                                        href="/demo-tenant/login"
+                                        href={`/register-tenant?plan_id=${plan.id}`}
                                         className={`w-full py-2.5 rounded-lg font-medium text-xs text-center block transition ${
                                             isPopular
                                                 ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20'

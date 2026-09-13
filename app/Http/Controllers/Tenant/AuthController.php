@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers\Tenant;
 
+use App\Contracts\TenantContract;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Web\TenantRegisterRequest;
+use App\Models\Plan;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -11,6 +14,39 @@ use Inertia\Response;
 
 class AuthController extends Controller
 {
+    public function __construct(
+        protected TenantContract $tenantService
+    ) {}
+
+    public function showTenantWelcome($tenant_slug): Response
+    {
+        $tenant = app('current_tenant');
+
+        return Inertia::render('Tenant/Welcome', [
+            'tenant' => $tenant,
+        ]);
+    }
+
+    public function showRegisterForm(Request $request): Response
+    {
+        $plans = Plan::where('is_active', true)->get();
+
+        return Inertia::render('Tenant/Auth/Register', [
+            'plans' => $plans,
+            'selectedPlanId' => $request->query('plan_id'),
+        ]);
+    }
+
+    public function register(TenantRegisterRequest $request): Response
+    {
+        $result = $this->tenantService->registerTenant($request->validated());
+
+        return Inertia::render('Tenant/Auth/RegisterSuccess', [
+            'tenant' => $result['tenant'],
+            'user' => $result['user'],
+        ]);
+    }
+
     public function showLoginForm($tenant_slug): Response
     {
         $tenant = app('current_tenant');
