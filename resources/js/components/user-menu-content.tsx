@@ -1,4 +1,4 @@
-import { Link, router } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import { LogOut, Settings } from 'lucide-react';
 import {
     DropdownMenuGroup,
@@ -7,23 +7,14 @@ import {
     DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { UserInfo } from '@/components/user-info';
-import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
-import { logout } from '@/routes';
-import { edit } from '@/routes/profile';
 import type { User } from '@/types';
 
-type Props = {
+interface UserMenuContentProps {
     user: User;
-};
+    logoutUrl?: string;
+}
 
-export function UserMenuContent({ user }: Props) {
-    const cleanup = useMobileNavigation();
-
-    const handleLogout = () => {
-        cleanup();
-        router.flushAll();
-    };
-
+export function UserMenuContent({ user, logoutUrl = '/logout' }: UserMenuContentProps) {
     return (
         <>
             <DropdownMenuLabel className="p-0 font-normal">
@@ -31,31 +22,29 @@ export function UserMenuContent({ user }: Props) {
                     <UserInfo user={user} showEmail={true} />
                 </div>
             </DropdownMenuLabel>
+
             <DropdownMenuSeparator />
+
             <DropdownMenuGroup>
                 <DropdownMenuItem asChild>
-                    <Link
-                        className="block w-full cursor-pointer"
-                        href={edit()}
-                        prefetch
-                        onClick={cleanup}
-                    >
-                        <Settings className="mr-2" />
-                        Settings
+                    <Link href="/settings/profile" className="flex w-full items-center cursor-pointer">
+                        <Settings className="mr-2 size-4" />
+                        <span>Settings</span>
                     </Link>
                 </DropdownMenuItem>
             </DropdownMenuGroup>
+
             <DropdownMenuSeparator />
+
             <DropdownMenuItem asChild>
                 <Link
-                    className="block w-full cursor-pointer"
-                    href={logout()}
+                    href={logoutUrl}
+                    method="post"
                     as="button"
-                    onClick={handleLogout}
-                    data-test="logout-button"
+                    className="flex w-full items-center cursor-pointer text-destructive focus:text-destructive"
                 >
-                    <LogOut className="mr-2" />
-                    Log out
+                    <LogOut className="mr-2 size-4" />
+                    <span>Log out</span>
                 </Link>
             </DropdownMenuItem>
         </>

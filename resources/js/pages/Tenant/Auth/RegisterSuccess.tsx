@@ -1,6 +1,8 @@
 import React from 'react';
-import { Head } from '@inertiajs/react';
-import { CheckCircle2, ArrowRight, Building2, UserCheck } from 'lucide-react';
+import { Head, Link } from '@inertiajs/react';
+import AppLogo from '@/components/app-logo';
+import { Button } from '@/components/ui/button';
+import { ArrowRight, Building2, CheckCircle2, ExternalLink, UserCheck } from 'lucide-react';
 
 interface Props {
     tenant: {
@@ -19,57 +21,97 @@ export default function RegisterSuccess({ tenant, user }: Props) {
     const loginUrl = `/${tenant.slug}/login`;
 
     return (
-        <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6 text-slate-100 font-sans">
+        <>
             <Head title="Registration Successful" />
 
-            <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl text-center space-y-6">
-                <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto">
-                    <CheckCircle2 size={36} />
-                </div>
+            {/* Container Outer dengan Background Soft Blue Glow */}
+            <div className="relative flex min-h-screen items-center justify-center bg-slate-50/50 p-4 font-sans overflow-hidden">
+                {/* Decorative Background Blur Glows */}
+                <div className="absolute -top-24 -left-24 h-96 w-96 rounded-full bg-blue-100/60 blur-3xl" />
+                <div className="absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-blue-200/40 blur-3xl" />
 
-                <div>
-                    <h1 className="text-2xl font-extrabold text-white">Company Registered!</h1>
-                    <p className="text-slate-400 text-xs mt-2">
-                        Your multi-tenant warehouse environment has been successfully created.
-                    </p>
-                </div>
+                {/* Main Card Container */}
+                <div className="relative w-full max-w-[440px] overflow-hidden rounded-2xl bg-white p-8 shadow-xl shadow-slate-200/60 border border-slate-100">
+                    {/* Top Accent Gradient Line */}
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-emerald-500 to-indigo-600" />
 
-                {/* Details Box */}
-                <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-4 text-left space-y-3">
-                    <div className="flex items-center gap-3">
-                        <Building2 size={18} className="text-indigo-400 shrink-0" />
-                        <div>
-                            <div className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Company</div>
-                            <div className="text-sm font-semibold text-white">{tenant.name}</div>
+                    {/* Header Logo & Success Icon */}
+                    <div className="mb-6 text-center">
+                        {/* <div className="mx-auto mb-4 flex items-center justify-center">
+                            <AppLogo size="lg" showText={false} />
+                        </div> */}
+
+                        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 shadow-sm">
+                            <CheckCircle2 className="h-6 w-6" />
+                        </div>
+
+                        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+                            Company Registered!
+                        </h1>
+
+                        <p className="mt-2 text-xs leading-relaxed text-slate-500 px-2">
+                            Your multi-tenant warehouse environment has been successfully created and configured.
+                        </p>
+                    </div>
+
+                    {/* Details Box */}
+                    <div className="mb-6 rounded-xl border border-slate-100 bg-slate-50/80 p-4 text-left space-y-3">
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100/60 text-blue-600 shrink-0">
+                                <Building2 size={16} />
+                            </div>
+                            <div>
+                                <div className="text-[10px] uppercase tracking-wider font-semibold text-slate-400">
+                                    Company
+                                </div>
+                                <div className="text-sm font-bold text-slate-800">
+                                    {tenant.name}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 border-t border-slate-200/60 pt-3">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100/60 text-blue-600 shrink-0">
+                                <UserCheck size={16} />
+                            </div>
+                            <div>
+                                <div className="text-[10px] uppercase tracking-wider font-semibold text-slate-400">
+                                    Admin Account
+                                </div>
+                                <div className="text-sm font-medium text-slate-700">
+                                    {user.email}
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3 border-t border-slate-800/80 pt-3">
-                        <UserCheck size={18} className="text-indigo-400 shrink-0" />
-                        <div>
-                            <div className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Admin Account</div>
-                            <div className="text-sm font-medium text-slate-200">{user.email}</div>
-                        </div>
+                    {/* Action Buttons */}
+                    <div className="space-y-2.5">
+                        <Button
+                            asChild
+                            className="h-11 w-full bg-blue-600 font-semibold text-white shadow-md shadow-blue-600/25 transition-all hover:bg-blue-700 active:scale-[0.99]"
+                        >
+                            <Link href={loginUrl} className="flex items-center justify-center gap-2">
+                                Go to Sign In Portal
+                                <ArrowRight className="h-4 w-4" />
+                            </Link>
+                        </Button>
+
+                        <Button
+                            asChild
+                            variant="outline"
+                            className="h-10 w-full border-slate-200 bg-white font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 text-xs"
+                        >
+                            <Link href={tenantUrl} className="flex items-center justify-center gap-1.5">
+                                Visit Tenant Public Page ({tenantUrl})
+                                <ExternalLink className="h-3.5 w-3.5 text-slate-400" />
+                            </Link>
+                        </Button>
                     </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="space-y-3 pt-2">
-                    <a
-                        href={loginUrl}
-                        className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-3.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition shadow-lg shadow-indigo-600/25"
-                    >
-                        Go to Sign In Portal <ArrowRight size={16} />
-                    </a>
-
-                    <a
-                        href={tenantUrl}
-                        className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 py-3 rounded-xl font-medium text-xs block transition"
-                    >
-                        Visit Tenant Public Page ({tenantUrl})
-                    </a>
                 </div>
             </div>
-        </div>
+        </>
     );
 }
+
+RegisterSuccess.layout = (page: React.ReactNode) => page;

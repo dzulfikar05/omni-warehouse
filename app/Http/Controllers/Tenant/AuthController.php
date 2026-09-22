@@ -82,6 +82,6 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('tenant.login', ['tenant_slug' => $tenant_slug]);
+        return redirect()->route('tenant.welcome', ['tenant_slug' => $tenant_slug]);
     }
 }

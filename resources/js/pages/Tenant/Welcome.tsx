@@ -1,6 +1,8 @@
 import React from 'react';
 import { Head, Link } from '@inertiajs/react';
-import { Building2, LogIn, Warehouse } from 'lucide-react';
+import AppLogo from '@/components/app-logo';
+import { Button } from '@/components/ui/button';
+import { ArrowRight, MapPin, Phone } from 'lucide-react';
 
 interface Props {
     tenant: {
@@ -12,64 +14,96 @@ interface Props {
 }
 
 export default function TenantWelcome({ tenant }: Props) {
+    const tenantName = tenant?.name || 'Tenant Portal';
+
     return (
         <>
-            <Head title={`${tenant?.name || 'Tenant Portal'} - Warehouse System`} />
+            <Head title={`${tenantName} - Warehouse Portal`} />
 
-            <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col justify-between">
+            {/* Container Outer Light Mode dengan Soft Background Glow */}
+            <div className="relative flex min-h-screen flex-col justify-between bg-slate-50/50 font-sans text-slate-800 overflow-hidden">
+                {/* Decorative Background Blur Glows */}
+                <div className="absolute -top-32 -left-32 h-[500px] w-[500px] rounded-full bg-blue-100/50 blur-3xl pointer-events-none" />
+                <div className="absolute -bottom-32 -right-32 h-[500px] w-[500px] rounded-full bg-indigo-100/40 blur-3xl pointer-events-none" />
+
                 {/* Navbar */}
-                <nav className="border-b border-slate-800 bg-slate-950/40 px-6 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center font-bold text-white">
-                            <Warehouse size={18} />
-                        </div>
-                        <span className="font-bold text-base text-white">{tenant?.name}</span>
-                    </div>
+                <nav className="relative z-10 border-b border-slate-200/80 bg-white/70 backdrop-blur-md px-6 h-16 flex items-center justify-between shadow-xs">
+                    <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
+                        <Link href={`/${tenant?.slug}`} className="flex items-center gap-3">
+                            <AppLogo size="sm" tenantName={tenantName} />
+                        </Link>
 
-                    <Link
-                        href={`/${tenant?.slug}/login`}
-                        className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center gap-1.5 transition"
-                    >
-                        <LogIn size={14} /> Employee Sign In
-                    </Link>
+                        <Button
+                            asChild
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs h-9 px-4 rounded-xl shadow-md shadow-blue-600/20 transition-all active:scale-95"
+                        >
+                            <Link href={`/${tenant?.slug}/login`}>
+                                Employee Sign In
+                            </Link>
+                        </Button>
+                    </div>
                 </nav>
 
-                {/* Main Section */}
-                <main className="max-w-4xl mx-auto px-6 py-20 text-center">
-                    <div className="w-16 h-16 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                        <Building2 size={32} />
+                {/* Main Hero Section */}
+                <main className="relative z-10 max-w-3xl mx-auto px-6 py-20 text-center flex-1 flex flex-col justify-center items-center">
+                    {/* Badge Container / App Logo Large */}
+                    <div className="mb-6 flex items-center justify-center rounded-3xl bg-white p-6 shadow-xl shadow-slate-200/60 border border-slate-100 relative">
+                        <div className="absolute top-0 left-0 right-0 h-1 rounded-t-3xl bg-gradient-to-r from-blue-600 via-emerald-500 to-indigo-600" />
+                        <AppLogo size="xl" showText={true} />
                     </div>
 
-                    <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-                        {tenant?.name}
+                    <span className="px-3.5 py-1.5 bg-blue-50 border border-blue-200/60 rounded-full text-blue-700 text-xs font-semibold tracking-wide uppercase shadow-xs">
+                        Official Warehouse Portal
+                    </span>
+
+                    <h1 className="mt-5 text-4xl sm:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight">
+                        {tenantName}
                     </h1>
-                    <p className="text-slate-400 text-sm mt-3 max-w-xl mx-auto">
+
+                    <p className="mt-4 text-slate-600 text-sm sm:text-base max-w-lg leading-relaxed">
                         Official Operations & Inventory Management Portal powered by OmniWarehouse SaaS.
                     </p>
 
-                    {tenant?.address && (
-                        <p className="text-xs text-slate-500 mt-2">
-                            📍 {tenant.address}
-                        </p>
+                    {/* Information Box (Address & Phone) */}
+                    {(tenant?.address || tenant?.phone) && (
+                        <div className="mt-6 inline-flex flex-wrap items-center justify-center gap-4 px-4 py-2 bg-white/80 border border-slate-200/60 rounded-xl text-xs text-slate-600 shadow-xs">
+                            {tenant?.address && (
+                                <span className="flex items-center gap-1.5">
+                                    <MapPin size={14} className="text-blue-600 shrink-0" />
+                                    {tenant.address}
+                                </span>
+                            )}
+                            {tenant?.phone && (
+                                <span className="flex items-center gap-1.5 border-l border-slate-200 pl-4">
+                                    <Phone size={14} className="text-blue-600 shrink-0" />
+                                    {tenant.phone}
+                                </span>
+                            )}
+                        </div>
                     )}
 
+                    {/* CTA Button */}
                     <div className="mt-8">
-                        <Link
-                            href={`/${tenant?.slug}/login`}
-                            className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm px-6 py-3 rounded-xl shadow-lg shadow-indigo-600/20 transition"
+                        <Button
+                            asChild
+                            size="lg"
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-8 py-6 rounded-2xl shadow-lg shadow-blue-600/25 transition-all hover:shadow-xl hover:shadow-blue-600/30 active:scale-98"
                         >
-                            Access Warehouse Dashboard
-                        </Link>
+                            <Link href={`/${tenant?.slug}/login`} className="flex items-center gap-2">
+                                Access Warehouse Dashboard
+                                <ArrowRight size={18} />
+                            </Link>
+                        </Button>
                     </div>
                 </main>
 
-                <footer className="border-t border-slate-800 py-6 text-center text-xs text-slate-500">
-                    &copy; {new Date().getFullYear()} {tenant?.name}. Powered by OmniWarehouse.
+                {/* Footer */}
+                <footer className="relative z-10 border-t border-slate-200/80 bg-white/50 backdrop-blur-xs py-6 text-center text-xs text-slate-500">
+                    &copy; {new Date().getFullYear()} <span className="font-semibold text-slate-700">{tenantName}</span>. Powered by <span className="font-semibold text-blue-600">OmniWarehouse</span>.
                 </footer>
             </div>
         </>
     );
 }
 
-// ⚠️ Mencegah Inertia membungkus halaman ini dengan AppLayout (AppSidebar)
 TenantWelcome.layout = (page: React.ReactNode) => page;

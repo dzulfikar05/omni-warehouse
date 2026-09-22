@@ -39,8 +39,13 @@ export function AppSidebar() {
 
     const isTenantUser = Boolean(current_tenant || userTenantId);
 
+    const activeTenantName =
+        current_tenant?.name ||
+        auth?.user?.tenant_name ||
+        auth?.user?.tenant?.name ||
+        'Tenant Portal';
+
     if (isTenantUser) {
-        // Tenant Sidebar Menu
         mainNavItems.push({
             title: 'Dashboard',
             href: activeTenantSlug
@@ -49,7 +54,6 @@ export function AppSidebar() {
             icon: LayoutGrid,
         });
     } else {
-        // Super Admin Sidebar Menu
         if (can('dashboard.view') || hasRole('superadmin')) {
             mainNavItems.push({
                 title: 'Dashboard',
@@ -110,7 +114,14 @@ export function AppSidebar() {
                                 }
                                 prefetch
                             >
-                                <AppLogo />
+                                <AppLogo
+                                    size="sm"
+                                    tenantName={
+                                        isTenantUser
+                                            ? activeTenantName
+                                            : 'OmniWarehouse'
+                                    }
+                                />
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
