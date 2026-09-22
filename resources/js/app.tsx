@@ -16,6 +16,8 @@ createInertiaApp({
             // case pageName === 'welcome':
             case pageName === 'welcome' || pageName.endsWith('/welcome') || pageName.endsWith('/registersuccess'):
                 return null;
+            case pageName.includes('tenant/auth/login') || pageName.includes('auth/login') || pageName.includes('tenant/auth/register') || pageName.includes('auth/register'):
+                return null;
             // case pageName.startsWith('auth/'):
             case pageName.startsWith('auth/') || pageName.includes('/auth/'):
                 return AuthLayout;

@@ -16,11 +16,17 @@ import { UserMenuContent } from '@/components/user-menu-content';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 export function NavUser() {
-    const { auth } = usePage().props;
     const { state } = useSidebar();
     const isMobile = useIsMobile();
 
-    if (!auth.user) {
+    const { auth, current_tenant } = usePage().props as any;
+    const userTenantId = auth?.user?.tenant_id;
+    const currentPathSlug = window.location.pathname.split('/')[1];
+    const activeTenantSlug = current_tenant?.slug || (userTenantId ? currentPathSlug : null);
+
+    const logoutUrl = activeTenantSlug ? `/${activeTenantSlug}/logout` : '/logout';
+
+    if (!auth?.user) {
         return null;
     }
 
@@ -49,7 +55,7 @@ export function NavUser() {
                                   : 'bottom'
                         }
                     >
-                        <UserMenuContent user={auth.user} />
+                        <UserMenuContent user={auth.user} logoutUrl={logoutUrl} />
                     </DropdownMenuContent>
                 </DropdownMenu>
             </SidebarMenuItem>
