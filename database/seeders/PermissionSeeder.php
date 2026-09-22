@@ -32,20 +32,25 @@ class PermissionSeeder extends Seeder
         ];
 
         foreach ($permissions as $value) {
-            Permission::create(['name' => $value]);
+            Permission::firstOrCreate(['name' => $value, 'guard_name' => 'web']);
         }
 
-        $superadminRole = Role::create(['name' => 'superadmin']);
+        $superadminRole = Role::firstOrCreate(
+            ['name' => 'superadmin', 'guard_name' => 'web']
+        );
         $superadminRole->syncPermissions(Permission::all());
 
-        $user = User::create(
+        $user = User::firstOrCreate(
+            ['email' => 'admin@mail.com'],
             [
-                'email' => 'admin@mail.com',
                 'name' => 'admin',
                 'password' => Hash::make('admin123'),
             ]
         );
 
-        $user->assignRole($superadminRole);
+        if (! $user->hasRole($superadminRole->name)) {
+            $user->assignRole($superadminRole);
+        }
     }
 }
+
