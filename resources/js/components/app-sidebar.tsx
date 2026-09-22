@@ -4,6 +4,7 @@ import {
     Building2,
     FolderGit2,
     LayoutGrid,
+    Settings,
     UsersRound,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
@@ -52,6 +53,22 @@ export function AppSidebar() {
                 ? `/${activeTenantSlug}/dashboard`
                 : '/dashboard',
             icon: LayoutGrid,
+        });
+
+        mainNavItems.push({
+            title: 'Settings',
+            href: activeTenantSlug ? `/${activeTenantSlug}/settings/company-profile` : '#',
+            icon: Settings,
+            children: [
+                {
+                    title: 'Company Profile',
+                    href: activeTenantSlug ? `/${activeTenantSlug}/settings/company-profile` : '#',
+                },
+                {
+                    title: 'User & Roles',
+                    href: activeTenantSlug ? `/${activeTenantSlug}/settings/users-roles` : '#',
+                },
+            ],
         });
     } else {
         if (can('dashboard.view') || hasRole('superadmin')) {
