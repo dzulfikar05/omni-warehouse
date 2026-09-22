@@ -4,11 +4,13 @@ namespace App\Providers;
 
 use App\Contracts\CompanyProfileContract;
 use App\Contracts\RoleContract;
+use App\Contracts\StockOpnameContract;
 use App\Contracts\TenantContract;
 use App\Contracts\TenantUserRoleContract;
 use App\Contracts\UserContract;
 use App\Services\CompanyProfileService;
 use App\Services\RoleService;
+use App\Services\StockOpnameService;
 use App\Services\TenantService;
 use App\Services\TenantUserRoleService;
 use App\Services\UserService;
@@ -30,6 +32,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(TenantContract::class, TenantService::class);
         $this->app->bind(TenantUserRoleContract::class, TenantUserRoleService::class);
         $this->app->bind(CompanyProfileContract::class, CompanyProfileService::class);
+        $this->app->bind(StockOpnameContract::class, StockOpnameService::class);
     }
 
     /**
