@@ -12,7 +12,7 @@ export default function AppLayout({
     return (
         <AppLayoutTemplate breadcrumbs={breadcrumbs}>
             {children}
-            <Toaster position="top-right" richColors />
+            {/* <Toaster position="top-right" richColors /> */}
 
         </AppLayoutTemplate>
     );
