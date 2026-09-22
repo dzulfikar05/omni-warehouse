@@ -29,6 +29,7 @@ require __DIR__ . '/web/plans.php';
 require __DIR__ . '/settings.php';
 require __DIR__ . '/web/tenant/users_roles.php';
 require __DIR__ . '/web/tenant/company_profile.php';
+require __DIR__ . '/web/tenant/stock_opname.php';
 
 
 Route::prefix('{tenant_slug}')->middleware(['identify_tenant'])->group(function () {

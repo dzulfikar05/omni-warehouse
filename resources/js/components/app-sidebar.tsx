@@ -56,6 +56,26 @@ export function AppSidebar() {
         });
 
         mainNavItems.push({
+            title: 'Warehouse & Stocks',
+            href: activeTenantSlug ? `/${activeTenantSlug}/stock-opname` : '#',
+            icon: Building2,
+            children: [
+                {
+                    title: 'Warehouses',
+                    href: activeTenantSlug ? `/${activeTenantSlug}/warehouses` : '#',
+                },
+                {
+                    title: 'Rack & Stock Location',
+                    href: activeTenantSlug ? `/${activeTenantSlug}/stock-locations` : '#',
+                },
+                {
+                    title: 'Stock Opname',
+                    href: activeTenantSlug ? `/${activeTenantSlug}/stock-opname` : '#',
+                },
+            ],
+        });
+
+        mainNavItems.push({
             title: 'Settings',
             href: activeTenantSlug ? `/${activeTenantSlug}/settings/company-profile` : '#',
             icon: Settings,
