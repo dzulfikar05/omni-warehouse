@@ -1,5 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
+    ArrowLeftRight,
     BookOpen,
     Building2,
     FolderGit2,
@@ -77,6 +78,34 @@ export function AppSidebar() {
                     title: 'Stock Opname',
                     href: activeTenantSlug
                         ? `/${activeTenantSlug}/stock-opname`
+                        : '#',
+                },
+            ],
+        });
+
+        mainNavItems.push({
+            title: 'Transaction',
+            href: activeTenantSlug
+                ? `/${activeTenantSlug}/transactions/inbound`
+                : '#',
+            icon: ArrowLeftRight,
+            children: [
+                {
+                    title: 'Inbound Management',
+                    href: activeTenantSlug
+                        ? `/${activeTenantSlug}/transactions/inbound`
+                        : '#',
+                },
+                {
+                    title: 'Outbound Management',
+                    href: activeTenantSlug
+                        ? `/${activeTenantSlug}/transactions/outbound`
+                        : '#',
+                },
+                {
+                    title: 'Stock Transfer',
+                    href: activeTenantSlug
+                        ? `/${activeTenantSlug}/transactions/stock-transfer`
                         : '#',
                 },
             ],
