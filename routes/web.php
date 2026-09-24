@@ -76,5 +76,8 @@ Route::prefix('{tenant_slug}')->middleware(['identify_tenant'])->group(function 
         Route::get('/dashboard', function () {
             return Inertia::render('Tenant/Dashboard');
         })->name('tenant.dashboard');
+
+        require __DIR__ . '/web/tenant/settings.php';
+
     });
 });
