@@ -3,14 +3,18 @@
 namespace App\Providers;
 
 use App\Contracts\CompanyProfileContract;
+use App\Contracts\CustomerContract;
 use App\Contracts\RoleContract;
 use App\Contracts\StockOpnameContract;
+use App\Contracts\SupplierContract;
 use App\Contracts\TenantContract;
 use App\Contracts\TenantUserRoleContract;
 use App\Contracts\UserContract;
 use App\Services\CompanyProfileService;
+use App\Services\CustomerService;
 use App\Services\RoleService;
 use App\Services\StockOpnameService;
+use App\Services\SupplierService;
 use App\Services\TenantService;
 use App\Services\TenantUserRoleService;
 use App\Services\UserService;
@@ -33,6 +37,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(TenantUserRoleContract::class, TenantUserRoleService::class);
         $this->app->bind(CompanyProfileContract::class, CompanyProfileService::class);
         $this->app->bind(StockOpnameContract::class, StockOpnameService::class);
+        $this->app->bind(CustomerContract::class, CustomerService::class);
+        $this->app->bind(SupplierContract::class, SupplierService::class);
     }
 
     /**
@@ -54,14 +60,15 @@ class AppServiceProvider extends ServiceProvider
             app()->isProduction(),
         );
 
-        Password::defaults(fn (): ?Password => app()->isProduction()
-            ? Password::min(12)
+        Password::defaults(
+            fn(): ?Password => app()->isProduction()
+                ? Password::min(12)
                 ->mixedCase()
                 ->letters()
                 ->numbers()
                 ->symbols()
                 ->uncompromised()
-            : null,
+                : null,
         );
     }
 }
