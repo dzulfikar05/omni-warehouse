@@ -22,9 +22,16 @@ export function NavUser() {
     const { auth, current_tenant } = usePage().props as any;
     const userTenantId = auth?.user?.tenant_id;
     const currentPathSlug = window.location.pathname.split('/')[1];
-    const activeTenantSlug = current_tenant?.slug || (userTenantId ? currentPathSlug : null);
 
+    // Deteksi tenant slug yang sedang aktif
+    const activeTenantSlug =
+        current_tenant?.slug ||
+        auth?.user?.tenant?.slug ||
+        (userTenantId ? currentPathSlug : null);
+
+    // Buat URL Logout dan Settings secara dinamis
     const logoutUrl = activeTenantSlug ? `/${activeTenantSlug}/logout` : '/logout';
+    const settingsUrl = activeTenantSlug ? `/${activeTenantSlug}/settings/profile` : '/settings/profile';
 
     if (!auth?.user) {
         return null;
@@ -55,7 +62,11 @@ export function NavUser() {
                                   : 'bottom'
                         }
                     >
-                        <UserMenuContent user={auth.user} logoutUrl={logoutUrl} />
+                        <UserMenuContent
+                            user={auth.user}
+                            logoutUrl={logoutUrl}
+                            settingsUrl={settingsUrl}
+                        />
                     </DropdownMenuContent>
                 </DropdownMenu>
             </SidebarMenuItem>
