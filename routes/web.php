@@ -32,6 +32,7 @@ require __DIR__ . '/web/tenant/company_profile.php';
 require __DIR__ . '/web/tenant/stock_opname.php';
 require __DIR__ . '/web/tenant/customers.php';
 require __DIR__ . '/web/tenant/suppliers.php';
+require __DIR__ . '/web/tenant/inbound.php';
 
 
 Route::prefix('{tenant_slug}')->middleware(['identify_tenant'])->group(function () {
