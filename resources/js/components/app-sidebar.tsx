@@ -5,6 +5,7 @@ import {
     FolderGit2,
     LayoutGrid,
     Settings,
+    Users,
     UsersRound,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
@@ -62,31 +63,61 @@ export function AppSidebar() {
             children: [
                 {
                     title: 'Warehouses',
-                    href: activeTenantSlug ? `/${activeTenantSlug}/warehouses` : '#',
+                    href: activeTenantSlug
+                        ? `/${activeTenantSlug}/warehouses`
+                        : '#',
                 },
                 {
                     title: 'Rack & Stock Location',
-                    href: activeTenantSlug ? `/${activeTenantSlug}/stock-locations` : '#',
+                    href: activeTenantSlug
+                        ? `/${activeTenantSlug}/stock-locations`
+                        : '#',
                 },
                 {
                     title: 'Stock Opname',
-                    href: activeTenantSlug ? `/${activeTenantSlug}/stock-opname` : '#',
+                    href: activeTenantSlug
+                        ? `/${activeTenantSlug}/stock-opname`
+                        : '#',
+                },
+            ],
+        });
+
+        mainNavItems.push({
+            title: 'Contact',
+            href: activeTenantSlug
+                ? `/${activeTenantSlug}/contacts/customers`
+                : '#',
+            icon: Users,
+            children: [
+                {
+                    title: 'Customer',
+                    href: `/${activeTenantSlug}/contacts/customers`,
+                },
+                {
+                    title: 'Supplier',
+                    href: `/${activeTenantSlug}/contacts/suppliers`,
                 },
             ],
         });
 
         mainNavItems.push({
             title: 'Settings',
-            href: activeTenantSlug ? `/${activeTenantSlug}/settings/company-profile` : '#',
+            href: activeTenantSlug
+                ? `/${activeTenantSlug}/settings/company-profile`
+                : '#',
             icon: Settings,
             children: [
                 {
                     title: 'Company Profile',
-                    href: activeTenantSlug ? `/${activeTenantSlug}/settings/company-profile` : '#',
+                    href: activeTenantSlug
+                        ? `/${activeTenantSlug}/settings/company-profile`
+                        : '#',
                 },
                 {
                     title: 'User & Roles',
-                    href: activeTenantSlug ? `/${activeTenantSlug}/settings/users-roles` : '#',
+                    href: activeTenantSlug
+                        ? `/${activeTenantSlug}/settings/users-roles`
+                        : '#',
                 },
             ],
         });
