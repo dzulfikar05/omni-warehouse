@@ -23,10 +23,12 @@ export default function CreateRole({ permissions = [] }: { permissions: Permissi
 
     const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
+    // Parse 'tenant.company_profile.view' -> Group: 'company_profile', Perm: 'view'
     const groupedPermissions = useMemo(() => {
         const groups: Record<string, Permission[]> = {};
         permissions.forEach((perm) => {
-            const groupName = perm.name.split('.')[0];
+            const parts = perm.name.replace(/^tenant\./, '').split('.');
+            const groupName = parts[0];
             if (!groups[groupName]) groups[groupName] = [];
             groups[groupName].push(perm);
         });
@@ -138,7 +140,7 @@ export default function CreateRole({ permissions = [] }: { permissions: Permissi
                                                         )}
                                                     </button>
                                                     <h3 className="font-bold text-xs uppercase tracking-wider text-foreground">
-                                                        {groupName} Management
+                                                        {groupName.replace('_', ' ')} Management
                                                     </h3>
                                                 </div>
 
@@ -165,6 +167,8 @@ export default function CreateRole({ permissions = [] }: { permissions: Permissi
                                                         const isChecked = data.permissions.includes(
                                                             permission.name
                                                         );
+                                                        const label = permission.name.replace(/^tenant\./, '');
+
                                                         return (
                                                             <div
                                                                 key={permission.id}
@@ -185,7 +189,7 @@ export default function CreateRole({ permissions = [] }: { permissions: Permissi
                                                                     htmlFor={`perm-${permission.id}`}
                                                                     className="cursor-pointer text-xs font-medium capitalize"
                                                                 >
-                                                                    {permission.name.split('.')[1] || permission.name}
+                                                                    {label}
                                                                 </label>
                                                             </div>
                                                         );

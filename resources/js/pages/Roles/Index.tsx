@@ -110,7 +110,8 @@ export default function Index({ roles, filters }: RolesProps) {
                     title="Role List"
                     description="Manage system access levels and permissions."
                     renderAction={
-                        can('roles.create') && (
+                        /* Gunakan permission 'central.roles.create' */
+                        can('central.roles.create') && (
                             <Button
                                 asChild
                                 className="shadow-md"
@@ -159,7 +160,7 @@ export default function Index({ roles, filters }: RolesProps) {
                 </PageHeader>
 
                 <DataTable
-                    headers={['#', 'Role Name', '']}
+                    headers={['#', 'Role Name', 'Action']}
                     data={roles.data}
                     pagination={roles}
                     renderRow={(role) => (
@@ -167,18 +168,19 @@ export default function Index({ roles, filters }: RolesProps) {
                             <TableCell className="font-mono text-xs text-muted-foreground">
                                 #{role.id}
                             </TableCell>
-                            <TableCell className="font-medium text-foreground">
+                            <TableCell className="font-medium text-foreground capitalize">
                                 {role.name}
                             </TableCell>
                             <TableCell className="text-right">
+                                {/* ActionButton untuk Detail (Show), Edit, dan Hapus (Delete) */}
                                 <ActionButton
                                     label={role.name}
                                     showUrl={`/roles/${role.id}`}
                                     editUrl={`/roles/${role.id}/edit`}
                                     onDelete={() => processDelete(role.id)}
-                                    canShow={can('roles.show')}
-                                    canEdit={can('roles.edit')}
-                                    canDelete={can('roles.delete')}
+                                    canShow={can('central.roles.show')}
+                                    canEdit={can('central.roles.edit')}
+                                    canDelete={can('central.roles.delete')}
                                 />
                             </TableCell>
                         </>

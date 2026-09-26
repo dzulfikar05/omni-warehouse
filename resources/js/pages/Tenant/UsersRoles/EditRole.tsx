@@ -19,7 +19,6 @@ interface Role {
 
 export default function EditRole({ role, permissions = [] }: { role: Role; permissions: Permission[] }) {
     const { current_tenant, auth } = usePage().props as any;
-    // const tenantSlug = current_tenant?.slug || '';
     const currentPathSlug = window.location.pathname.split('/')[1];
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
 
@@ -30,10 +29,20 @@ export default function EditRole({ role, permissions = [] }: { role: Role; permi
 
     const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
+    // 1. Grouping Permission berdasarkan Submenu yang Sebenarnya
+    // Contoh: 'tenant.contacts.customers.view' -> Group: 'contacts.customers', Perm: 'view'
+    // Contoh: 'tenant.warehouses.view' -> Group: 'warehouses', Perm: 'view'
     const groupedPermissions = useMemo(() => {
         const groups: Record<string, Permission[]> = {};
         permissions.forEach((perm) => {
-            const groupName = perm.name.split('.')[0];
+            // Hapus prefix 'tenant.' dari string permission
+            const cleanName = perm.name.replace(/^tenant\./, '');
+            const parts = cleanName.split('.');
+
+            // Ambil nama modul/submenu (mengabaikan action terakhir seperti view/create/edit)
+            const action = parts[parts.length - 1];
+            const groupName = parts.slice(0, parts.length - 1).join(' ');
+
             if (!groups[groupName]) groups[groupName] = [];
             groups[groupName].push(perm);
         });
@@ -70,6 +79,13 @@ export default function EditRole({ role, permissions = [] }: { role: Role; permi
             current.push(permissionName);
         }
         setData('permissions', current);
+    };
+
+    // Helper untuk menampilkan nama action saja (e.g. "view", "create", "delete")
+    const getPermissionActionLabel = (permName: string) => {
+        const parts = permName.split('.');
+        const rawAction = parts[parts.length - 1];
+        return rawAction.replace('_', ' ');
     };
 
     const submit = (e: React.FormEvent) => {
@@ -148,8 +164,8 @@ export default function EditRole({ role, permissions = [] }: { role: Role; permi
                                                             <ChevronDown className="h-4 w-4" />
                                                         )}
                                                     </button>
-                                                    <h3 className="font-bold text-xs uppercase tracking-wider text-foreground">
-                                                        {groupName} Management
+                                                    <h3 className="font-bold text-xs uppercase tracking-wider text-foreground capitalize">
+                                                        {groupName.replace('_', ' ')}
                                                     </h3>
                                                 </div>
 
@@ -176,6 +192,8 @@ export default function EditRole({ role, permissions = [] }: { role: Role; permi
                                                         const isChecked = data.permissions.includes(
                                                             permission.name
                                                         );
+                                                        const actionLabel = getPermissionActionLabel(permission.name);
+
                                                         return (
                                                             <div
                                                                 key={permission.id}
@@ -196,7 +214,7 @@ export default function EditRole({ role, permissions = [] }: { role: Role; permi
                                                                     htmlFor={`perm-${permission.id}`}
                                                                     className="cursor-pointer text-xs font-medium capitalize"
                                                                 >
-                                                                    {permission.name.split('.')[1] || permission.name}
+                                                                    {actionLabel}
                                                                 </label>
                                                             </div>
                                                         );

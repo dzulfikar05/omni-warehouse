@@ -50,7 +50,6 @@ class TenantUserRoleService implements TenantUserRoleContract
 
         return Role::query()
             ->where('tenant_id', $tenant->id)
-            ->orWhereNull('tenant_id')
             ->when($search, function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%");
             })

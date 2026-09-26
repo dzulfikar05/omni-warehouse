@@ -20,15 +20,18 @@ interface Role {
 export default function Edit({ role, permissions }: { role: Role; permissions: Permission[] }) {
     const { data, setData, put, processing, errors } = useForm({
         name: role.name || '',
-        permissions: role.permissions.map((p) => p.name) || [] as string[],
+        permissions: role.permissions?.map((p) => p.name) || [],
     });
 
     const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
+    // Grouping permission per modul/sub-modul secara presisi
     const groupedPermissions = useMemo(() => {
         const groups: Record<string, Permission[]> = {};
         permissions.forEach((perm) => {
-            const groupName = perm.name.split('.')[0];
+            const parts = perm.name.split('.');
+            const groupName = parts.slice(0, parts.length - 1).join(' ');
+
             if (!groups[groupName]) groups[groupName] = [];
             groups[groupName].push(perm);
         });
@@ -36,9 +39,9 @@ export default function Edit({ role, permissions }: { role: Role; permissions: P
     }, [permissions]);
 
     const toggleAccordion = (groupName: string) => {
-        setOpenGroups(prev => ({
+        setOpenGroups((prev) => ({
             ...prev,
-            [groupName]: !prev[groupName]
+            [groupName]: !prev[groupName],
         }));
     };
 
@@ -51,9 +54,7 @@ export default function Edit({ role, permissions }: { role: Role; permissions: P
                 if (!newPermissions.includes(name)) newPermissions.push(name);
             });
         } else {
-            newPermissions = newPermissions.filter(
-                (name) => !groupPermNames.includes(name),
-            );
+            newPermissions = newPermissions.filter((name) => !groupPermNames.includes(name));
         }
         setData('permissions', newPermissions);
     };
@@ -69,6 +70,11 @@ export default function Edit({ role, permissions }: { role: Role; permissions: P
         setData('permissions', current);
     };
 
+    const getPermissionActionLabel = (permName: string) => {
+        const parts = permName.split('.');
+        return parts[parts.length - 1].replace(/_/g, ' ');
+    };
+
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
         put(`/roles/${role.id}`);
@@ -79,37 +85,30 @@ export default function Edit({ role, permissions }: { role: Role; permissions: P
             <Head title={`Edit Role - ${role.name}`} />
 
             <div className="space-y-6 p-4">
-                {/* Header Section */}
-                <div className="mx-auto rounded-lg bg-card text-card-foreground p-6 shadow-md border border-border">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <h2 className="text-xl font-bold text-foreground">
-                                Edit Role: <span className="capitalize">{role.name}</span>
-                            </h2>
-                        </div>
-                        <Button asChild variant="outline">
-                            <Link href="/roles">
-                                <ArrowLeftCircleIcon className="mr-2 h-4 w-4" /> Back
-                            </Link>
-                        </Button>
-                    </div>
+                <div className="mx-auto rounded-lg bg-card text-card-foreground p-6 shadow-md border border-border flex items-center justify-between">
+                    <h2 className="text-xl font-bold text-foreground">
+                        Edit Role: <span className="capitalize">{role.name}</span>
+                    </h2>
+                    <Button asChild variant="outline">
+                        <Link href="/roles">
+                            <ArrowLeftCircleIcon className="mr-2 h-4 w-4" /> Back
+                        </Link>
+                    </Button>
                 </div>
 
                 <div className="mx-auto rounded-lg bg-card text-card-foreground p-6 shadow-md border border-border">
                     <form onSubmit={submit} className="max-w-4xl space-y-6">
-                        {/* Input Role Name */}
                         <div className="max-w-xl space-y-1">
                             <Label htmlFor="name">Role Name</Label>
                             <Input
                                 id="name"
                                 value={data.name}
                                 onChange={(e) => setData('name', e.target.value)}
-                                placeholder="e.g. Administrator"
+                                placeholder="e.g. System Administrator"
                             />
                             {errors.name && <span className="text-sm text-red-500">{errors.name}</span>}
                         </div>
 
-                        {/* Permissions Section */}
                         <div className="space-y-4">
                             <Label className="text-base font-bold text-foreground">
                                 Update Permissions Mapping
@@ -121,8 +120,7 @@ export default function Edit({ role, permissions }: { role: Role; permissions: P
                                     const isAllGroupChecked = perms.every((p) => data.permissions.includes(p.name));
 
                                     return (
-                                        <div key={groupName} className="rounded-xl border border-border bg-card overflow-hidden shadow-sm transition-all">
-                                            {/* Accordion Header */}
+                                        <div key={groupName} className="overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all">
                                             <div className="flex items-center justify-between bg-muted/50 p-4">
                                                 <div className="flex items-center space-x-3">
                                                     <button
@@ -132,7 +130,9 @@ export default function Edit({ role, permissions }: { role: Role; permissions: P
                                                     >
                                                         {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                                                     </button>
-                                                    <h3 className="font-bold text-foreground capitalize">{groupName} Management</h3>
+                                                    <h3 className="font-bold text-foreground capitalize">
+                                                        {groupName.replace(/_/g, ' ')}
+                                                    </h3>
                                                 </div>
 
                                                 <div className="flex items-center space-x-2 bg-card px-3 py-1 rounded-lg border border-border">
@@ -147,28 +147,28 @@ export default function Edit({ role, permissions }: { role: Role; permissions: P
                                                 </div>
                                             </div>
 
-                                            {/* Accordion Content */}
                                             {isExpanded && (
                                                 <div className="grid grid-cols-1 gap-3 p-5 md:grid-cols-2 lg:grid-cols-3 border-t border-border">
-                                                    {perms.map((permission) => (
-                                                        <div
-                                                            key={permission.id}
-                                                            className={`flex items-center space-x-3 rounded-xl border p-3 transition-all ${
-                                                                data.permissions.includes(permission.name)
-                                                                    ? 'bg-primary/10 border-primary/30'
-                                                                    : 'border-transparent hover:bg-muted/50'
-                                                            }`}
-                                                        >
-                                                            <Checkbox
-                                                                id={`perm-${permission.id}`}
-                                                                checked={data.permissions.includes(permission.name)}
-                                                                onCheckedChange={() => handleCheckboxChange(permission.name)}
-                                                            />
-                                                            <label htmlFor={`perm-${permission.id}`} className="cursor-pointer text-sm font-medium capitalize text-muted-foreground">
-                                                                {permission.name.split('.')[1] || permission.name}
-                                                            </label>
-                                                        </div>
-                                                    ))}
+                                                    {perms.map((permission) => {
+                                                        const isChecked = data.permissions.includes(permission.name);
+                                                        return (
+                                                            <div
+                                                                key={permission.id}
+                                                                className={`flex items-center space-x-3 rounded-xl border p-3 transition-all ${
+                                                                    isChecked ? 'bg-primary/10 border-primary/30' : 'border-transparent hover:bg-muted/50'
+                                                                }`}
+                                                            >
+                                                                <Checkbox
+                                                                    id={`perm-${permission.id}`}
+                                                                    checked={isChecked}
+                                                                    onCheckedChange={() => handleCheckboxChange(permission.name)}
+                                                                />
+                                                                <label htmlFor={`perm-${permission.id}`} className="cursor-pointer text-sm font-medium capitalize text-muted-foreground">
+                                                                    {getPermissionActionLabel(permission.name)}
+                                                                </label>
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
                                             )}
                                         </div>
@@ -178,13 +178,8 @@ export default function Edit({ role, permissions }: { role: Role; permissions: P
                             {errors.permissions && <p className="text-sm font-medium text-red-500">{errors.permissions}</p>}
                         </div>
 
-                        {/* Action Buttons */}
                         <div className="border-t border-border pt-4 flex gap-3">
-                            <Button
-                                type="submit"
-                                className="shadow-md"
-                                disabled={processing}
-                            >
+                            <Button type="submit" className="shadow-md" disabled={processing}>
                                 {processing ? 'Updating...' : 'Update Role'}
                             </Button>
                             <Button asChild variant="ghost">

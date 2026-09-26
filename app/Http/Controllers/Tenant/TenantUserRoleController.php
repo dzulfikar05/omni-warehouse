@@ -24,17 +24,11 @@ class TenantUserRoleController extends Controller
         $this->service = $service;
     }
 
-    /**
-     * Helper to retrieve Tenant by slug.
-     */
     protected function getTenant(string $tenant_slug): Tenant
     {
         return Tenant::where('slug', $tenant_slug)->firstOrFail();
     }
 
-    /**
-     * Display the main index page (Members & Roles tabs).
-     */
     public function index(Request $request, string $tenant_slug): Response
     {
         $search = $request->input('search');
@@ -57,9 +51,8 @@ class TenantUserRoleController extends Controller
     {
         $tenant = $this->getTenant($tenant_slug);
 
-        $roles = Role::where('tenant_id', $tenant->id)
-            ->orWhereNull('tenant_id')
-            ->get();
+        // HANYA ambil Role yang milik Tenant ini saja
+        $roles = Role::where('tenant_id', $tenant->id)->get();
 
         return Inertia::render('Tenant/UsersRoles/CreateUser', [
             'roles' => $roles,
@@ -105,9 +98,8 @@ class TenantUserRoleController extends Controller
             ->with('roles')
             ->findOrFail($id);
 
-        $roles = Role::where('tenant_id', $tenant->id)
-            ->orWhereNull('tenant_id')
-            ->get();
+        // HANYA ambil Role yang milik Tenant ini saja
+        $roles = Role::where('tenant_id', $tenant->id)->get();
 
         return Inertia::render('Tenant/UsersRoles/EditUser', [
             'user' => [
@@ -140,8 +132,11 @@ class TenantUserRoleController extends Controller
 
     public function createRole(string $tenant_slug): Response
     {
+        // HANYA kirim permission milik Tenant ('tenant.%')
+        $permissions = Permission::where('name', 'LIKE', 'tenant.%')->get();
+
         return Inertia::render('Tenant/UsersRoles/CreateRole', [
-            'permissions' => Permission::all(),
+            'permissions' => $permissions,
         ]);
     }
 
@@ -157,8 +152,8 @@ class TenantUserRoleController extends Controller
     {
         $tenant = $this->getTenant($tenant_slug);
 
+        // FILTER: Pastikan Role milik tenant ini
         $role = Role::where('tenant_id', $tenant->id)
-            ->orWhereNull('tenant_id')
             ->with('permissions')
             ->findOrFail($id);
 
@@ -171,14 +166,17 @@ class TenantUserRoleController extends Controller
     {
         $tenant = $this->getTenant($tenant_slug);
 
+        // FILTER: Pastikan Role milik tenant ini
         $role = Role::where('tenant_id', $tenant->id)
-            ->orWhereNull('tenant_id')
             ->with('permissions')
             ->findOrFail($id);
 
+        // HANYA kirim permission milik Tenant ('tenant.%')
+        $permissions = Permission::where('name', 'LIKE', 'tenant.%')->get();
+
         return Inertia::render('Tenant/UsersRoles/EditRole', [
             'role' => $role,
-            'permissions' => Permission::all(),
+            'permissions' => $permissions,
         ]);
     }
 

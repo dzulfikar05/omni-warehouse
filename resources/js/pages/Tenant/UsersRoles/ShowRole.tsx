@@ -18,19 +18,31 @@ interface Role {
 
 export default function ShowRole({ role }: { role: Role }) {
     const { current_tenant, auth } = usePage().props as any;
-    // const tenantSlug = current_tenant?.slug || '';
     const currentPathSlug = window.location.pathname.split('/')[1];
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
 
+    // Grouping Permission per Modul / Submenu (menghilangkan prefix 'tenant.')
     const groupedPermissions = useMemo(() => {
         const groups: Record<string, Permission[]> = {};
         role.permissions?.forEach((perm) => {
-            const groupName = perm.name.split('.')[0];
+            const cleanName = perm.name.replace(/^tenant\./, '');
+            const parts = cleanName.split('.');
+
+            // Mengambil nama modul/submenu (mengabaikan action terakhir)
+            const groupName = parts.slice(0, parts.length - 1).join(' ');
+
             if (!groups[groupName]) groups[groupName] = [];
             groups[groupName].push(perm);
         });
         return groups;
     }, [role.permissions]);
+
+    // Helper untuk menampilkan label action bersih (misal: "verify barcode", "create session")
+    const getPermissionActionLabel = (permName: string) => {
+        const parts = permName.split('.');
+        const rawAction = parts[parts.length - 1];
+        return rawAction.replace(/_/g, ' ');
+    };
 
     return (
         <>
@@ -78,8 +90,8 @@ export default function ShowRole({ role }: { role: Role }) {
                             <div className="grid grid-cols-1 gap-4">
                                 {Object.entries(groupedPermissions).map(([groupName, perms]) => (
                                     <div key={groupName} className="rounded-xl border border-border bg-muted/40 p-4">
-                                        <h3 className="text-xs font-bold text-blue-600 uppercase mb-3 border-b border-border/60 pb-1.5">
-                                            {groupName} Management
+                                        <h3 className="text-xs font-bold text-blue-600 uppercase mb-3 border-b border-border/60 pb-1.5 capitalize">
+                                            {groupName.replace(/_/g, ' ')}
                                         </h3>
                                         <div className="flex flex-wrap gap-2">
                                             {perms.map((perm) => (
@@ -88,7 +100,7 @@ export default function ShowRole({ role }: { role: Role }) {
                                                     variant="outline"
                                                     className="bg-card border-border text-foreground font-medium capitalize text-xs px-2.5 py-1"
                                                 >
-                                                    {perm.name.split('.')[1] || perm.name}
+                                                    {getPermissionActionLabel(perm.name)}
                                                 </Badge>
                                             ))}
                                         </div>

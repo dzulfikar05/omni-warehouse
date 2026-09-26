@@ -11,7 +11,7 @@ interface Permission {
     name: string;
 }
 
-export default function Create({ permissions }: { permissions: Permission[] }) {
+export default function Create({ permissions = [] }: { permissions: Permission[] }) {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         permissions: [] as string[],
@@ -19,10 +19,13 @@ export default function Create({ permissions }: { permissions: Permission[] }) {
 
     const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
+    // Grouping permission berdasarkan modul / submenu
     const groupedPermissions = useMemo(() => {
         const groups: Record<string, Permission[]> = {};
         permissions.forEach((perm) => {
-            const groupName = perm.name.split('.')[0];
+            const parts = perm.name.split('.');
+            const groupName = parts.slice(0, parts.length - 1).join(' ');
+
             if (!groups[groupName]) groups[groupName] = [];
             groups[groupName].push(perm);
         });
@@ -45,9 +48,7 @@ export default function Create({ permissions }: { permissions: Permission[] }) {
                 if (!newPermissions.includes(name)) newPermissions.push(name);
             });
         } else {
-            newPermissions = newPermissions.filter(
-                (name) => !groupPermNames.includes(name),
-            );
+            newPermissions = newPermissions.filter((name) => !groupPermNames.includes(name));
         }
         setData('permissions', newPermissions);
     };
@@ -63,6 +64,11 @@ export default function Create({ permissions }: { permissions: Permission[] }) {
         setData('permissions', current);
     };
 
+    const getPermissionActionLabel = (permName: string) => {
+        const parts = permName.split('.');
+        return parts[parts.length - 1].replace(/_/g, ' ');
+    };
+
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
         post('/roles');
@@ -73,18 +79,13 @@ export default function Create({ permissions }: { permissions: Permission[] }) {
             <Head title="Create Role" />
 
             <div className="space-y-6 p-4">
-                <div className="mx-auto rounded-lg bg-card text-card-foreground p-6 shadow-md border border-border">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-bold text-foreground">
-                            Create New Role
-                        </h2>
-                        <Button asChild variant="outline">
-                            <Link href="/roles">
-                                <ArrowLeftCircleIcon className="mr-2 h-4 w-4" />{' '}
-                                Back
-                            </Link>
-                        </Button>
-                    </div>
+                <div className="mx-auto rounded-lg bg-card text-card-foreground p-6 shadow-md border border-border flex items-center justify-between">
+                    <h2 className="text-xl font-bold text-foreground">Create Central Role</h2>
+                    <Button asChild variant="outline">
+                        <Link href="/roles">
+                            <ArrowLeftCircleIcon className="mr-2 h-4 w-4" /> Back
+                        </Link>
+                    </Button>
                 </div>
 
                 <div className="mx-auto rounded-lg bg-card text-card-foreground p-6 shadow-md border border-border">
@@ -94,149 +95,82 @@ export default function Create({ permissions }: { permissions: Permission[] }) {
                             <Input
                                 id="name"
                                 value={data.name}
-                                onChange={(e) =>
-                                    setData('name', e.target.value)
-                                }
-                                placeholder="e.g. Administrator"
+                                onChange={(e) => setData('name', e.target.value)}
+                                placeholder="e.g. System Administrator"
                             />
-                            {errors.name && (
-                                <span className="text-sm text-red-500">
-                                    {errors.name}
-                                </span>
-                            )}
+                            {errors.name && <span className="text-sm text-red-500">{errors.name}</span>}
                         </div>
 
                         <div className="space-y-4">
-                            <Label className="text-base font-bold text-foreground">
-                                Assign Permissions
-                            </Label>
+                            <Label className="text-base font-bold text-foreground">Assign Permissions</Label>
 
                             <div className="space-y-4">
-                                {Object.entries(groupedPermissions).map(
-                                    ([groupName, perms]) => {
-                                        const isExpanded =
-                                            !!openGroups[groupName];
-                                        const isAllGroupChecked = perms.every(
-                                            (p) =>
-                                                data.permissions.includes(
-                                                    p.name,
-                                                ),
-                                        );
+                                {Object.entries(groupedPermissions).map(([groupName, perms]) => {
+                                    const isExpanded = !!openGroups[groupName];
+                                    const isAllGroupChecked = perms.every((p) => data.permissions.includes(p.name));
 
-                                        return (
-                                            <div
-                                                key={groupName}
-                                                className="overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all"
-                                            >
-                                                {/* Header Grup */}
-                                                <div className="flex items-center justify-between bg-muted/50 p-4">
-                                                    <div className="flex items-center space-x-3">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() =>
-                                                                toggleAccordion(
-                                                                    groupName,
-                                                                )
-                                                            }
-                                                            className="rounded-md p-1 text-muted-foreground hover:bg-muted"
-                                                        >
-                                                            {isExpanded ? (
-                                                                <ChevronUp className="h-4 w-4" />
-                                                            ) : (
-                                                                <ChevronDown className="h-4 w-4" />
-                                                            )}
-                                                        </button>
-                                                        <h3 className="font-bold text-foreground capitalize">
-                                                            {groupName}{' '}
-                                                            Management
-                                                        </h3>
-                                                    </div>
-
-                                                    <div className="flex items-center space-x-2 rounded-lg border border-border bg-card px-3 py-1">
-                                                        <Checkbox
-                                                            id={`all-${groupName}`}
-                                                            checked={
-                                                                isAllGroupChecked
-                                                            }
-                                                            onCheckedChange={(
-                                                                checked,
-                                                            ) =>
-                                                                toggleGroup(
-                                                                    groupName,
-                                                                    !!checked,
-                                                                )
-                                                            }
-                                                        />
-                                                        <label
-                                                            htmlFor={`all-${groupName}`}
-                                                            className="cursor-pointer text-[10px] font-bold tracking-wider text-muted-foreground uppercase"
-                                                        >
-                                                            Check All
-                                                        </label>
-                                                    </div>
+                                    return (
+                                        <div key={groupName} className="overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all">
+                                            <div className="flex items-center justify-between bg-muted/50 p-4">
+                                                <div className="flex items-center space-x-3">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => toggleAccordion(groupName)}
+                                                        className="rounded-md p-1 text-muted-foreground hover:bg-muted"
+                                                    >
+                                                        {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                                    </button>
+                                                    <h3 className="font-bold text-foreground capitalize">
+                                                        {groupName.replace(/_/g, ' ')}
+                                                    </h3>
                                                 </div>
 
-                                                {/* Konten Permission (Show/Hide) */}
-                                                {isExpanded && (
-                                                    <div className="grid grid-cols-1 gap-3 border-t border-border p-5 md:grid-cols-2 lg:grid-cols-3">
-                                                        {perms.map(
-                                                            (permission) => (
-                                                                <div
-                                                                    key={
-                                                                        permission.id
-                                                                    }
-                                                                    className={`flex items-center space-x-3 rounded-xl border p-3 transition-all ${
-                                                                        data.permissions.includes(
-                                                                            permission.name,
-                                                                        )
-                                                                            ? 'border-primary/30 bg-primary/10'
-                                                                            : 'border-transparent hover:bg-muted/50'
-                                                                    }`}
-                                                                >
-                                                                    <Checkbox
-                                                                        id={`perm-${permission.id}`}
-                                                                        checked={data.permissions.includes(
-                                                                            permission.name,
-                                                                        )}
-                                                                        onCheckedChange={() =>
-                                                                            handleCheckboxChange(
-                                                                                permission.name,
-                                                                            )
-                                                                        }
-                                                                    />
-                                                                    <label
-                                                                        htmlFor={`perm-${permission.id}`}
-                                                                        className="cursor-pointer text-sm font-medium text-muted-foreground capitalize"
-                                                                    >
-                                                                        {permission.name.split(
-                                                                            '.',
-                                                                        )[1] ||
-                                                                            permission.name}
-                                                                    </label>
-                                                                </div>
-                                                            ),
-                                                        )}
-                                                    </div>
-                                                )}
+                                                <div className="flex items-center space-x-2 rounded-lg border border-border bg-card px-3 py-1">
+                                                    <Checkbox
+                                                        id={`all-${groupName}`}
+                                                        checked={isAllGroupChecked}
+                                                        onCheckedChange={(checked) => toggleGroup(groupName, !!checked)}
+                                                    />
+                                                    <label htmlFor={`all-${groupName}`} className="cursor-pointer text-[10px] font-bold tracking-wider text-muted-foreground uppercase">
+                                                        Check All
+                                                    </label>
+                                                </div>
                                             </div>
-                                        );
-                                    },
-                                )}
+
+                                            {isExpanded && (
+                                                <div className="grid grid-cols-1 gap-3 border-t border-border p-5 md:grid-cols-2 lg:grid-cols-3">
+                                                    {perms.map((permission) => {
+                                                        const isChecked = data.permissions.includes(permission.name);
+                                                        return (
+                                                            <div
+                                                                key={permission.id}
+                                                                className={`flex items-center space-x-3 rounded-xl border p-3 transition-all ${
+                                                                    isChecked ? 'border-primary/30 bg-primary/10' : 'border-transparent hover:bg-muted/50'
+                                                                }`}
+                                                            >
+                                                                <Checkbox
+                                                                    id={`perm-${permission.id}`}
+                                                                    checked={isChecked}
+                                                                    onCheckedChange={() => handleCheckboxChange(permission.name)}
+                                                                />
+                                                                <label htmlFor={`perm-${permission.id}`} className="cursor-pointer text-sm font-medium capitalize text-muted-foreground">
+                                                                    {getPermissionActionLabel(permission.name)}
+                                                                </label>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
                             </div>
-                            {errors.permissions && (
-                                <p className="text-sm font-medium text-red-500">
-                                    {errors.permissions}
-                                </p>
-                            )}
+                            {errors.permissions && <p className="text-sm font-medium text-red-500">{errors.permissions}</p>}
                         </div>
 
                         <div className="border-t border-border pt-4">
-                            <Button
-                                type="submit"
-                                className="w-full sm:w-auto shadow-md"
-                                disabled={processing}
-                            >
-                                {processing ? 'Saving...' : 'Save'}
+                            <Button type="submit" className="w-full sm:w-auto shadow-md" disabled={processing}>
+                                {processing ? 'Saving...' : 'Save Role'}
                             </Button>
                         </div>
                     </form>

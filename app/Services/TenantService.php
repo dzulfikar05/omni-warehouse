@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class TenantService implements TenantContract
@@ -99,7 +100,6 @@ class TenantService implements TenantContract
         });
     }
 
-
     public function registerTenant(array $data): array
     {
         return DB::transaction(function () use ($data) {
@@ -120,12 +120,15 @@ class TenantService implements TenantContract
             ]);
 
             $adminRole = Role::firstOrCreate([
-                'name' => 'Admin Gudang - ' . $tenant->name,
+                'name' => 'Admin Warehouse - ' . $tenant->name,
                 'guard_name' => 'web',
             ], [
                 'tenant_id' => $tenant->id,
-                'desc' => 'Administrator penuh operasional gudang tenant',
+                'desc' => 'Admin role for ' . $tenant->name . ' tenant, with full permissions for this tenant.',
             ]);
+
+            $tenantPermissions = Permission::where('name', 'LIKE', 'tenant.%')->get();
+            $adminRole->syncPermissions($tenantPermissions);
 
             $user = User::create([
                 'tenant_id' => $tenant->id,

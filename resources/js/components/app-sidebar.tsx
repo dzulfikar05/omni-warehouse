@@ -31,6 +31,7 @@ export function AppSidebar() {
     const userRoles: string[] = auth?.user?.roles || [];
     const userTenantId = auth?.user?.tenant_id;
 
+    // Helper Spatie
     const can = (permission: string) => userPermissions.includes(permission);
     const hasRole = (role: string) => userRoles.includes(role);
 
@@ -49,109 +50,132 @@ export function AppSidebar() {
         'Tenant Portal';
 
     if (isTenantUser) {
-        mainNavItems.push({
-            title: 'Dashboard',
-            href: activeTenantSlug
-                ? `/${activeTenantSlug}/dashboard`
-                : '/dashboard',
-            icon: LayoutGrid,
-        });
+        // ----------------------------------------------------
+        // TENANT WORKSPACE NAVIGATION (Disaring dengan tenant.*)
+        // ----------------------------------------------------
 
-        mainNavItems.push({
-            title: 'Warehouse & Stocks',
-            href: activeTenantSlug ? `/${activeTenantSlug}/stock-opname` : '#',
-            icon: Building2,
-            children: [
-                {
-                    title: 'Warehouses',
-                    href: activeTenantSlug
-                        ? `/${activeTenantSlug}/warehouses`
-                        : '#',
-                },
-                {
-                    title: 'Rack & Stock Location',
-                    href: activeTenantSlug
-                        ? `/${activeTenantSlug}/stock-locations`
-                        : '#',
-                },
-                {
-                    title: 'Stock Opname',
-                    href: activeTenantSlug
-                        ? `/${activeTenantSlug}/stock-opname`
-                        : '#',
-                },
-            ],
-        });
+        // 1. Dashboard Tenant
+        if (can('tenant.dashboard.view') || true) {
+            mainNavItems.push({
+                title: 'Dashboard',
+                href: activeTenantSlug ? `/${activeTenantSlug}/dashboard` : '/dashboard',
+                icon: LayoutGrid,
+            });
+        }
 
-        mainNavItems.push({
-            title: 'Transaction',
-            href: activeTenantSlug
-                ? `/${activeTenantSlug}/transactions/inbound`
-                : '#',
-            icon: ArrowLeftRight,
-            children: [
-                {
-                    title: 'Inbound Management',
-                    href: activeTenantSlug
-                        ? `/${activeTenantSlug}/transactions/inbound`
-                        : '#',
-                },
-                {
-                    title: 'Outbound Management',
-                    href: activeTenantSlug
-                        ? `/${activeTenantSlug}/transactions/outbound`
-                        : '#',
-                },
-                {
-                    title: 'Stock Transfer',
-                    href: activeTenantSlug
-                        ? `/${activeTenantSlug}/transactions/stock-transfer`
-                        : '#',
-                },
-            ],
-        });
+        // 2. Warehouse & Stocks
+        const warehouseChildren = [];
+        if (can('tenant.warehouses.view')) {
+            warehouseChildren.push({
+                title: 'Warehouses',
+                href: activeTenantSlug ? `/${activeTenantSlug}/warehouses` : '#',
+            });
+        }
+        if (can('tenant.stock_locations.view')) {
+            warehouseChildren.push({
+                title: 'Rack & Stock Location',
+                href: activeTenantSlug ? `/${activeTenantSlug}/stock-locations` : '#',
+            });
+        }
+        if (can('tenant.stock_opname.view')) {
+            warehouseChildren.push({
+                title: 'Stock Opname',
+                href: activeTenantSlug ? `/${activeTenantSlug}/stock-opname` : '#',
+            });
+        }
 
-        mainNavItems.push({
-            title: 'Contact',
-            href: activeTenantSlug
-                ? `/${activeTenantSlug}/contacts/customers`
-                : '#',
-            icon: Users,
-            children: [
-                {
-                    title: 'Customer',
-                    href: `/${activeTenantSlug}/contacts/customers`,
-                },
-                {
-                    title: 'Supplier',
-                    href: `/${activeTenantSlug}/contacts/suppliers`,
-                },
-            ],
-        });
+        if (warehouseChildren.length > 0) {
+            mainNavItems.push({
+                title: 'Warehouse & Stocks',
+                href: warehouseChildren[0].href,
+                icon: Building2,
+                children: warehouseChildren,
+            });
+        }
 
-        mainNavItems.push({
-            title: 'Settings',
-            href: activeTenantSlug
-                ? `/${activeTenantSlug}/settings/company-profile`
-                : '#',
-            icon: Settings,
-            children: [
-                {
-                    title: 'Company Profile',
-                    href: activeTenantSlug
-                        ? `/${activeTenantSlug}/settings/company-profile`
-                        : '#',
-                },
-                {
-                    title: 'User & Roles',
-                    href: activeTenantSlug
-                        ? `/${activeTenantSlug}/settings/users-roles`
-                        : '#',
-                },
-            ],
-        });
+        // 3. Transactions
+        const transactionChildren = [];
+        if (can('tenant.inbound.view')) {
+            transactionChildren.push({
+                title: 'Inbound Management',
+                href: activeTenantSlug ? `/${activeTenantSlug}/transactions/inbound` : '#',
+            });
+        }
+        if (can('tenant.outbound.view')) {
+            transactionChildren.push({
+                title: 'Outbound Management',
+                href: activeTenantSlug ? `/${activeTenantSlug}/transactions/outbound` : '#',
+            });
+        }
+        if (can('tenant.stock_transfer.view')) {
+            transactionChildren.push({
+                title: 'Stock Transfer',
+                href: activeTenantSlug ? `/${activeTenantSlug}/transactions/stock-transfer` : '#',
+            });
+        }
+
+        if (transactionChildren.length > 0) {
+            mainNavItems.push({
+                title: 'Transaction',
+                href: transactionChildren[0].href,
+                icon: ArrowLeftRight,
+                children: transactionChildren,
+            });
+        }
+
+        // 4. Contact
+        const contactChildren = [];
+        if (can('tenant.contacts.customers.view')) {
+            contactChildren.push({
+                title: 'Customer',
+                href: activeTenantSlug ? `/${activeTenantSlug}/contacts/customers` : '#',
+            });
+        }
+        if (can('tenant.contacts.suppliers.view')) {
+            contactChildren.push({
+                title: 'Supplier',
+                href: activeTenantSlug ? `/${activeTenantSlug}/contacts/suppliers` : '#',
+            });
+        }
+
+        if (contactChildren.length > 0) {
+            mainNavItems.push({
+                title: 'Contact',
+                href: contactChildren[0].href,
+                icon: Users,
+                children: contactChildren,
+            });
+        }
+
+        // 5. Tenant Settings
+        const settingsChildren = [];
+        if (can('tenant.company_profile.view')) {
+            settingsChildren.push({
+                title: 'Company Profile',
+                href: activeTenantSlug ? `/${activeTenantSlug}/settings/company-profile` : '#',
+            });
+        }
+        if (can('tenant.users.view') || can('tenant.roles.view')) {
+            settingsChildren.push({
+                title: 'User & Roles',
+                href: activeTenantSlug ? `/${activeTenantSlug}/settings/users-roles` : '#',
+            });
+        }
+
+        if (settingsChildren.length > 0) {
+            mainNavItems.push({
+                title: 'Settings',
+                href: settingsChildren[0].href,
+                icon: Settings,
+                children: settingsChildren,
+            });
+        }
+
     } else {
-        if (can('dashboard.view') || hasRole('superadmin')) {
+        // ----------------------------------------------------
+        // CENTRAL PLATFORM NAVIGATION (Disaring dengan central.*)
+        // ----------------------------------------------------
+        if (can('central.dashboard.view') || hasRole('superadmin')) {
             mainNavItems.push({
                 title: 'Dashboard',
                 href: '/dashboard',
@@ -159,7 +183,7 @@ export function AppSidebar() {
             });
         }
 
-        if (hasRole('superadmin')) {
+        if (can('central.tenants.view') || hasRole('superadmin')) {
             mainNavItems.push({
                 title: 'Tenants',
                 href: '/admin/tenants',
@@ -167,7 +191,7 @@ export function AppSidebar() {
             });
         }
 
-        if (can('users.view') || hasRole('superadmin')) {
+        if (can('central.users.view') || hasRole('superadmin')) {
             mainNavItems.push({
                 title: 'Users',
                 href: '/users',
@@ -175,7 +199,7 @@ export function AppSidebar() {
             });
         }
 
-        if (can('roles.view') || hasRole('superadmin')) {
+        if (can('central.roles.view') || hasRole('superadmin')) {
             mainNavItems.push({
                 title: 'Roles & Permissions',
                 href: '/roles',

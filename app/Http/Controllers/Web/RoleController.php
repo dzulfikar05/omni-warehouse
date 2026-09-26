@@ -15,17 +15,11 @@ class RoleController extends Controller
 {
     protected RoleContract $roleService;
 
-    /**
-     * Inject the RoleContract via constructor.
-     */
     public function __construct(RoleContract $roleService)
     {
         $this->roleService = $roleService;
     }
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request): Response
     {
         $search = $request->input('search');
@@ -39,19 +33,16 @@ class RoleController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create(): Response
     {
+        // Hanya ambil permission Central Admin (abaikan yang berawalan tenant.%)
+        $permissions = Permission::where('name', 'NOT LIKE', 'tenant.%')->get();
+
         return Inertia::render('Roles/Create', [
-            'permissions' => Permission::all(),
+            'permissions' => $permissions,
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(RoleRequest $request): RedirectResponse
     {
         $this->roleService->storeRole($request->validated());
@@ -59,9 +50,6 @@ class RoleController extends Controller
         return to_route('roles.index')->with('success', 'Role created successfully.');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id): Response
     {
         $role = $this->roleService->getRoleDetails($id);
@@ -71,22 +59,17 @@ class RoleController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id): Response
     {
         $role = $this->roleService->getRoleDetails($id);
+        $permissions = Permission::whereNull('tenant_id')->get();
 
         return Inertia::render('Roles/Edit', [
             'role' => $role,
-            'permissions' => Permission::all(),
+            'permissions' => $permissions,
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(RoleRequest $request, string $id): RedirectResponse
     {
         $this->roleService->updateRole($id, $request->validated());
@@ -94,9 +77,6 @@ class RoleController extends Controller
         return to_route('roles.index')->with('success', 'Role updated successfully.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id): RedirectResponse
     {
         $this->roleService->deleteRole($id);
