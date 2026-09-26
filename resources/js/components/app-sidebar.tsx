@@ -31,17 +31,20 @@ export function AppSidebar() {
     const userRoles: string[] = auth?.user?.roles || [];
     const userTenantId = auth?.user?.tenant_id;
 
-    // Helper Spatie
+    // Helper Spatie Permission
     const can = (permission: string) => userPermissions.includes(permission);
     const hasRole = (role: string) => userRoles.includes(role);
+
+    // Penentuan Konteks Platform Central vs Tenant
+    // Jika user TIDAK punya tenant_id DAN role 'superadmin' / punya permission 'central.*', maka dia adalah Central User.
+    const isCentralUser = !userTenantId && (hasRole('superadmin') || userPermissions.some(p => p.startsWith('central.')));
+    const isTenantUser = !isCentralUser && Boolean(current_tenant || userTenantId);
 
     const mainNavItems: NavItem[] = [];
 
     const currentPathSlug = window.location.pathname.split('/')[1];
     const activeTenantSlug =
         current_tenant?.slug || (userTenantId ? currentPathSlug : null);
-
-    const isTenantUser = Boolean(current_tenant || userTenantId);
 
     const activeTenantName =
         current_tenant?.name ||
@@ -55,7 +58,7 @@ export function AppSidebar() {
         // ----------------------------------------------------
 
         // 1. Dashboard Tenant
-        if (can('tenant.dashboard.view') || true) {
+        if (can('tenant.dashboard.view')) {
             mainNavItems.push({
                 title: 'Dashboard',
                 href: activeTenantSlug ? `/${activeTenantSlug}/dashboard` : '/dashboard',
@@ -229,7 +232,7 @@ export function AppSidebar() {
                         <SidebarMenuButton size="lg" asChild>
                             <Link
                                 href={
-                                    activeTenantSlug
+                                    isTenantUser && activeTenantSlug
                                         ? `/${activeTenantSlug}/dashboard`
                                         : '/dashboard'
                                 }
