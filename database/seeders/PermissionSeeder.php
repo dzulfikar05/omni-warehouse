@@ -49,6 +49,10 @@ class PermissionSeeder extends Seeder
             // Submenu: Stock Opname
             'tenant.stock_opname.view', 'tenant.stock_opname.create_session', 'tenant.stock_opname.verify', 'tenant.stock_opname.adjust',
 
+            // Menu Group: Inventory Management
+            // Submenu: Products
+            'tenant.products.view', 'tenant.products.show', 'tenant.products.create', 'tenant.products.edit', 'tenant.products.delete',
+            
             // Menu Group: Transaction
             // Submenu: Inbound Management
             'tenant.inbound.view', 'tenant.inbound.show', 'tenant.inbound.verify_barcode', 'tenant.inbound.putaway', 'tenant.inbound.commit', 'tenant.inbound.hold',
