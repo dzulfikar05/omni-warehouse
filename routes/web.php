@@ -51,6 +51,7 @@ Route::middleware(['auth', 'verified', EnsureCentralUser::class])->group(functio
 */
 require __DIR__ . '/web/tenant/users_roles.php';
 require __DIR__ . '/web/tenant/company_profile.php';
+require __DIR__ . '/web/tenant/warehouses.php';
 require __DIR__ . '/web/tenant/stock_opname.php';
 require __DIR__ . '/web/tenant/customers.php';
 require __DIR__ . '/web/tenant/suppliers.php';

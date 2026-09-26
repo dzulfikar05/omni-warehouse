@@ -11,7 +11,7 @@ const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     layout: (name) => {
-        const pageName = name.toLowerCase();
+        const pageName = typeof name === 'string' ? name.toLowerCase() : '';
         switch (true) {
             // case pageName === 'welcome':
             case pageName === 'welcome' || pageName.endsWith('/welcome') || pageName.endsWith('/registersuccess'):
