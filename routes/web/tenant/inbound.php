@@ -28,3 +28,4 @@ Route::prefix('{tenant_slug}')->middleware(['identify_tenant', 'auth', 'verified
         ->middleware('permission:tenant.inbound.hold')
         ->name('tenant.transactions.inbound.hold');
 });
+
