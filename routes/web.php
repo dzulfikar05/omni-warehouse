@@ -57,6 +57,7 @@ require __DIR__ . '/web/tenant/customers.php';
 require __DIR__ . '/web/tenant/suppliers.php';
 require __DIR__ . '/web/tenant/inbound.php';
 require __DIR__ . '/web/tenant/outbound.php';
+require __DIR__ . '/web/tenant/stock_transfer.php';
 
 
 /*
