@@ -65,53 +65,46 @@ export function AppSidebar() {
                 icon: LayoutGrid,
             });
         }
-        mainNavItems.push({
-            title: 'Inventory Management',
-            href: activeTenantSlug
-                ? `/${activeTenantSlug}/inventory/products`
-                : '#',
-            icon: Building2,
-            children: [
-                {
-                    title: 'Products',
-                    href: activeTenantSlug
-                        ? `/${activeTenantSlug}/inventory/products`
-                        : '#',
-                },
-                {
-                    title: 'Categories',
-                    href: activeTenantSlug
-                        ? `/${activeTenantSlug}/inventory/categories`
-                        : '#',
-                },
-            ],
-        });
+        // mainNavItems.push({
+        //     title: 'Inventory Management',
+        //     href: activeTenantSlug
+        //         ? `/${activeTenantSlug}/inventory/products`
+        //         : '#',
+        //     icon: Building2,
+        //     children: [
+        //         {
+        //             title: 'Products',
+        //             href: activeTenantSlug
+        //                 ? `/${activeTenantSlug}/inventory/products`
+        //                 : '#',
+        //         },
+        //         {
+        //             title: 'Categories',
+        //             href: activeTenantSlug
+        //                 ? `/${activeTenantSlug}/inventory/categories`
+        //                 : '#',
+        //         },
+        //     ],
+        // });
 
-        mainNavItems.push({
-            title: 'Warehouse & Stocks',
-            href: activeTenantSlug ? `/${activeTenantSlug}/stock-opname` : '#',
-            icon: Building2,
-            children: [
-                {
-                    title: 'Warehouses',
-                    href: activeTenantSlug
-                        ? `/${activeTenantSlug}/warehouses`
-                        : '#',
-                },
-                {
-                    title: 'Rack & Stock Location',
-                    href: activeTenantSlug
-                        ? `/${activeTenantSlug}/stock-locations`
-                        : '#',
-                },
-                {
-                    title: 'Stock Opname',
-                    href: activeTenantSlug
-                        ? `/${activeTenantSlug}/stock-opname`
-                        : '#',
-                },
-            ],
-        });
+        const inventoryChildren = [];
+        if (can('tenant.products.view')) {
+            inventoryChildren.push({
+                title: 'Products',
+                href: activeTenantSlug
+                    ? `/${activeTenantSlug}/inventory/products`
+                    : '#',
+            });
+        }
+
+        if (inventoryChildren.length > 0) {
+            mainNavItems.push({
+                title: 'Inventory Management',
+                href: inventoryChildren[0].href,
+                icon: Building2,
+                children: inventoryChildren,
+            });
+        }
 
         // 2. Warehouse & Stocks
         const warehouseChildren = [];
