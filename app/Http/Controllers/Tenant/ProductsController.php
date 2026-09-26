@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Products;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\Category;
 
 class ProductsController extends Controller
 {
@@ -15,8 +16,10 @@ class ProductsController extends Controller
     public function index(Request $request)
     {
         $tenantSlug = $request->route('tenant_slug');
-        $search = $request->input('search');
-        $perPage = (int) $request->input('per_page', 10);
+        $search     = $request->input('search');
+        $categoryId = $request->input('category_id');
+        $sortBy     = $request->input('sort_by', 'latest');
+        $perPage    = (int) $request->input('per_page', 10);
 
         // Batasi pilihan jumlah data per halaman
         if (! in_array($perPage, [10, 25, 50])) {
@@ -24,28 +27,54 @@ class ProductsController extends Controller
         }
 
         $products = Products::query()
+            ->with('category')
+            // Filter Search
             ->when($search, function ($query, $search) {
-                $query->where(function ($query) use ($search) {
-                    $query->where('name', 'like', "%{$search}%")
-                        ->orWhere('sku', 'like', "%{$search}%");
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('id', 'like', "%{$search}%")
+                        ->orWhereHas('category', function ($catQuery) use ($search) {
+                            $catQuery->where('name', 'like', "%{$search}%");
+                        });
                 });
             })
-            ->latest()
+            // Filter Berdasarkan Kategori
+            ->when($categoryId, function ($query, $categoryId) {
+                $query->where('category_id', $categoryId);
+            })
+            // Filter Sorting
+            ->when($sortBy, function ($query, $sortBy) {
+                match ($sortBy) {
+                    'oldest'    => $query->oldest(),
+                    'name_asc'  => $query->orderBy('name', 'asc'),
+                    'name_desc' => $query->orderBy('name', 'desc'),
+                    default     => $query->latest(),
+                };
+            }, function ($query) {
+                $query->latest();
+            })
             ->paginate($perPage)
             ->withQueryString();
+
+        // Ambil daftar kategori untuk dropdown filter di frontend
+        // Sesuaikan nama Model 'Category' jika di project Anda berbeda (misal: Categories)
+        $categories = Category::select('id', 'name')->get();
 
         return Inertia::render(
             'Tenant/Inventory Management/Products/index',
             [
-                'tenant_slug' => $tenantSlug, // <-- DIKIRIM KE FRONTEND
-                'products' => $products,
-                'filters' => [
-                    'search' => $search,
+                'tenant_slug' => $tenantSlug,
+                'products'    => $products,
+                'categories'  => $categories,
+                'filters'     => [
+                    'search'      => $search,
+                    'category_id' => $categoryId,
+                    'sort_by'     => $sortBy,
+                    'per_page'    => (string) $perPage,
                 ],
             ]
         );
     }
-
     /**
      * Menampilkan form untuk menambah produk baru.
      */
@@ -54,7 +83,7 @@ class ProductsController extends Controller
         return Inertia::render(
             'Tenant/Inventory Management/Products/create',
             [
-                'tenant_slug' => $request->route('tenant_slug'), // <-- TAMBAHKAN INI
+                'tenant_slug' => $request->route('tenant_slug'),
             ]
         );
     }
@@ -65,14 +94,14 @@ class ProductsController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'category_id' => ['required'],
-            'name' => ['required', 'string', 'max:255'],
+            'category_id' => ['required', 'exists:categories,id'],
+            'name'        => ['required', 'string', 'max:255'],
         ]);
 
         Products::create([
-            'tenant_id' => app('current_tenant')->id,
+            'tenant_id'   => app('current_tenant')->id,
             'category_id' => $validated['category_id'],
-            'name' => $validated['name'],
+            'name'        => $validated['name'],
         ]);
 
         return redirect()
@@ -81,17 +110,19 @@ class ProductsController extends Controller
             ])
             ->with('success', 'Product created successfully.');
     }
-    
+
     /**
      * Menampilkan detail produk.
      */
     public function show(Request $request, $tenant_slug, Products $product)
     {
+        $product->load('category');
+
         return Inertia::render(
             'Tenant/Inventory Management/Products/show',
             [
-                'tenant_slug' => $tenant_slug, 
-                'product' => $product,
+                'tenant_slug' => $tenant_slug,
+                'product'     => $product,
             ]
         );
     }
@@ -105,7 +136,7 @@ class ProductsController extends Controller
             'Tenant/Inventory Management/Products/edit',
             [
                 'tenant_slug' => $tenant_slug,
-                'product' => $product,
+                'product'     => $product,
             ]
         );
     }
@@ -119,8 +150,8 @@ class ProductsController extends Controller
         Products $product
     ) {
         $validated = $request->validate([
-            'category_id' => ['required'],
-            'name' => ['required', 'string', 'max:255'],
+            'category_id' => ['required', 'exists:categories,id'],
+            'name'        => ['required', 'string', 'max:255'],
         ]);
 
         $product->update($validated);

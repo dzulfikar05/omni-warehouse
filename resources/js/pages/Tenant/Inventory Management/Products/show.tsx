@@ -3,6 +3,7 @@ import { Head, Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 
 interface Product {
+    category: any;
     id: number;
     name: string;
     category_id: number;
@@ -62,7 +63,7 @@ export default function Show({
                             </p>
 
                             <p className="mt-1 font-medium text-foreground">
-                                {product.category_id}
+                                {product.category?.name || 'N/A'}
                             </p>
                         </div>
 

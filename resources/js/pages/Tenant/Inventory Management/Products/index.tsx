@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,11 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
 
 import {
     Plus,
@@ -17,12 +22,20 @@ import {
     Eye,
     Pencil,
     Trash2,
+    X,
 } from 'lucide-react';
+import debounce from 'lodash/debounce';
+
+interface Category {
+    id: number;
+    name: string;
+}
 
 interface Product {
     id: number;
     name: string;
     category_id: number;
+    category?: Category;
     created_at: string;
 }
 
@@ -37,31 +50,86 @@ interface PaginatedProducts {
 interface Props {
     tenant_slug: string;
     products: PaginatedProducts;
+    categories: Category[]; // Props baru untuk opsi filter kategori
     filters: {
         search?: string;
+        category_id?: string;
+        sort_by?: string;
+        per_page?: string;
     };
 }
 
 export default function Index({
     tenant_slug,
     products,
+    categories = [],
     filters,
 }: Props) {
     const [search, setSearch] = useState(filters.search ?? '');
+    const [categoryId, setCategoryId] = useState(filters.category_id ?? '');
+    const [sortBy, setSortBy] = useState(filters.sort_by ?? 'latest');
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-    const handleSearch = (value: string) => {
-        setSearch(value);
+    // Helper untuk mengirim request navigasi Inertia
+    const updateQueryParams = (newParams: Record<string, any>) => {
+        const queryParams = {
+            search: search || undefined,
+            category_id: categoryId || undefined,
+            sort_by: sortBy !== 'latest' ? sortBy : undefined,
+            per_page: products.per_page,
+            ...newParams,
+        };
 
         router.get(
             `/${tenant_slug}/inventory/products`,
-            {
-                search: value || undefined,
-            },
+            queryParams,
             {
                 preserveState: true,
                 replace: true,
-            },
+            }
         );
+    };
+
+    // Debounce pencarian
+    const debouncedSearch = useCallback(
+        debounce((value: string) => {
+            updateQueryParams({ search: value || undefined, page: 1 });
+        }, 400),
+        [tenant_slug, categoryId, sortBy, products.per_page]
+    );
+
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setSearch(value);
+        debouncedSearch(value);
+    };
+
+    const handlePerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        updateQueryParams({ per_page: e.target.value, page: 1 });
+    };
+
+    const handlePagination = (page: number) => {
+        updateQueryParams({ page });
+    };
+
+    const handleApplyFilter = () => {
+        updateQueryParams({
+            category_id: categoryId || undefined,
+            sort_by: sortBy !== 'latest' ? sortBy : undefined,
+            page: 1,
+        });
+        setIsFilterOpen(false);
+    };
+
+    const handleResetFilter = () => {
+        setCategoryId('');
+        setSortBy('latest');
+        updateQueryParams({
+            category_id: undefined,
+            sort_by: undefined,
+            page: 1,
+        });
+        setIsFilterOpen(false);
     };
 
     const handleDelete = (productId: number) => {
@@ -70,9 +138,11 @@ export default function Index({
         }
 
         router.delete(
-            `/${tenant_slug}/inventory/products/${productId}`,
+            `/${tenant_slug}/inventory/products/${productId}`
         );
     };
+
+    const isFilterActive = Boolean(filters.category_id || (filters.sort_by && filters.sort_by !== 'latest'));
 
     return (
         <>
@@ -103,20 +173,8 @@ export default function Index({
 
                             <select
                                 className="rounded-md border border-border bg-card px-2 py-1 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                defaultValue={products.per_page}
-                                onChange={(e) => {
-                                    router.get(
-                                        `/${tenant_slug}/inventory/products`,
-                                        {
-                                            search: search || undefined,
-                                            per_page: e.target.value,
-                                        },
-                                        {
-                                            preserveState: true,
-                                            replace: true,
-                                        },
-                                    );
-                                }}
+                                value={products.per_page}
+                                onChange={handlePerPageChange}
                             >
                                 <option value="10">10</option>
                                 <option value="25">25</option>
@@ -133,20 +191,95 @@ export default function Index({
                                 <Input
                                     placeholder="Search..."
                                     value={search}
-                                    onChange={(e) =>
-                                        handleSearch(e.target.value)
-                                    }
+                                    onChange={handleSearchChange}
                                     className="pl-9"
                                 />
                             </div>
 
-                            <Button
-                                variant="outline"
-                                className="flex items-center space-x-2"
-                            >
-                                <SlidersHorizontal className="h-4 w-4" />
-                                <span>Filter</span>
-                            </Button>
+                            {/* Filter Popover */}
+                            <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant={isFilterActive ? "default" : "outline"}
+                                        className="relative flex items-center space-x-2"
+                                    >
+                                        <SlidersHorizontal className="h-4 w-4" />
+                                        <span>Filter</span>
+                                        {isFilterActive && (
+                                            <span className="ml-1 rounded-full bg-primary-foreground text-primary px-1.5 py-0.5 text-xs font-bold">
+                                                •
+                                            </span>
+                                        )}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-80 p-4" align="end">
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between border-b pb-2">
+                                            <h4 className="font-semibold text-sm">Filter Products</h4>
+                                            {isFilterActive && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={handleResetFilter}
+                                                    className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
+                                                >
+                                                    Reset
+                                                </Button>
+                                            )}
+                                        </div>
+
+                                        {/* Filter Kategori */}
+                                        <div className="space-y-1.5">
+                                            <label className="text-xs font-medium text-muted-foreground">
+                                                Category
+                                            </label>
+                                            <select
+                                                className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                                value={categoryId}
+                                                onChange={(e) => setCategoryId(e.target.value)}
+                                            >
+                                                <option value="">All Categories</option>
+                                                {categories.map((cat) => (
+                                                    <option key={cat.id} value={cat.id}>
+                                                        {cat.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        {/* Filter Urutan / Sort */}
+                                        <div className="space-y-1.5">
+                                            <label className="text-xs font-medium text-muted-foreground">
+                                                Sort By
+                                            </label>
+                                            <select
+                                                className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                                value={sortBy}
+                                                onChange={(e) => setSortBy(e.target.value)}
+                                            >
+                                                <option value="latest">Newest First</option>
+                                                <option value="oldest">Oldest First</option>
+                                                <option value="name_asc">Name (A-Z)</option>
+                                                <option value="name_desc">Name (Z-A)</option>
+                                            </select>
+                                        </div>
+
+                                        {/* Action Buttons */}
+                                        <div className="flex justify-end space-x-2 pt-2 border-t">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setIsFilterOpen(false)}
+                                            >
+                                                Cancel
+                                            </Button>
+                                            <Button size="sm" onClick={handleApplyFilter}>
+                                                Apply
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
                         </div>
                     </div>
                 </div>
@@ -166,7 +299,7 @@ export default function Index({
                                     </th>
 
                                     <th className="p-4 font-semibold">
-                                        Category
+                                        Category Name
                                     </th>
 
                                     <th className="p-4 font-semibold">
@@ -187,7 +320,7 @@ export default function Index({
                                             className="transition-colors hover:bg-muted/50"
                                         >
                                             <td className="p-4 font-medium text-foreground">
-                                                {product.id}
+                                                PRD-00{product.id}
                                             </td>
 
                                             <td className="p-4 text-foreground">
@@ -195,12 +328,12 @@ export default function Index({
                                             </td>
 
                                             <td className="p-4 text-muted-foreground">
-                                                {product.category_id}
+                                                {product.category?.name || 'N/A'}
                                             </td>
 
                                             <td className="p-4 text-muted-foreground">
                                                 {new Date(
-                                                    product.created_at,
+                                                    product.created_at
                                                 ).toLocaleDateString('en-GB')}
                                             </td>
 
@@ -248,7 +381,7 @@ export default function Index({
                                                         <DropdownMenuItem
                                                             onClick={() =>
                                                                 handleDelete(
-                                                                    product.id,
+                                                                    product.id
                                                                 )
                                                             }
                                                             className="flex cursor-pointer items-center text-red-600 focus:text-red-600"
@@ -291,17 +424,8 @@ export default function Index({
                                 size="sm"
                                 disabled={products.current_page === 1}
                                 onClick={() =>
-                                    router.get(
-                                        `/${tenant_slug}/inventory/products`,
-                                        {
-                                            page:
-                                                products.current_page - 1,
-                                            search: search || undefined,
-                                        },
-                                        {
-                                            preserveState: true,
-                                            replace: true,
-                                        },
+                                    handlePagination(
+                                        products.current_page - 1
                                     )
                                 }
                             >
@@ -316,17 +440,8 @@ export default function Index({
                                     products.last_page
                                 }
                                 onClick={() =>
-                                    router.get(
-                                        `/${tenant_slug}/inventory/products`,
-                                        {
-                                            page:
-                                                products.current_page + 1,
-                                            search: search || undefined,
-                                        },
-                                        {
-                                            preserveState: true,
-                                            replace: true,
-                                        },
+                                    handlePagination(
+                                        products.current_page + 1
                                     )
                                 }
                             >

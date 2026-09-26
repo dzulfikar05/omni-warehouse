@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Category;
 
 class Products extends Model
 {
@@ -11,6 +12,12 @@ class Products extends Model
 
     protected $table = 'products';
 
-    protected $guarded = [];
+    protected $with = ['category'];
 
+    public function category()
+    {
+        return $this->belongsTo(Category::class, 'category_id');
+    }
+
+    protected $guarded = [];
 }
