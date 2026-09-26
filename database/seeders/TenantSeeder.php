@@ -53,6 +53,10 @@ class TenantSeeder extends Seeder
             ]
         );
 
+        // Assign semua permission tenant ke Admin Gudang secara otomatis
+        $tenantPermissions = \Spatie\Permission\Models\Permission::where('name', 'like', 'tenant.%')->get();
+        $adminRole->syncPermissions($tenantPermissions);
+
         // Hapus 'role_id' karena Spatie menggunakan tabel pivot model_has_roles
         $user = User::firstOrCreate(
             ['email' => 'budi@demo-tenant.com'],
