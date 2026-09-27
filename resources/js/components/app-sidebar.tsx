@@ -65,27 +65,6 @@ export function AppSidebar() {
                 icon: LayoutGrid,
             });
         }
-        // mainNavItems.push({
-        //     title: 'Inventory Management',
-        //     href: activeTenantSlug
-        //         ? `/${activeTenantSlug}/inventory/products`
-        //         : '#',
-        //     icon: Building2,
-        //     children: [
-        //         {
-        //             title: 'Products',
-        //             href: activeTenantSlug
-        //                 ? `/${activeTenantSlug}/inventory/products`
-        //                 : '#',
-        //         },
-        //         {
-        //             title: 'Categories',
-        //             href: activeTenantSlug
-        //                 ? `/${activeTenantSlug}/inventory/categories`
-        //                 : '#',
-        //         },
-        //     ],
-        // });
 
         const inventoryChildren = [];
         if (can('tenant.products.view')) {
@@ -93,6 +72,15 @@ export function AppSidebar() {
                 title: 'Products',
                 href: activeTenantSlug
                     ? `/${activeTenantSlug}/inventory/products`
+                    : '#',
+            });
+        }
+
+        if (can('tenant.categories.view')) {
+            inventoryChildren.push({
+                title: 'Categories',
+                href: activeTenantSlug
+                    ? `/${activeTenantSlug}/inventory/categories`
                     : '#',
             });
         }
