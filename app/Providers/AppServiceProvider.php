@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Contracts\CompanyProfileContract;
 use App\Contracts\CustomerContract;
 use App\Contracts\InboundContract;
+use App\Contracts\OutboundContract;
 use App\Contracts\RoleContract;
 use App\Contracts\WarehousesContract;
 use App\Contracts\StockOpnameContract;
@@ -15,6 +16,7 @@ use App\Contracts\UserContract;
 use App\Services\CompanyProfileService;
 use App\Services\CustomerService;
 use App\Services\InboundService;
+use App\Services\OutboundService;
 use App\Services\RoleService;
 use App\Services\WarehousesService;
 use App\Services\StockOpnameService;
@@ -45,6 +47,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(CustomerContract::class, CustomerService::class);
         $this->app->bind(SupplierContract::class, SupplierService::class);
         $this->app->bind(InboundContract::class, InboundService::class);
+        $this->app->bind(OutboundContract::class, OutboundService::class);
     }
 
     /**

@@ -4,17 +4,24 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Category extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'id',
+        'tenant_id',
+        'name',
+        'desc',
+        'created_by',
+        'created_at',
+        'updated_at',
+    ];
 
-    public function creator(): BelongsTo
+    public function products()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->hasMany(Products::class);
     }
 
 }
