@@ -66,6 +66,34 @@ export function AppSidebar() {
             });
         }
 
+        const inventoryChildren = [];
+        if (can('tenant.products.view')) {
+            inventoryChildren.push({
+                title: 'Products',
+                href: activeTenantSlug
+                    ? `/${activeTenantSlug}/inventory/products`
+                    : '#',
+            });
+        }
+
+        if (can('tenant.categories.view')) {
+            inventoryChildren.push({
+                title: 'Categories',
+                href: activeTenantSlug
+                    ? `/${activeTenantSlug}/inventory/categories`
+                    : '#',
+            });
+        }
+
+        if (inventoryChildren.length > 0) {
+            mainNavItems.push({
+                title: 'Inventory Management',
+                href: inventoryChildren[0].href,
+                icon: Building2,
+                children: inventoryChildren,
+            });
+        }
+
         // 2. Warehouse & Stocks
         const warehouseChildren = [];
         if (can('tenant.warehouses.view')) {
