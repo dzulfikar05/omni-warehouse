@@ -7,6 +7,7 @@ use App\Contracts\CustomerContract;
 use App\Contracts\InboundContract;
 use App\Contracts\OutboundContract;
 use App\Contracts\RoleContract;
+use App\Contracts\StockTransferContract;
 use App\Contracts\WarehousesContract;
 use App\Contracts\StockOpnameContract;
 use App\Contracts\SupplierContract;
@@ -18,6 +19,7 @@ use App\Services\CustomerService;
 use App\Services\InboundService;
 use App\Services\OutboundService;
 use App\Services\RoleService;
+use App\Services\StockTransferService;
 use App\Services\WarehousesService;
 use App\Services\StockOpnameService;
 use App\Services\SupplierService;
@@ -48,6 +50,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(SupplierContract::class, SupplierService::class);
         $this->app->bind(InboundContract::class, InboundService::class);
         $this->app->bind(OutboundContract::class, OutboundService::class);
+        $this->app->bind(StockTransferContract::class, StockTransferService::class);
     }
 
     /**
