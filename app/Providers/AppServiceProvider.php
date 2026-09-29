@@ -6,6 +6,10 @@ use App\Contracts\CompanyProfileContract;
 use App\Contracts\CustomerContract;
 use App\Contracts\InboundContract;
 use App\Contracts\OutboundContract;
+use App\Contracts\StockMovementReportContract;
+use App\Contracts\StockSummaryReportContract;
+use App\Contracts\ValuationAssetReportContract;
+use App\Contracts\InboundOutboundReportContract;
 use App\Contracts\RoleContract;
 use App\Contracts\WarehousesContract;
 use App\Contracts\StockOpnameContract;
@@ -15,8 +19,11 @@ use App\Contracts\TenantUserRoleContract;
 use App\Contracts\UserContract;
 use App\Services\CompanyProfileService;
 use App\Services\CustomerService;
+use App\Services\InboundOutboundReportService;
 use App\Services\InboundService;
 use App\Services\OutboundService;
+use App\Services\StockMovementReportService;
+use App\Services\StockSummaryReportService;
 use App\Services\RoleService;
 use App\Services\WarehousesService;
 use App\Services\StockOpnameService;
@@ -24,6 +31,7 @@ use App\Services\SupplierService;
 use App\Services\TenantService;
 use App\Services\TenantUserRoleService;
 use App\Services\UserService;
+use App\Services\ValuationAssetReportService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -48,6 +56,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(SupplierContract::class, SupplierService::class);
         $this->app->bind(InboundContract::class, InboundService::class);
         $this->app->bind(OutboundContract::class, OutboundService::class);
+        $this->app->bind(StockSummaryReportContract::class, StockSummaryReportService::class);
+        $this->app->bind(StockMovementReportContract::class, StockMovementReportService::class);
+        $this->app->bind(ValuationAssetReportContract::class, ValuationAssetReportService::class);
+        $this->app->bind(InboundOutboundReportContract::class, InboundOutboundReportService::class);
     }
 
     /**

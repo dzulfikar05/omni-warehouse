@@ -17,6 +17,11 @@ class InventoryStock extends Model
         return $this->belongsTo(Product::class);
     }
 
+    public function sku(): BelongsTo
+    {
+        return $this->belongsTo(Sku::class);
+    }
+
     public function location(): BelongsTo
     {
         return $this->belongsTo(Location::class);
