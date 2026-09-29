@@ -3,6 +3,7 @@ import {
     ArrowLeftRight,
     BookOpen,
     Building2,
+    FileText,
     FolderGit2,
     LayoutGrid,
     Settings,
@@ -36,7 +37,6 @@ export function AppSidebar() {
     const hasRole = (role: string) => userRoles.includes(role);
 
     // Penentuan Konteks Platform Central vs Tenant
-    // Jika user TIDAK punya tenant_id DAN role 'superadmin' / punya permission 'central.*', maka dia adalah Central User.
     const isCentralUser = !userTenantId && (hasRole('superadmin') || userPermissions.some(p => p.startsWith('central.')));
     const isTenantUser = !isCentralUser && Boolean(current_tenant || userTenantId);
 
@@ -66,6 +66,7 @@ export function AppSidebar() {
             });
         }
 
+        // 2. Inventory Management
         const inventoryChildren = [];
         if (can('tenant.products.view')) {
             inventoryChildren.push({
@@ -94,7 +95,7 @@ export function AppSidebar() {
             });
         }
 
-        // 2. Warehouse & Stocks
+        // 3. Warehouse & Stocks
         const warehouseChildren = [];
         if (can('tenant.warehouses.view')) {
             warehouseChildren.push({
@@ -124,7 +125,7 @@ export function AppSidebar() {
             });
         }
 
-        // 3. Transactions
+        // 4. Transactions
         const transactionChildren = [];
         if (can('tenant.inbound.view')) {
             transactionChildren.push({
@@ -154,7 +155,7 @@ export function AppSidebar() {
             });
         }
 
-        // 4. Contact
+        // 5. Contact
         const contactChildren = [];
         if (can('tenant.contacts.customers.view')) {
             contactChildren.push({
@@ -178,7 +179,43 @@ export function AppSidebar() {
             });
         }
 
-        // 5. Tenant Settings
+        // 6. Reports (Fitur Laporan)
+        const reportChildren = [];
+        if (can('tenant.stock_summary.view')) {
+            reportChildren.push({
+                title: 'Stock Summary Report',
+                href: activeTenantSlug ? `/${activeTenantSlug}/reports/stock-summary` : '#',
+            });
+        }
+        if (can('tenant.stock_movement.view')) {
+            reportChildren.push({
+                title: 'Stock Movement',
+                href: activeTenantSlug ? `/${activeTenantSlug}/reports/stock-movement` : '#',
+            });
+        }
+        if (can('tenant.valuation_asset.view')) {
+            reportChildren.push({
+                title: 'Valuation & Asset Report',
+                href: activeTenantSlug ? `/${activeTenantSlug}/reports/valuation-asset` : '#',
+            });
+        }
+        if (can('tenant.inbound_outbound.view')) {
+            reportChildren.push({
+                title: 'Inbound / Outbound Summary',
+                href: activeTenantSlug ? `/${activeTenantSlug}/reports/inbound-outbound` : '#',
+            });
+        }
+
+        if (reportChildren.length > 0) {
+            mainNavItems.push({
+                title: 'Reports',
+                href: reportChildren[0].href,
+                icon: FileText,
+                children: reportChildren,
+            });
+        }
+
+        // 7. Tenant Settings
         const settingsChildren = [];
         if (can('tenant.company_profile.view')) {
             settingsChildren.push({

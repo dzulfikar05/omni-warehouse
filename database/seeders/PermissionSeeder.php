@@ -72,6 +72,18 @@ class PermissionSeeder extends Seeder
             // Menu Group: Settings
             // Submenu: Company Profile
             'tenant.company_profile.view', 'tenant.company_profile.edit', 'tenant.company_profile.delete_logo',
+
+            // Menu Group: Reports
+            // Submenu: Stock Summary
+            'tenant.stock_summary.view',
+            // Submenu: Stock Movement
+            'tenant.stock_movement.view',
+            // Submenu: Valuation Asset
+            'tenant.valuation_asset.view',
+            // Submenu: Inbound & Outbound
+            'tenant.inbound_outbound.view',
+
+
             // Submenu: User & Roles
             'tenant.users.view', 'tenant.users.show', 'tenant.users.create', 'tenant.users.edit', 'tenant.users.delete',
             'tenant.roles.view', 'tenant.roles.show', 'tenant.roles.create', 'tenant.roles.edit', 'tenant.roles.delete',

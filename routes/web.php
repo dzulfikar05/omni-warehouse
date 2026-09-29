@@ -58,6 +58,10 @@ require __DIR__ . '/web/tenant/suppliers.php';
 require __DIR__ . '/web/tenant/inbound.php';
 require __DIR__ . '/web/tenant/products.php';
 require __DIR__ . '/web/tenant/categories.php';
+require __DIR__ . '/web/tenant/stock_summary.php';
+require __DIR__ . '/web/tenant/stock_movement.php';
+require __DIR__ . '/web/tenant/valuation_asset.php';
+require __DIR__ . '/web/tenant/inbound_outbound.php';
 require __DIR__ . '/web/tenant/outbound.php';
 require __DIR__ . '/web/tenant/stock_transfer.php';
 
