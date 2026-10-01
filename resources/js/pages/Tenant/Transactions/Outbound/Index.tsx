@@ -70,7 +70,7 @@ export default function Index({ manifests: initialManifests }: OutboundIndexProp
                                 <span>{activeTenantName}</span>
                             </div>
 
-                            {can('outbound.create') && (
+                            {can('tenant.outbound.create') && (
                                 <Button
                                     onClick={() => setIsCreateModalOpen(true)}
                                     className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-4 h-9 rounded-xl shadow-md gap-1.5 cursor-pointer"

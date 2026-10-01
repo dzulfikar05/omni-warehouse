@@ -57,7 +57,7 @@ class PermissionSeeder extends Seeder
 
             // Menu Group: Transaction
             // Submenu: Inbound Management
-            'tenant.inbound.view', 'tenant.inbound.show', 'tenant.inbound.verify_barcode', 'tenant.inbound.putaway', 'tenant.inbound.commit', 'tenant.inbound.hold',
+            'tenant.inbound.view', 'tenant.inbound.show', 'tenant.inbound.create', 'tenant.inbound.verify_barcode', 'tenant.inbound.putaway', 'tenant.inbound.commit', 'tenant.inbound.hold',
             // Submenu: Outbound Management
             'tenant.outbound.view', 'tenant.outbound.show', 'tenant.outbound.create', 'tenant.outbound.edit', 'tenant.outbound.commit', 'tenant.outbound.hold',
             // Submenu: Stock Transfer
@@ -108,6 +108,13 @@ class PermissionSeeder extends Seeder
         // Superadmin central diberikan seluruh permission central
         $centralPermissionsModels = Permission::whereIn('name', $centralPermissions)->get();
         $superadminRole->syncPermissions($centralPermissionsModels);
+
+        // Sync seluruh permission tenant ke semua role tenant yang ada di database
+        $allTenantPermissions = Permission::where('name', 'LIKE', 'tenant.%')->get();
+        $tenantRoles = Role::whereNotNull('tenant_id')->get();
+        foreach ($tenantRoles as $tRole) {
+            $tRole->syncPermissions($allTenantPermissions);
+        }
 
         // --- User Central Admin ---
         $user = User::firstOrCreate(
