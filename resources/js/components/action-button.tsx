@@ -25,6 +25,7 @@ interface ActionButtonProps {
     label: string; // Nama data (misal: "Admin", "User A")
     showUrl?: string;
     editUrl?: string;
+    onEdit?: () => void;
     onDelete: () => void;
     canShow?: boolean;
     canEdit?: boolean;
@@ -35,6 +36,7 @@ export function ActionButton({
     label,
     showUrl,
     editUrl,
+    onEdit,
     onDelete,
     canShow = false,
     canEdit = false,
@@ -43,7 +45,7 @@ export function ActionButton({
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="outline">Action</Button>
+                <Button variant="outline" size="sm">Action</Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-[160px]">
 
@@ -55,11 +57,22 @@ export function ActionButton({
                     </DropdownMenuItem>
                 )}
 
-                {canEdit && editUrl && (
-                    <DropdownMenuItem asChild>
-                        <Link href={editUrl} className="flex cursor-pointer items-center">
-                            <Pencil className="mr-2 h-4 w-4" /> Edit Data
-                        </Link>
+                {canEdit && (editUrl || onEdit) && (
+                    <DropdownMenuItem
+                        asChild={!!editUrl}
+                        onSelect={() => {
+                            if (onEdit) onEdit();
+                        }}
+                    >
+                        {editUrl ? (
+                            <Link href={editUrl} className="flex cursor-pointer items-center">
+                                <Pencil className="mr-2 h-4 w-4" /> Edit Data
+                            </Link>
+                        ) : (
+                            <div className="flex cursor-pointer items-center w-full">
+                                <Pencil className="mr-2 h-4 w-4" /> Edit Data
+                            </div>
+                        )}
                     </DropdownMenuItem>
                 )}
 

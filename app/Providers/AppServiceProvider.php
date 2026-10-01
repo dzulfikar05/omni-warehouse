@@ -12,6 +12,7 @@ use App\Contracts\ValuationAssetReportContract;
 use App\Contracts\InboundOutboundReportContract;
 use App\Contracts\RoleContract;
 use App\Contracts\StockTransferContract;
+use App\Contracts\LocationsContract;
 use App\Contracts\WarehousesContract;
 use App\Contracts\StockOpnameContract;
 use App\Contracts\SupplierContract;
@@ -27,6 +28,7 @@ use App\Services\StockMovementReportService;
 use App\Services\StockSummaryReportService;
 use App\Services\RoleService;
 use App\Services\StockTransferService;
+use App\Services\LocationsService;
 use App\Services\WarehousesService;
 use App\Services\StockOpnameService;
 use App\Services\SupplierService;
@@ -62,6 +64,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(StockMovementReportContract::class, StockMovementReportService::class);
         $this->app->bind(ValuationAssetReportContract::class, ValuationAssetReportService::class);
         $this->app->bind(InboundOutboundReportContract::class, InboundOutboundReportService::class);
+        $this->app->bind(LocationsContract::class, LocationsService::class);
         $this->app->bind(StockTransferContract::class, StockTransferService::class);
     }
 
