@@ -9,7 +9,7 @@ import { PageHeader } from '@/components/page-header';
 import { toast } from 'sonner';
 import { debounce } from 'lodash';
 import { usePermission } from '@/utils/permission';
-import { Plus, Truck } from 'lucide-react';
+import { Plus, Truck, UserPlus, PhoneCall } from 'lucide-react';
 
 interface Supplier {
     id: number;
@@ -17,7 +17,14 @@ interface Supplier {
     pic?: string;
     phone?: string;
     email?: string;
+    notes?: string;
     created_at: string;
+}
+
+interface SupplierStats {
+    total_suppliers?: number;
+    new_this_month?: number;
+    has_contact?: number;
 }
 
 interface PageProps {
@@ -28,17 +35,18 @@ interface PageProps {
         last_page: number;
         total: number;
     };
+    stats?: SupplierStats;
     filters: { search?: string; per_page?: string };
 }
 
-export default function SupplierIndex({ suppliers, filters }: PageProps) {
+export default function SupplierIndex({ suppliers, stats, filters }: PageProps) {
     const { flash, current_tenant, auth } = usePage().props as any;
     const { can } = usePermission();
 
     const [search, setSearch] = useState(filters?.search || '');
     const [perPage, setPerPage] = useState(filters?.per_page || '10');
 
-    const currentPathSlug = window.location.pathname.split('/')[1];
+    const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
 
     // Tracker cegah toast ganda
@@ -92,15 +100,41 @@ export default function SupplierIndex({ suppliers, filters }: PageProps) {
                     }
                 />
 
-                {/* Stat Cards */}
+                {/* Stat Cards - Disesuaikan dengan Database (Tanpa status) */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
                             <p className="text-xs font-medium text-muted-foreground">Total Suppliers</p>
-                            <h3 className="mt-1 text-2xl font-bold text-foreground">{suppliers.total || 0}</h3>
+                            <h3 className="mt-1 text-2xl font-bold text-foreground">
+                                {stats?.total_suppliers ?? suppliers.total ?? 0}
+                            </h3>
                         </div>
                         <div className="rounded-xl bg-blue-50 p-3 text-blue-600 dark:bg-blue-950/50">
                             <Truck size={22} />
+                        </div>
+                    </div>
+
+                    <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
+                        <div>
+                            <p className="text-xs font-medium text-muted-foreground">New This Month</p>
+                            <h3 className="mt-1 text-2xl font-bold text-foreground">
+                                {stats?.new_this_month ?? 0}
+                            </h3>
+                        </div>
+                        <div className="rounded-xl bg-purple-50 p-3 text-purple-600 dark:bg-purple-950/50">
+                            <UserPlus size={22} />
+                        </div>
+                    </div>
+
+                    <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
+                        <div>
+                            <p className="text-xs font-medium text-muted-foreground">With Contact Info</p>
+                            <h3 className="mt-1 text-2xl font-bold text-foreground">
+                                {stats?.has_contact ?? 0}
+                            </h3>
+                        </div>
+                        <div className="rounded-xl bg-emerald-50 p-3 text-emerald-600 dark:bg-emerald-950/50">
+                            <PhoneCall size={22} />
                         </div>
                     </div>
                 </div>
@@ -118,6 +152,7 @@ export default function SupplierIndex({ suppliers, filters }: PageProps) {
                     }}
                 />
 
+                {/* DataTable Asli Kembali Seperti Semula */}
                 <DataTable
                     headers={['#', 'SUPPLIER NAME', 'PIC', 'CONTACT INFO', 'ACTIONS']}
                     data={suppliers.data}

@@ -9,7 +9,7 @@ import { PageHeader } from '@/components/page-header';
 import { toast } from 'sonner';
 import { debounce } from 'lodash';
 import { usePermission } from '@/utils/permission';
-import { Plus, UserCheck } from 'lucide-react';
+import { Plus, UserCheck, UserPlus, PhoneCall } from 'lucide-react';
 
 interface Customer {
     id: number;
@@ -20,6 +20,12 @@ interface Customer {
     created_at: string;
 }
 
+interface CustomerStats {
+    total_customers?: number;
+    new_this_month?: number;
+    has_contact?: number;
+}
+
 interface PageProps {
     customers: {
         data: Customer[];
@@ -28,20 +34,20 @@ interface PageProps {
         last_page: number;
         total: number;
     };
+    stats?: CustomerStats;
     filters: { search?: string; per_page?: string };
 }
 
-export default function CustomerIndex({ customers, filters }: PageProps) {
+export default function CustomerIndex({ customers, stats, filters }: PageProps) {
     const { flash, current_tenant, auth } = usePage().props as any;
     const { can } = usePermission();
 
     const [search, setSearch] = useState(filters?.search || '');
     const [perPage, setPerPage] = useState(filters?.per_page || '10');
 
-    const currentPathSlug = window.location.pathname.split('/')[1];
+    const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
 
-    // Tracker untuk cegah toast ganda
     const lastShownFlash = useRef<string | null>(null);
 
     useEffect(() => {
@@ -92,15 +98,41 @@ export default function CustomerIndex({ customers, filters }: PageProps) {
                     }
                 />
 
-                {/* Stat Card */}
+                {/* 3 Stat Cards Riil */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
                             <p className="text-xs font-medium text-muted-foreground">Total Customers</p>
-                            <h3 className="mt-1 text-2xl font-bold text-foreground">{customers.total || 0}</h3>
+                            <h3 className="mt-1 text-2xl font-bold text-foreground">
+                                {stats?.total_customers ?? customers.total ?? 0}
+                            </h3>
                         </div>
                         <div className="rounded-xl bg-blue-50 p-3 text-blue-600 dark:bg-blue-950/50">
                             <UserCheck size={22} />
+                        </div>
+                    </div>
+
+                    <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
+                        <div>
+                            <p className="text-xs font-medium text-muted-foreground">New This Month</p>
+                            <h3 className="mt-1 text-2xl font-bold text-foreground">
+                                {stats?.new_this_month ?? 0}
+                            </h3>
+                        </div>
+                        <div className="rounded-xl bg-purple-50 p-3 text-purple-600 dark:bg-purple-950/50">
+                            <UserPlus size={22} />
+                        </div>
+                    </div>
+
+                    <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
+                        <div>
+                            <p className="text-xs font-medium text-muted-foreground">With Contact Info</p>
+                            <h3 className="mt-1 text-2xl font-bold text-foreground">
+                                {stats?.has_contact ?? 0}
+                            </h3>
+                        </div>
+                        <div className="rounded-xl bg-emerald-50 p-3 text-emerald-600 dark:bg-emerald-950/50">
+                            <PhoneCall size={22} />
                         </div>
                     </div>
                 </div>
