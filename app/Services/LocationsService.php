@@ -20,16 +20,21 @@ class LocationsService implements LocationsContract
 
         return Location::whereIn('warehouse_id', $tenantWarehouseIds)
             ->with(['warehouse'])
-            ->withCount([
-                // Count distinct SKUs currently stored in this location
-                'transactionItems as total_sku_count' => function ($query) {
-                    $query->select(\DB::raw('count(distinct sku_id)'));
-                },
-                // Sum total qty of all items in this location
-                'transactionItems as total_qty' => function ($query) {
-                    $query->select(\DB::raw('coalesce(sum(quantity), 0)'));
-                },
-            ])
+            ->select('locations.*')
+            ->selectSub(function ($query) {
+                $query->selectRaw('COALESCE(
+                    NULLIF((SELECT COUNT(DISTINCT sku_id) FROM inventory_stocks WHERE location_id = locations.id AND quantity > 0), 0),
+                    (SELECT COUNT(DISTINCT sku_id) FROM transaction_items JOIN transactions ON transaction_items.transaction_id = transactions.id WHERE transaction_items.to_location_id = locations.id AND transactions.status = \'completed\'),
+                    0
+                )');
+            }, 'total_sku_count')
+            ->selectSub(function ($query) {
+                $query->selectRaw('COALESCE(
+                    NULLIF((SELECT SUM(quantity) FROM inventory_stocks WHERE location_id = locations.id), 0),
+                    (SELECT SUM(quantity) FROM transaction_items JOIN transactions ON transaction_items.transaction_id = transactions.id WHERE transaction_items.to_location_id = locations.id AND transactions.status = \'completed\'),
+                    0
+                )');
+            }, 'total_qty')
             ->when($search, function ($query, $searchQuery) {
                 $query->where('rack_code', 'like', "%{$searchQuery}%")
                       ->orWhere('zone', 'like', "%{$searchQuery}%");

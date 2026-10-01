@@ -27,5 +27,10 @@ class Location extends Model
     {
         return $this->hasMany(TransactionItem::class, 'to_location_id');
     }
+
+    public function inventoryStocks(): HasMany
+    {
+        return $this->hasMany(InventoryStock::class, 'location_id');
+    }
 }
 
