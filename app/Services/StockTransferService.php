@@ -53,6 +53,22 @@ class StockTransferService implements StockTransferContract
             ->toArray();
 
         // 3. Fetch SKUs for Tenant
+        $inventoryStocks = DB::table('inventory_stocks')
+            ->join('skus', 'inventory_stocks.sku_id', '=', 'skus.id')
+            ->join('products', 'skus.product_id', '=', 'products.id')
+            ->where('products.tenant_id', $tenant->id)
+            ->where('inventory_stocks.quantity', '>', 0)
+            ->select('inventory_stocks.sku_id', 'inventory_stocks.location_id', 'inventory_stocks.quantity')
+            ->get();
+            
+        $stocksBySku = [];
+        foreach ($inventoryStocks as $stock) {
+            $stocksBySku[$stock->sku_id][] = [
+                'location_id' => $stock->location_id,
+                'quantity' => (int) $stock->quantity,
+            ];
+        }
+
         $skus = DB::table('skus')
             ->join('products', 'skus.product_id', '=', 'products.id')
             ->leftJoin('inventory_stocks', 'skus.id', '=', 'inventory_stocks.sku_id')
@@ -65,12 +81,13 @@ class StockTransferService implements StockTransferContract
             )
             ->groupBy('skus.id', 'skus.sku_code', 'products.name')
             ->get()
-            ->map(function ($sku) {
+            ->map(function ($sku) use ($stocksBySku) {
                 return [
                     'id' => $sku->id,
                     'code' => $sku->code,
                     'name' => $sku->name,
                     'current_stock' => (int) $sku->current_stock,
+                    'locations' => $stocksBySku[$sku->id] ?? [],
                 ];
             })
             ->toArray();
@@ -115,7 +132,7 @@ class StockTransferService implements StockTransferContract
                     'to_location' => $item->to_location ?? 'RAK-DEST',
                     'quantity' => (int) $item->quantity,
                     'status' => strtoupper($item->status),
-                    'created_at' => date('Y-m-d H:i', strtotime($item->created_at)),
+                    'created_at' => \Carbon\Carbon::parse($item->created_at)->timezone('Asia/Jakarta')->format('Y-m-d H:i'),
                     'created_by' => $item->created_by ?? 'System User',
                 ];
             })
@@ -158,56 +175,63 @@ class StockTransferService implements StockTransferContract
                 'updated_at' => now(),
             ]);
 
-            // 2. Create Transaction Item
-            DB::table('transaction_items')->insert([
-                'transaction_id' => $transactionId,
-                'sku_id' => $data['sku_id'],
-                'from_location_id' => $data['from_location_id'],
-                'to_location_id' => $data['to_location_id'],
-                'quantity' => $data['quantity'],
-                'unit_price' => 0,
-                'created_by' => $userId,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-
-            // 3. Update Inventory Stock - Deduct Origin Location
-            $originStock = DB::table('inventory_stocks')
-                ->where('sku_id', $data['sku_id'])
-                ->where('location_id', $data['from_location_id'])
-                ->first();
-
-            if ($originStock) {
-                DB::table('inventory_stocks')
-                    ->where('id', $originStock->id)
-                    ->decrement('quantity', $data['quantity']);
-            }
-
-            // 4. Update Inventory Stock - Add Destination Location
-            $destStock = DB::table('inventory_stocks')
-                ->where('sku_id', $data['sku_id'])
-                ->where('location_id', $data['to_location_id'])
-                ->first();
-
-            if ($destStock) {
-                DB::table('inventory_stocks')
-                    ->where('id', $destStock->id)
-                    ->increment('quantity', $data['quantity']);
-            } else {
-                DB::table('inventory_stocks')->insert([
-                    'sku_id' => $data['sku_id'],
-                    'location_id' => $data['to_location_id'],
-                    'quantity' => $data['quantity'],
+            // 2. Loop & Process items
+            foreach ($data['items'] as $item) {
+                // Insert Transaction Item
+                DB::table('transaction_items')->insert([
+                    'transaction_id' => $transactionId,
+                    'sku_id' => $item['sku_id'],
+                    'from_location_id' => $item['from_location_id'],
+                    'to_location_id' => $item['to_location_id'],
+                    'quantity' => $item['quantity'],
+                    'unit_price' => 0,
                     'created_by' => $userId,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
+
+                // Deduct Origin Location Stock
+                $originStock = DB::table('inventory_stocks')
+                    ->where('sku_id', $item['sku_id'])
+                    ->where('location_id', $item['from_location_id'])
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$originStock || $originStock->quantity < $item['quantity']) {
+                    throw new \Exception("Stok untuk salah satu SKU tidak mencukupi atau tidak ditemukan di rak asal.");
+                }
+
+                DB::table('inventory_stocks')
+                    ->where('id', $originStock->id)
+                    ->decrement('quantity', $item['quantity']);
+
+                // Increment Destination Location Stock
+                $destStock = DB::table('inventory_stocks')
+                    ->where('sku_id', $item['sku_id'])
+                    ->where('location_id', $item['to_location_id'])
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($destStock) {
+                    DB::table('inventory_stocks')
+                        ->where('id', $destStock->id)
+                        ->increment('quantity', $item['quantity']);
+                } else {
+                    DB::table('inventory_stocks')->insert([
+                        'sku_id' => $item['sku_id'],
+                        'location_id' => $item['to_location_id'],
+                        'quantity' => $item['quantity'],
+                        'created_by' => $userId,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
             }
         });
 
         return [
             'success' => true,
-            'message' => 'Mutasi transfer stok berhasil dicatat ke database!',
+            'message' => 'Batch mutasi transfer stok (' . count($data['items']) . ' SKU) berhasil dicatat ke database!',
         ];
     }
 }

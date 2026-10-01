@@ -39,4 +39,5 @@ export interface SkuOption {
     code: string;
     name: string;
     current_stock: number;
+    locations?: { location_id: number; quantity: number }[];
 }
