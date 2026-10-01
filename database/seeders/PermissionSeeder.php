@@ -54,6 +54,8 @@ class PermissionSeeder extends Seeder
             'tenant.products.view', 'tenant.products.show', 'tenant.products.create', 'tenant.products.edit', 'tenant.products.delete',
             // Submenu: Categories
             'tenant.categories.view', 'tenant.categories.show', 'tenant.categories.create', 'tenant.categories.edit', 'tenant.categories.delete',
+            // Submenu: Units
+            'tenant.units.view', 'tenant.units.show', 'tenant.units.create', 'tenant.units.edit', 'tenant.units.delete',
 
             // Menu Group: Transaction
             // Submenu: Inbound Management
