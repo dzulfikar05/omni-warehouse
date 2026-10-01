@@ -35,15 +35,19 @@ class StockTransferController extends Controller
     public function store(string $tenant_slug, Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'sku_id' => 'required',
-            'from_location_id' => 'required|different:to_location_id',
-            'to_location_id' => 'required',
-            'quantity' => 'required|integer|min:1',
+            'items' => 'required|array|min:1',
+            'items.*.sku_id' => 'required',
+            'items.*.from_location_id' => 'required|different:items.*.to_location_id',
+            'items.*.to_location_id' => 'required',
+            'items.*.quantity' => 'required|integer|min:1',
             'notes' => 'nullable|string',
         ]);
 
-        $res = $this->stockTransferService->createStockTransfer($tenant_slug, $validated);
-
-        return redirect()->back()->with('success', $res['message']);
+        try {
+            $res = $this->stockTransferService->createStockTransfer($tenant_slug, $validated);
+            return redirect()->back()->with('success', $res['message']);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
     }
 }

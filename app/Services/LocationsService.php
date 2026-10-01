@@ -137,6 +137,7 @@ class LocationsService implements LocationsContract
             ->leftJoin('products', 'skus.product_id', '=', 'products.id')
             ->leftJoin('categories', 'products.category_id', '=', 'categories.id')
             ->where('inventory_stocks.location_id', $locationId)
+            ->where('inventory_stocks.quantity', '>', 0)
             ->select(
                 'inventory_stocks.id',
                 'inventory_stocks.quantity',
@@ -158,8 +159,8 @@ class LocationsService implements LocationsContract
                 ->join('skus', 'transaction_items.sku_id', '=', 'skus.id')
                 ->leftJoin('products', 'skus.product_id', '=', 'products.id')
                 ->leftJoin('categories', 'products.category_id', '=', 'categories.id')
-                ->where('transaction_items.to_location_id', $locationId)
                 ->where('transactions.status', 'completed')
+                ->where('transaction_items.quantity', '>', 0)
                 ->select(
                     \DB::raw('MIN(transaction_items.id) as id'),
                     \DB::raw('SUM(transaction_items.quantity) as quantity'),
@@ -201,7 +202,13 @@ class LocationsService implements LocationsContract
             )
             ->orderByDesc('transactions.created_at')
             ->limit(15)
-            ->get();
+            ->get()
+            ->map(function ($movement) {
+                if ($movement->created_at) {
+                    $movement->created_at = \Carbon\Carbon::parse($movement->created_at)->timezone('Asia/Jakarta')->format('Y-m-d H:i');
+                }
+                return $movement;
+            });
 
         return [
             'location'  => $location,

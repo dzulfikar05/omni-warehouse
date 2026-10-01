@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Head, usePage } from '@inertiajs/react';
+import { toast } from 'sonner';
 import {
     ArrowRightLeft,
     CheckCircle2,
@@ -33,12 +34,25 @@ export default function StockTransferIndex({
     skus = [],
     summary: initialSummary,
 }: StockTransferIndexProps) {
-    const { current_tenant, auth } = usePage().props as any;
+    const { current_tenant, auth, flash } = usePage().props as any;
     const { can } = usePermission();
-    const [transfers] = useState<StockTransferItem[]>(initialTransfers);
+    const [transfers, setTransfers] = React.useState<StockTransferItem[]>(initialTransfers);
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [statusFilter, setStatusFilter] = useState<'ALL' | 'COMPLETED' | 'IN_TRANSIT'>('ALL');
     const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
+
+    React.useEffect(() => {
+        setTransfers(initialTransfers);
+    }, [initialTransfers]);
+
+    React.useEffect(() => {
+        if (flash?.success) {
+            toast.success('Berhasil', { description: flash.success });
+        }
+        if (flash?.error) {
+            toast.error('Gagal', { description: flash.error });
+        }
+    }, [flash]);
 
     const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : 'demo-tenant';
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
