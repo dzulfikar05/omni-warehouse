@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Tenant;
 use App\Contracts\CustomerContract;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\CustomerRequest;
+use App\Models\Customer;
+use App\Models\Tenant;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -21,14 +23,30 @@ class CustomerController extends Controller
 
     public function index(Request $request, string $tenant_slug): Response
     {
+        $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
         $search = $request->input('search');
         $perPage = (int) $request->input('per_page', 10);
 
         $customers = $this->service->getPaginatedCustomers($tenant_slug, $search, $perPage);
 
+        // Agregasi Statistik berbasis Tenant
+        $stats = [
+            'total_customers' => Customer::where('tenant_id', $tenant->id)->count(),
+            'new_this_month'  => Customer::where('tenant_id', $tenant->id)
+                ->whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->count(),
+            'has_contact'     => Customer::where('tenant_id', $tenant->id)
+                ->where(function ($q) {
+                    $q->whereNotNull('phone')->orWhereNotNull('email');
+                })
+                ->count(),
+        ];
+
         return Inertia::render('Tenant/Contacts/Customers/Index', [
             'customers' => $customers,
-            'filters' => $request->only(['search', 'per_page']),
+            'stats'     => $stats,
+            'filters'   => $request->only(['search', 'per_page']),
         ]);
     }
 
@@ -48,6 +66,16 @@ class CustomerController extends Controller
     public function show(string $tenant_slug, string $id): Response
     {
         $customer = $this->service->getCustomerById($tenant_slug, $id);
+
+        // Load data riwayat outbound dan item barang yang dibeli secara riil
+        $customer->load([
+            'outbounds' => function ($query) {
+                $query->with(['items.sku.product'])->latest()->limit(5);
+            },
+            'purchased_products' => function ($query) {
+                $query->with(['sku.product'])->limit(10);
+            }
+        ]);
 
         return Inertia::render('Tenant/Contacts/Customers/Show', [
             'customer' => $customer,
