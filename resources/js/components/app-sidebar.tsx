@@ -86,6 +86,15 @@ export function AppSidebar() {
             });
         }
 
+        if (can('tenant.units.view')) {
+            inventoryChildren.push({
+                title: 'Units',
+                href: activeTenantSlug
+                    ? `/${activeTenantSlug}/inventory/units`
+                    : '#',
+            });
+        }
+
         if (inventoryChildren.length > 0) {
             mainNavItems.push({
                 title: 'Inventory Management',
