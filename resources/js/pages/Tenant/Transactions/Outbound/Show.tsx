@@ -197,6 +197,11 @@ export default function Show({ manifest: initialManifest, items: initialItems }:
 
                     {/* Quick Control Actions */}
                     <div className="flex items-center gap-2 flex-wrap">
+                        <div className="h-9 px-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center gap-2 text-xs font-semibold">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                            <span>Mobile Operator Sync Ready</span>
+                        </div>
+
                         <Button
                             type="button"
                             variant="outline"
