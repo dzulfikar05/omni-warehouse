@@ -68,6 +68,13 @@ export function AppSidebar() {
 
         // 2. Inventory Management
         const inventoryChildren = [];
+        if (can('tenant.skus.view')) {
+            inventoryChildren.push({
+                title: 'SKUs',
+                href: activeTenantSlug ? `/${activeTenantSlug}/inventory/skus` : '#',
+            });
+        }
+
         if (can('tenant.products.view')) {
             inventoryChildren.push({
                 title: 'Products',
