@@ -8,13 +8,13 @@ export default function StatsSection() {
     ];
 
     return (
-        <section className="py-16 px-6 border-t border-slate-100">
+        <section className="py-16 px-6 border-t border-slate-100 bg-white dark:bg-slate-950 dark:border-slate-800/80 transition-colors duration-300">
             <div className="max-w-4xl mx-auto">
                 <div className="grid sm:grid-cols-3 gap-8 text-center">
                     {stats.map((s, i) => (
                         <div key={i}>
-                            <div className="text-3xl font-black text-blue-600 mb-1">{s.value}</div>
-                            <div className="text-xs text-slate-500 font-medium">{s.label}</div>
+                            <div className="text-3xl font-black text-blue-600 dark:text-blue-400 mb-1">{s.value}</div>
+                            <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">{s.label}</div>
                         </div>
                     ))}
                 </div>

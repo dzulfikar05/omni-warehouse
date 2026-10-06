@@ -2,28 +2,32 @@ import React from 'react';
 import { Link } from '@inertiajs/react';
 import { ArrowRight, CheckCircle } from 'lucide-react';
 
-// Inline product mockup — simulates the WMS dashboard UI
+// Inline product mockup — simulates the WMS dashboard UI with Light/Dark Mode
 function DashboardMockup() {
     return (
-        <div className="w-full max-w-3xl mx-auto mt-14 rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-200/80 overflow-hidden select-none pointer-events-none">
+        <div className="w-full max-w-3xl mx-auto mt-14 rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-200/80 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none overflow-hidden select-none pointer-events-none transition-colors duration-300">
             {/* Window chrome */}
-            <div className="bg-slate-50 border-b border-slate-200 px-4 py-3 flex items-center gap-2">
+            <div className="bg-slate-50 border-b border-slate-200 px-4 py-3 flex items-center gap-2 dark:bg-slate-950 dark:border-slate-800">
                 <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
                 <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
                 <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
-                <div className="ml-3 flex-1 bg-slate-100 rounded-md px-3 py-1 text-[10px] text-slate-400 font-mono">
+                <div className="ml-3 flex-1 bg-slate-100 rounded-md px-3 py-1 text-[10px] text-slate-400 font-mono dark:bg-slate-900 dark:text-slate-500">
                     app.omniwarehouse.id/dashboard
                 </div>
             </div>
 
             {/* Dashboard content */}
-            <div className="p-5 bg-slate-50 flex gap-4">
+            <div className="p-5 bg-slate-50 dark:bg-slate-900/50 flex gap-4">
                 {/* Left sidebar stub */}
                 <div className="w-32 shrink-0 space-y-1">
                     {['Dashboard', 'Inventory', 'Rak & Lokasi', 'Inbound', 'Outbound', 'Laporan'].map((item, i) => (
                         <div
                             key={i}
-                            className={`rounded-lg px-3 py-2 text-[10px] font-semibold ${i === 0 ? 'bg-[#2B7FFF] text-white' : 'text-slate-500 hover:bg-slate-100'}`}
+                            className={`rounded-lg px-3 py-2 text-[10px] font-semibold ${
+                                i === 0
+                                    ? 'bg-[#2B7FFF] text-white'
+                                    : 'text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800/60'
+                            }`}
                         >
                             {item}
                         </div>
@@ -39,18 +43,18 @@ function DashboardMockup() {
                             { label: 'Akurasi Stok', value: '99.4%', delta: 'vs 94% kemarin', up: true },
                             { label: 'Picking Selesai', value: '183', delta: '12 pending', up: false },
                         ].map((m, i) => (
-                            <div key={i} className="bg-white rounded-xl border border-slate-100 p-3">
-                                <p className="text-[9px] text-slate-400 font-medium uppercase tracking-wide">{m.label}</p>
-                                <p className="text-lg font-black text-slate-900 mt-0.5">{m.value}</p>
-                                <p className={`text-[9px] font-semibold mt-0.5 ${m.up ? 'text-emerald-500' : 'text-amber-500'}`}>{m.delta}</p>
+                            <div key={i} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 p-3">
+                                <p className="text-[9px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wide">{m.label}</p>
+                                <p className="text-lg font-black text-slate-900 dark:text-white mt-0.5">{m.value}</p>
+                                <p className={`text-[9px] font-semibold mt-0.5 ${m.up ? 'text-emerald-500 dark:text-emerald-400' : 'text-amber-500 dark:text-amber-400'}`}>{m.delta}</p>
                             </div>
                         ))}
                     </div>
 
                     {/* Rack map stub */}
-                    <div className="bg-white rounded-xl border border-slate-100 p-3">
+                    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 p-3">
                         <div className="flex items-center justify-between mb-2">
-                            <p className="text-[10px] font-bold text-slate-700">Denah Rak — Gudang A</p>
+                            <p className="text-[10px] font-bold text-slate-700 dark:text-slate-200">Denah Rak — Gudang A</p>
                             <span className="text-[9px] text-[#2B7FFF] font-semibold">Live</span>
                         </div>
                         <div className="grid grid-cols-10 gap-1">
@@ -64,23 +68,23 @@ function DashboardMockup() {
                                         key={i}
                                         className={`h-4 rounded-sm ${
                                             isActive ? 'bg-[#2B7FFF]' :
-                                            isFilled ? 'bg-slate-200' :
-                                            'bg-slate-100'
+                                            isFilled ? 'bg-slate-200 dark:bg-slate-700' :
+                                            'bg-slate-100 dark:bg-slate-800/60'
                                         }`}
                                     />
                                 );
                             })}
                         </div>
                         <div className="flex items-center gap-3 mt-2">
-                            <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-[#2B7FFF] inline-block" /> Proses Picking</span>
-                            <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-slate-200 inline-block" /> Terisi</span>
-                            <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-slate-100 inline-block" /> Kosong</span>
+                            <span className="flex items-center gap-1 text-[9px] text-slate-400 dark:text-slate-500"><span className="w-2 h-2 rounded-sm bg-[#2B7FFF] inline-block" /> Proses Picking</span>
+                            <span className="flex items-center gap-1 text-[9px] text-slate-400 dark:text-slate-500"><span className="w-2 h-2 rounded-sm bg-slate-200 dark:bg-slate-700 inline-block" /> Terisi</span>
+                            <span className="flex items-center gap-1 text-[9px] text-slate-400 dark:text-slate-500"><span className="w-2 h-2 rounded-sm bg-slate-100 dark:bg-slate-800 inline-block" /> Kosong</span>
                         </div>
                     </div>
 
                     {/* Recent activity */}
-                    <div className="bg-white rounded-xl border border-slate-100 p-3">
-                        <p className="text-[10px] font-bold text-slate-700 mb-2">Aktivitas Terakhir</p>
+                    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 p-3">
+                        <p className="text-[10px] font-bold text-slate-700 dark:text-slate-200 mb-2">Aktivitas Terakhir</p>
                         <div className="space-y-1.5">
                             {[
                                 { action: 'Inbound 200 unit — SKU-7723 (Baju Polo)', time: '2 mnt lalu', type: 'in' },
@@ -89,8 +93,8 @@ function DashboardMockup() {
                             ].map((a, i) => (
                                 <div key={i} className="flex items-center gap-2">
                                     <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${a.type === 'in' ? 'bg-emerald-400' : a.type === 'warn' ? 'bg-amber-400' : 'bg-[#2B7FFF]'}`} />
-                                    <p className="text-[9px] text-slate-600 flex-1 truncate">{a.action}</p>
-                                    <span className="text-[9px] text-slate-400 shrink-0">{a.time}</span>
+                                    <p className="text-[9px] text-slate-600 dark:text-slate-300 flex-1 truncate">{a.action}</p>
+                                    <span className="text-[9px] text-slate-400 dark:text-slate-500 shrink-0">{a.time}</span>
                                 </div>
                             ))}
                         </div>
@@ -103,10 +107,10 @@ function DashboardMockup() {
 
 export default function HeroSection() {
     return (
-        <section id="overview" className="relative pt-36 pb-20 px-6 overflow-hidden bg-white">
-            {/* Very subtle top-only gradient tint — no harsh grid */}
+        <section id="overview" className="relative pt-36 pb-20 px-6 overflow-hidden bg-white dark:bg-slate-950 transition-colors duration-300">
+            {/* Subtle top-only gradient tint adapted for light and dark modes */}
             <div
-                className="absolute top-0 left-0 right-0 h-80 pointer-events-none"
+                className="absolute top-0 left-0 right-0 h-80 pointer-events-none transition-opacity duration-300 dark:opacity-20"
                 style={{
                     background: 'linear-gradient(to bottom, #EEF5FF 0%, transparent 100%)',
                 }}
@@ -114,12 +118,12 @@ export default function HeroSection() {
 
             <div className="relative max-w-4xl mx-auto text-center">
                 {/* Eyebrow */}
-                <p className="text-[11px] font-bold uppercase tracking-widest text-[#2B7FFF] mb-5">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-[#2B7FFF] dark:text-blue-400 mb-5">
                     Warehouse Management System — Multi-Tenant SaaS
                 </p>
 
                 {/* Headline — outcome-first, not feature-first */}
-                <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-slate-900 leading-[1.08]">
+                <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.08]">
                     Eliminasi Selisih Stok.{' '}
                     <br className="hidden sm:block" />
                     Pangkas Waktu Picking{' '}
@@ -140,7 +144,7 @@ export default function HeroSection() {
                 </h1>
 
                 {/* Subtext — pain-point language */}
-                <p className="mt-7 text-slate-500 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
+                <p className="mt-7 text-slate-500 dark:text-slate-400 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
                     Tidak ada lagi barang hilang, stock opname berhari-hari, atau kesalahan picking.
                     OmniWarehouse memberi kontrol penuh atas setiap rak, SKU, dan pergerakan stok gudang Anda — secara real-time.
                 </p>
@@ -158,7 +162,7 @@ export default function HeroSection() {
                     </Link>
                     <a
                         href="#demo"
-                        className="inline-flex items-center gap-2 text-slate-700 hover:text-slate-900 font-semibold text-sm px-7 py-3.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-white transition-all duration-150 active:scale-[0.98]"
+                        className="inline-flex items-center gap-2 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white font-semibold text-sm px-7 py-3.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900 transition-all duration-150 active:scale-[0.98]"
                     >
                         Jadwalkan Live Demo 15 Menit
                     </a>
@@ -171,8 +175,8 @@ export default function HeroSection() {
                         'Setup dalam 5 menit',
                         'Tanpa kontrak jangka panjang',
                     ].map((item, i) => (
-                        <span key={i} className="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
-                            <CheckCircle size={12} className="text-emerald-500" />
+                        <span key={i} className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                            <CheckCircle size={12} className="text-emerald-500 dark:text-emerald-400" />
                             {item}
                         </span>
                     ))}

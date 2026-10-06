@@ -79,31 +79,31 @@ export default function PricingSection({ plans = [] }: PricingSectionProps) {
     };
 
     return (
-        <section id="pricing" className="py-28 px-6 bg-slate-50/60 border-t border-slate-200/70 relative overflow-hidden">
+        <section id="pricing" className="py-28 px-6 bg-slate-50/60 dark:bg-slate-950 border-t border-slate-200/70 dark:border-slate-800/80 relative overflow-hidden transition-colors duration-300">
             {/* Soft Ambient Background Glow */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-blue-400/5 blur-[120px] pointer-events-none rounded-full" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-blue-400/5 dark:bg-blue-600/10 blur-[120px] pointer-events-none rounded-full" />
 
             <div className="max-w-6xl mx-auto relative z-10">
                 {/* Header */}
                 <div className="text-center max-w-2xl mx-auto mb-12">
-                    <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900 leading-tight">
+                    <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
                         Pilih Paket yang Sesuai dengan Skala Gudang Anda
                     </h2>
-                    <p className="text-slate-500 text-sm md:text-base mt-3 leading-relaxed">
+                    <p className="text-slate-500 dark:text-slate-400 text-sm md:text-base mt-3 leading-relaxed">
                         Mulai dari 1 depot hingga puluhan hub distribusi. Tanpa kontrak tersembunyi, batalkan kapan saja.
                     </p>
                 </div>
 
-                {/* Sleek Segmented Toggle pill wrapper (Fixed bug text overlap completely) */}
+                {/* Sleek Segmented Toggle pill wrapper */}
                 <div className="flex justify-center mb-16">
-                    <div className="bg-slate-200/60 p-1.5 rounded-2xl inline-flex items-center gap-1 border border-slate-200/80 shadow-inner">
+                    <div className="bg-slate-200/60 dark:bg-slate-900/80 p-1.5 rounded-2xl inline-flex items-center gap-1 border border-slate-200/80 dark:border-slate-800 shadow-inner">
                         <button
                             type="button"
                             onClick={() => setBillingAnnual(false)}
                             className={`px-5 py-2 rounded-xl text-xs font-bold transition-all duration-200 select-none ${
                                 !billingAnnual
-                                    ? 'bg-white text-slate-900 shadow-sm'
-                                    : 'text-slate-500 hover:text-slate-800'
+                                    ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-white'
+                                    : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
                             }`}
                         >
                             Tagihan Bulanan
@@ -113,8 +113,8 @@ export default function PricingSection({ plans = [] }: PricingSectionProps) {
                             onClick={() => setBillingAnnual(true)}
                             className={`px-5 py-2 rounded-xl text-xs font-bold transition-all duration-200 select-none flex items-center gap-2 ${
                                 billingAnnual
-                                    ? 'bg-[#2B7FFF] text-white shadow-md shadow-blue-500/20'
-                                    : 'text-slate-500 hover:text-slate-800'
+                                    ? 'bg-[#2B7FFF] text-white shadow-md shadow-blue-500/20 dark:bg-blue-600 dark:shadow-blue-950/50'
+                                    : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
                             }`}
                         >
                             <span>Tagihan Tahunan</span>
@@ -122,7 +122,7 @@ export default function PricingSection({ plans = [] }: PricingSectionProps) {
                                 className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md uppercase tracking-wide transition-colors ${
                                     billingAnnual
                                         ? 'bg-white/20 text-white'
-                                        : 'bg-emerald-100 text-emerald-700'
+                                        : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400'
                                 }`}
                             >
                                 Hemat 20%
@@ -140,10 +140,10 @@ export default function PricingSection({ plans = [] }: PricingSectionProps) {
                         return (
                             <div
                                 key={plan.id}
-                                className={`relative rounded-3xl bg-white flex flex-col justify-between transition-all duration-300 hover:-translate-y-1.5 ${
+                                className={`relative rounded-3xl flex flex-col justify-between transition-all duration-300 hover:-translate-y-1.5 ${
                                     isPopular
-                                        ? 'border-2 border-[#2B7FFF] shadow-2xl shadow-blue-500/15 ring-4 ring-blue-500/5 z-10'
-                                        : 'border border-slate-200/90 shadow-sm hover:shadow-xl hover:shadow-slate-200/50'
+                                        ? 'bg-white border-2 border-[#2B7FFF] shadow-2xl shadow-blue-500/15 ring-4 ring-blue-500/5 dark:bg-slate-900 dark:border-blue-500 dark:shadow-blue-950/30 dark:ring-blue-500/10 z-10'
+                                        : 'bg-white border border-slate-200/90 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 dark:bg-slate-900/60 dark:border-slate-800 dark:hover:border-slate-700 dark:hover:shadow-none'
                                 }`}
                             >
                                 {/* Sleek Brand Blue Popular Badge */}
@@ -158,42 +158,42 @@ export default function PricingSection({ plans = [] }: PricingSectionProps) {
                                     {/* Header Info */}
                                     <div className="mb-6">
                                         <div className="flex items-center justify-between mb-2">
-                                            <h3 className="text-sm font-extrabold uppercase tracking-wider text-slate-400">
+                                            <h3 className="text-sm font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                                                 {plan.name}
                                             </h3>
                                             {isPopular && (
-                                                <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-blue-50 text-[#2B7FFF] border border-blue-100">
+                                                <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-blue-50 text-[#2B7FFF] border border-blue-100 dark:bg-blue-950/60 dark:text-blue-400 dark:border-blue-800/80">
                                                     Rekomendasi Tim
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="text-xs text-slate-500 leading-relaxed min-h-[36px]">
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed min-h-[36px]">
                                             {plan.desc || 'Solusi efisien untuk optimalisasi inventaris.'}
                                         </p>
                                     </div>
 
                                     {/* Price Display */}
-                                    <div className="py-6 border-y border-slate-100 mb-6">
+                                    <div className="py-6 border-y border-slate-100 dark:border-slate-800/80 mb-6">
                                         {isEnterprise ? (
                                             <div>
-                                                <div className="text-4xl font-extrabold tracking-tight text-slate-900">
+                                                <div className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
                                                     Custom
                                                 </div>
-                                                <div className="text-xs text-slate-400 mt-1.5 font-medium">
+                                                <div className="text-xs text-slate-400 dark:text-slate-500 mt-1.5 font-medium">
                                                     Sesuai jumlah lokasi gudang & kebutuhan SLA
                                                 </div>
                                             </div>
                                         ) : (
                                             <div>
                                                 <div className="flex items-baseline gap-1">
-                                                    <span className="text-4xl md:text-5xl font-black tracking-tight text-slate-900">
+                                                    <span className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white">
                                                         {formatPrice(plan.price)}
                                                     </span>
                                                 </div>
-                                                <div className="text-xs text-slate-400 mt-1.5 font-medium flex items-center gap-1.5">
+                                                <div className="text-xs text-slate-400 dark:text-slate-500 mt-1.5 font-medium flex items-center gap-1.5">
                                                     <span>/ bulan</span>
                                                     {billingAnnual && (
-                                                        <span className="text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded">
+                                                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded">
                                                             ditagih tahunan
                                                         </span>
                                                     )}
@@ -204,7 +204,7 @@ export default function PricingSection({ plans = [] }: PricingSectionProps) {
 
                                     {/* Feature Items */}
                                     <div className="mb-8 flex-1">
-                                        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-4">
+                                        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-4">
                                             Fitur Termasuk:
                                         </p>
                                         <ul className="space-y-3.5">
@@ -212,13 +212,13 @@ export default function PricingSection({ plans = [] }: PricingSectionProps) {
                                                 plan.features.map((feature) => (
                                                     <li
                                                         key={feature.id}
-                                                        className="flex items-start gap-3 text-xs font-semibold text-slate-700"
+                                                        className="flex items-start gap-3 text-xs font-semibold text-slate-700 dark:text-slate-300"
                                                     >
                                                         <span
                                                             className={`mt-0.5 shrink-0 w-4 h-4 rounded-full flex items-center justify-center ${
                                                                 isPopular
-                                                                    ? 'bg-[#2B7FFF] text-white shadow-sm shadow-blue-500/30'
-                                                                    : 'bg-blue-50 text-[#2B7FFF]'
+                                                                    ? 'bg-[#2B7FFF] text-white shadow-sm shadow-blue-500/30 dark:bg-blue-600'
+                                                                    : 'bg-blue-50 text-[#2B7FFF] dark:bg-blue-950/80 dark:text-blue-400'
                                                             }`}
                                                         >
                                                             <Check size={10} strokeWidth={3.5} />
@@ -227,7 +227,7 @@ export default function PricingSection({ plans = [] }: PricingSectionProps) {
                                                     </li>
                                                 ))
                                             ) : (
-                                                <li className="text-xs text-slate-400">
+                                                <li className="text-xs text-slate-400 dark:text-slate-500">
                                                     Fitur standar gudang aktif.
                                                 </li>
                                             )}
@@ -239,10 +239,10 @@ export default function PricingSection({ plans = [] }: PricingSectionProps) {
                                         href={isEnterprise ? '#' : `/register-tenant?plan_id=${plan.id}`}
                                         className={`w-full py-3.5 px-5 rounded-2xl font-bold text-xs text-center transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98] ${
                                             isPopular
-                                                ? 'bg-[#2B7FFF] text-white hover:bg-blue-600 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40'
+                                                ? 'bg-[#2B7FFF] text-white hover:bg-blue-600 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 dark:bg-blue-600 dark:hover:bg-blue-500'
                                                 : isEnterprise
-                                                ? 'bg-slate-900 text-white hover:bg-slate-800 shadow-md'
-                                                : 'bg-slate-100 text-slate-900 hover:bg-slate-200 hover:text-slate-900 border border-slate-200/80'
+                                                ? 'bg-slate-900 text-white hover:bg-slate-800 shadow-md dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white'
+                                                : 'bg-slate-100 text-slate-900 hover:bg-slate-200 hover:text-slate-900 border border-slate-200/80 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-700'
                                         }`}
                                     >
                                         <span>{isEnterprise ? 'Hubungi Tim Sales' : 'Mulai 14 Hari Gratis'}</span>
@@ -255,18 +255,17 @@ export default function PricingSection({ plans = [] }: PricingSectionProps) {
                 </div>
 
                 {/* Trust Footer */}
-                <div className="mt-12 text-center flex flex-col sm:flex-row items-center justify-center gap-6 text-xs text-slate-400">
+                <div className="mt-12 text-center flex flex-col sm:flex-row items-center justify-center gap-6 text-xs text-slate-400 dark:text-slate-500">
                     <span className="flex items-center gap-1.5">
-                        <ShieldCheck size={15} className="text-emerald-500" />
+                        <ShieldCheck size={15} className="text-emerald-500 dark:text-emerald-400" />
                         Tanpa Kartu Kredit di Awal
                     </span>
-                    <span className="hidden sm:inline text-slate-300">•</span>
+                    <span className="hidden sm:inline text-slate-300 dark:text-slate-700">•</span>
                     <span>Uji Coba Gratis 14 Hari Penuh</span>
-                    <span className="hidden sm:inline text-slate-300">•</span>
+                    <span className="hidden sm:inline text-slate-300 dark:text-slate-700">•</span>
                     <span>Dukungan Migration Data Gudang Gratis</span>
                 </div>
             </div>
         </section>
     );
 }
-

@@ -60,7 +60,7 @@ export default function Footer() {
     ];
 
     return (
-        <footer className="border-t border-slate-100 bg-white pt-16 pb-10 text-xs text-slate-500">
+        <footer className="border-t border-slate-100 bg-white pt-16 pb-10 text-xs text-slate-500 dark:border-slate-800/80 dark:bg-slate-950 dark:text-slate-400 transition-colors duration-300">
             <div className="max-w-7xl mx-auto px-6">
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
 
@@ -69,7 +69,7 @@ export default function Footer() {
                         <Link href="/" className="flex items-center gap-2 mb-4">
                             <AppLogo size="sm" tenantName="OmniWarehouse" />
                         </Link>
-                        <p className="text-slate-500 text-xs leading-relaxed max-w-sm mb-5">
+                        <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed max-w-sm mb-5">
                             Sistem Manajemen Gudang Multi-Tenant Enterprise. Dirancang untuk otomasi logistik, pemetaan rak spasial, dan isolasi data yang ketat.
                         </p>
 
@@ -82,7 +82,7 @@ export default function Footer() {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     aria-label={s.label}
-                                    className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 hover:text-sky-500 hover:border-sky-200 transition-colors duration-150"
+                                    className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 hover:text-sky-500 hover:border-sky-200 dark:border-slate-800 dark:text-slate-400 dark:hover:text-sky-400 dark:hover:border-sky-500/30 transition-colors duration-150"
                                 >
                                     {s.icon}
                                 </a>
@@ -92,46 +92,46 @@ export default function Footer() {
 
                     {/* Product links */}
                     <div>
-                        <h4 className="font-black text-slate-900 text-[11px] uppercase tracking-wider mb-4">Produk</h4>
+                        <h4 className="font-black text-slate-900 dark:text-slate-100 text-[11px] uppercase tracking-wider mb-4">Produk</h4>
                         <ul className="space-y-2.5 font-medium">
-                            <li><a href="#features" className="hover:text-sky-500 transition-colors">Fitur</a></li>
-                            <li><a href="#pricing" className="hover:text-sky-500 transition-colors">Harga</a></li>
-                            <li><a href="#solutions" className="hover:text-sky-500 transition-colors">Cara Kerja</a></li>
-                            <li><a href="#faq" className="hover:text-sky-500 transition-colors">FAQ</a></li>
+                            <li><a href="#features" className="hover:text-sky-500 dark:hover:text-sky-400 transition-colors">Fitur</a></li>
+                            <li><a href="#pricing" className="hover:text-sky-500 dark:hover:text-sky-400 transition-colors">Harga</a></li>
+                            <li><a href="#solutions" className="hover:text-sky-500 dark:hover:text-sky-400 transition-colors">Cara Kerja</a></li>
+                            <li><a href="#faq" className="hover:text-sky-500 dark:hover:text-sky-400 transition-colors">FAQ</a></li>
                         </ul>
                     </div>
 
                     {/* Solutions */}
                     <div>
-                        <h4 className="font-black text-slate-900 text-[11px] uppercase tracking-wider mb-4">Solusi</h4>
+                        <h4 className="font-black text-slate-900 dark:text-slate-100 text-[11px] uppercase tracking-wider mb-4">Solusi</h4>
                         <ul className="space-y-2.5 font-medium">
-                            <li><span className="text-slate-400">Depot Multi-Lokasi</span></li>
-                            <li><span className="text-slate-400">Penerimaan Otomatis</span></li>
-                            <li><span className="text-slate-400">Fulfillment 3PL</span></li>
-                            <li><span className="text-slate-400">Integrasi ERP</span></li>
+                            <li><span className="text-slate-400 dark:text-slate-500">Depot Multi-Lokasi</span></li>
+                            <li><span className="text-slate-400 dark:text-slate-500">Penerimaan Otomatis</span></li>
+                            <li><span className="text-slate-400 dark:text-slate-500">Fulfillment 3PL</span></li>
+                            <li><span className="text-slate-400 dark:text-slate-500">Integrasi ERP</span></li>
                         </ul>
                     </div>
 
                     {/* Account */}
                     <div>
-                        <h4 className="font-black text-slate-900 text-[11px] uppercase tracking-wider mb-4">Akun</h4>
+                        <h4 className="font-black text-slate-900 dark:text-slate-100 text-[11px] uppercase tracking-wider mb-4">Akun</h4>
                         <ul className="space-y-2.5 font-medium">
-                            <li><Link href="/login" className="hover:text-sky-500 transition-colors">Masuk</Link></li>
-                            <li><Link href="/register-tenant" className="hover:text-sky-500 transition-colors">Daftar Tenant</Link></li>
+                            <li><Link href="/login" className="hover:text-sky-500 dark:hover:text-sky-400 transition-colors">Masuk</Link></li>
+                            <li><Link href="/register-tenant" className="hover:text-sky-500 dark:hover:text-sky-400 transition-colors">Daftar Tenant</Link></li>
                         </ul>
                     </div>
                 </div>
 
                 {/* Bottom bar */}
-                <div className="pt-8 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 font-medium text-[11px]">
+                <div className="pt-8 border-t border-slate-100 dark:border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 font-medium text-[11px]">
                     <div>
                         &copy; {new Date().getFullYear()}{' '}
-                        <span className="text-slate-700 font-bold">OmniWarehouse SaaS</span>. Seluruh hak cipta dilindungi.
+                        <span className="text-slate-700 dark:text-slate-200 font-bold">OmniWarehouse SaaS</span>. Seluruh hak cipta dilindungi.
                     </div>
                     <div className="flex gap-6">
-                        <span className="hover:text-slate-800 cursor-pointer transition-colors">Kebijakan Privasi</span>
-                        <span className="hover:text-slate-800 cursor-pointer transition-colors">Syarat Layanan</span>
-                        <span className="hover:text-slate-800 cursor-pointer transition-colors">Jaminan SLA</span>
+                        <span className="hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer transition-colors">Kebijakan Privasi</span>
+                        <span className="hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer transition-colors">Syarat Layanan</span>
+                        <span className="hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer transition-colors">Jaminan SLA</span>
                     </div>
                 </div>
             </div>
