@@ -62,7 +62,9 @@ class RoleController extends Controller
     public function edit(string $id): Response
     {
         $role = $this->roleService->getRoleDetails($id);
-        $permissions = Permission::whereNull('tenant_id')->get();
+
+        // PERBAIKAN: Gunakan filter nama 'NOT LIKE tenant.%' alih-alih whereNull('tenant_id')
+        $permissions = Permission::where('name', 'NOT LIKE', 'tenant.%')->get();
 
         return Inertia::render('Roles/Edit', [
             'role' => $role,
