@@ -58,6 +58,7 @@ require __DIR__ . '/web/tenant/customers.php';
 require __DIR__ . '/web/tenant/suppliers.php';
 require __DIR__ . '/web/tenant/inbound.php';
 require __DIR__ . '/web/tenant/products.php';
+require __DIR__ . '/web/tenant/skus.php';
 require __DIR__ . '/web/tenant/categories.php';
 require __DIR__ . '/web/tenant/units.php';
 require __DIR__ . '/web/tenant/stock_summary.php';
