@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Head, useForm, router, usePage } from '@inertiajs/react';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
     Warehouse as WarehouseIcon,
     Plus,
@@ -8,7 +10,6 @@ import {
     Edit3,
     Trash2,
     Building2,
-    MapPin,
     Layers,
     Activity,
 } from 'lucide-react';
@@ -107,208 +108,202 @@ export default function WarehouseIndex({ warehouses, filters }: Props) {
 
     return (
         <>
-            <Head title="Warehouse & Stocks (Warehouse)" />
+            <Head title="Warehouse Management" />
 
-            <div className="p-6 flex flex-col gap-6 font-sans text-stone-900 bg-[#FAFAF9] min-h-screen">
+            <div className="space-y-6 p-4">
                 {/* HERO BANNER CARD */}
-                <div className="bg-white rounded-2xl border border-stone-200/90 p-5 shadow-xs flex flex-col gap-4">
+                <div className="rounded-lg border border-border bg-card p-6 text-card-foreground shadow-md">
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                         <div>
                             <div className="flex items-center gap-2.5 flex-wrap">
-                                <h1 className="text-xl font-bold text-stone-900 tracking-tight">
+                                <h1 className="text-2xl font-bold tracking-tight text-foreground">
                                     Warehouse Management
                                 </h1>
-                                <span className="text-[10px] font-bold bg-blue-50 text-blue-800 border border-blue-200 px-2 py-0.5 rounded flex items-center gap-1.5">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
+                                <span className="text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded flex items-center gap-1.5">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                                     Active Tenant
                                 </span>
                             </div>
-                            <p className="text-xs text-stone-500 mt-1">
+                            <p className="text-xs text-muted-foreground mt-1">
                                 Kelola data master gudang, titik lokasi, dan kapasitas penyimpanan fisik.
                             </p>
                         </div>
 
                         {/* Top Action Bar */}
                         <div className="flex flex-wrap items-center gap-2.5">
-                            <button
-                                type="button"
-                                onClick={openCreateModal}
-                                className="h-9 px-3.5 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
-                            >
-                                <Plus className="w-3.5 h-3.5" />
+                            <Button onClick={openCreateModal} className="shadow-md">
+                                <Plus className="mr-2 h-4 w-4" />
                                 <span>Add Warehouse</span>
-                            </button>
+                            </Button>
                         </div>
                     </div>
 
                     {/* Search Bar */}
-                    <form onSubmit={handleSearch} className="pt-3 border-t border-stone-100 flex flex-col sm:flex-row items-center gap-3">                        <div className="relative flex-1 w-full">
-                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400">
-                                <Search className="w-4 h-4 text-stone-500" />
-                            </div>
-                            <input
+                    <form onSubmit={handleSearch} className="mt-6 pt-4 border-t border-border flex flex-col sm:flex-row items-center gap-3">
+                        <div className="relative flex-1 w-full">
+                            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari berdasarkan nama gudang atau kode (cth: WH-JKT01)..."
-                                className="w-full pl-9 pr-4 py-2 bg-stone-50 hover:bg-white border border-stone-200 focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-500/10 rounded-lg text-xs font-medium text-stone-900 placeholder-stone-400 outline-none transition-all"
+                                className="pl-9"
                             />
                         </div>
-                        <button
-                            type="submit"
-                            className="w-full sm:w-auto h-9 px-4 bg-stone-800 hover:bg-stone-900 active:scale-[0.98] text-white rounded-lg font-semibold text-xs transition-all flex items-center justify-center gap-2 shadow-xs flex-shrink-0 cursor-pointer"
-                        >
+                        <Button type="submit" variant="secondary" className="w-full sm:w-auto">
                             <span>Cari Gudang</span>
-                        </button>
+                        </Button>
                     </form>
                 </div>
 
                 {/* 4 METRIC CARDS GRID */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="bg-white rounded-2xl border border-stone-200 p-5 shadow-xs flex flex-col justify-between h-36">
+                    <div className="rounded-lg border border-border bg-card p-5 text-card-foreground shadow-md flex flex-col justify-between h-36">
                         <div className="flex items-center justify-between">
-                            <span className="text-xs font-semibold text-stone-500">Total Warehouses</span>
-                            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                            <span className="text-xs font-semibold text-muted-foreground">Total Warehouses</span>
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
                                 <WarehouseIcon className="w-4 h-4" />
                             </div>
                         </div>
                         <div>
-                            <div className="text-3xl font-bold text-stone-900 tracking-tight">
-                                {totalWarehouses} <span className="text-xs font-normal text-stone-500">Unit</span>
+                            <div className="text-3xl font-bold tracking-tight text-foreground">
+                                {totalWarehouses} <span className="text-xs font-normal text-muted-foreground">Unit</span>
                             </div>
-                            <div className="text-xs text-emerald-600 font-medium mt-1">
+                            <div className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1">
                                 ● {activeWarehouses} Aktif Beroperasi
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-2xl border border-stone-200 p-5 shadow-xs flex flex-col justify-between h-36">
+                    <div className="rounded-lg border border-border bg-card p-5 text-card-foreground shadow-md flex flex-col justify-between h-36">
                         <div className="flex items-center justify-between">
-                            <span className="text-xs font-semibold text-stone-500">Racks & Zones</span>
-                            <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                            <span className="text-xs font-semibold text-muted-foreground">Racks & Zones</span>
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
                                 <Layers className="w-4 h-4" />
                             </div>
                         </div>
                         <div>
-                            <div className="text-3xl font-bold text-stone-900 tracking-tight">
-                                148 <span className="text-xs font-normal text-stone-500">Racks</span>
+                            <div className="text-3xl font-bold tracking-tight text-foreground">
+                                148 <span className="text-xs font-normal text-muted-foreground">Racks</span>
                             </div>
-                            <div className="text-xs text-indigo-600 font-medium mt-1">
+                            <div className="text-xs text-primary font-medium mt-1">
                                 12 Designated Zones (96% Mapped)
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-2xl border border-stone-200 p-5 shadow-xs flex flex-col justify-between h-36">
+                    <div className="rounded-lg border border-border bg-card p-5 text-card-foreground shadow-md flex flex-col justify-between h-36">
                         <div className="flex items-center justify-between">
-                            <span className="text-xs font-semibold text-stone-500">Live Stock Count</span>
-                            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                            <span className="text-xs font-semibold text-muted-foreground">Live Stock Count</span>
+                            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                                 <Activity className="w-4 h-4" />
                             </div>
                         </div>
                         <div>
-                            <div className="text-3xl font-bold text-stone-900 tracking-tight">
-                                84,290 <span className="text-xs font-normal text-stone-500">Items</span>
+                            <div className="text-3xl font-bold tracking-tight text-foreground">
+                                84,290 <span className="text-xs font-normal text-muted-foreground">Items</span>
                             </div>
-                            <div className="text-xs text-emerald-600 font-medium mt-1">
+                            <div className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1">
                                 ↑ +3.8% dari bulan lalu
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-2xl border border-stone-200 p-5 shadow-xs flex flex-col justify-between h-36">
+                    <div className="rounded-lg border border-border bg-card p-5 text-card-foreground shadow-md flex flex-col justify-between h-36">
                         <div className="flex items-center justify-between">
-                            <span className="text-xs font-semibold text-stone-500">Storage Utilization</span>
-                            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                            <span className="text-xs font-semibold text-muted-foreground">Storage Utilization</span>
+                            <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
                                 <Building2 className="w-4 h-4" />
                             </div>
                         </div>
                         <div>
-                            <div className="text-3xl font-bold text-stone-900 tracking-tight">
+                            <div className="text-3xl font-bold tracking-tight text-foreground">
                                 78.4%
                             </div>
-                            <div className="w-full bg-stone-100 rounded-full h-1.5 mt-2 overflow-hidden">
-                                <div className="bg-blue-600 h-1.5 rounded-full" style={{ width: '78.4%' }}></div>
+                            <div className="w-full bg-muted rounded-full h-1.5 mt-2 overflow-hidden">
+                                <div className="bg-primary h-1.5 rounded-full" style={{ width: '78.4%' }}></div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* WAREHOUSE LEDGER TABLE */}
-                <div className="bg-white rounded-2xl border border-stone-200 shadow-xs flex flex-col overflow-hidden">
-                    <div className="p-4 border-b border-stone-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="overflow-hidden rounded-lg border border-border bg-card text-card-foreground shadow-md flex flex-col">
+                    <div className="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
-                            <h2 className="text-sm font-bold text-stone-900">Daftar Gudang Tenant</h2>
-                            <p className="text-xs text-stone-500">Menampilkan seluruh fasilitas gudang terdaftar dalam sistem</p>
+                            <h2 className="text-sm font-bold text-foreground">Daftar Gudang Tenant</h2>
+                            <p className="text-xs text-muted-foreground">Menampilkan seluruh fasilitas gudang terdaftar dalam sistem</p>
                         </div>
-                        <div className="flex items-center gap-1.5 bg-stone-100 p-1 rounded-lg text-xs font-mono">
-                            <span className="px-2 py-0.5 font-semibold text-stone-700">{warehouses.data.length} Gudang Tersedia</span>
+                        <div className="flex items-center gap-1.5 bg-muted px-2 py-1 rounded-lg text-xs font-mono text-muted-foreground">
+                            <span className="font-semibold text-foreground">{warehouses.data.length} Gudang Tersedia</span>
                         </div>
                     </div>
 
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse text-xs">
-                            <thead className="bg-stone-50 text-stone-500 font-semibold border-b border-stone-200">
-                                <tr>
-                                    <th className="py-3 px-5">Kode Gudang</th>
-                                    <th className="py-3 px-5">Nama Warehouse</th>
-                                    <th className="py-3 px-5">Alamat / Deskripsi</th>
-                                    <th className="py-3 px-5">Tanggal Ditambahkan</th>
-                                    <th className="py-3 px-5 text-center">Status</th>
-                                    <th className="py-3 px-4 text-center">Aksi</th>
+                            <thead>
+                                <tr className="border-b border-border bg-muted/50 text-muted-foreground">
+                                    <th className="p-4 font-semibold">Kode Gudang</th>
+                                    <th className="p-4 font-semibold">Nama Warehouse</th>
+                                    <th className="p-4 font-semibold">Alamat / Deskripsi</th>
+                                    <th className="p-4 font-semibold">Tanggal Ditambahkan</th>
+                                    <th className="p-4 text-center font-semibold">Status</th>
+                                    <th className="p-4 text-center font-semibold">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-stone-100 text-stone-800 font-sans">
+                            <tbody className="divide-y divide-border">
                                 {warehouses.data.length > 0 ? (
                                     warehouses.data.map((wh) => (
-                                        <tr key={wh.id} className="hover:bg-stone-50/70 transition-colors">
-                                            <td className="py-3 px-5 font-mono">
-                                                <div className="font-bold text-blue-600">{wh.code}</div>
+                                        <tr key={wh.id} className="transition-colors hover:bg-muted/50">
+                                            <td className="p-4 font-mono font-bold text-primary">
+                                                {wh.code}
                                             </td>
-                                            <td className="py-3 px-5 font-semibold text-stone-900">
+                                            <td className="p-4 font-semibold text-foreground">
                                                 {wh.name}
                                             </td>
-                                            <td className="py-3 px-5 text-stone-600">
+                                            <td className="p-4 text-muted-foreground">
                                                 {wh.desc || '-'}
                                             </td>
-                                            <td className="py-3 px-5 font-mono text-stone-500">
+                                            <td className="p-4 font-mono text-muted-foreground">
                                                 {new Date(wh.created_at).toISOString().split('T')[0]}
                                             </td>
-                                            <td className="py-3 px-5 text-center">
-                                                <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${wh.is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}`}>
+                                            <td className="p-4 text-center">
+                                                <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${wh.is_active ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : 'bg-destructive/10 text-destructive border border-destructive/20'}`}>
                                                     {wh.is_active ? 'Active' : 'Inactive'}
                                                 </span>
                                             </td>
-                                            <td className="py-3 px-4 text-center space-x-1">
-                                                <button
-                                                    type="button"
+                                            <td className="p-4 text-center space-x-1">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
                                                     onClick={() => openEditModal(wh)}
-                                                    className="p-1 hover:bg-stone-100 rounded text-stone-400 hover:text-stone-700 transition-colors cursor-pointer"
+                                                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
                                                     title="Edit Gudang"
                                                 >
                                                     <Edit3 className="w-4 h-4" />
-                                                </button>
-                                                <button
-                                                    type="button"
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
                                                     onClick={() => handleDelete(wh.id, wh.name)}
-                                                    className="p-1 hover:bg-rose-50 rounded text-stone-400 hover:text-rose-600 transition-colors cursor-pointer"
+                                                    className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
                                                     title="Hapus Gudang"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
-                                                </button>
+                                                </Button>
                                             </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan={6} className="py-12 text-center text-stone-400 font-sans">
+                                        <td colSpan={6} className="p-12 text-center text-muted-foreground">
                                             <div className="flex flex-col items-center justify-center gap-2">
-                                                <WarehouseIcon className="w-8 h-8 text-stone-300 stroke-1" />
-                                                <p className="text-xs font-semibold text-stone-700">
+                                                <WarehouseIcon className="w-8 h-8 text-muted-foreground/50 stroke-1" />
+                                                <p className="text-xs font-semibold text-foreground">
                                                     Belum ada data gudang yang terdaftar untuk tenant ini.
                                                 </p>
-                                                <p className="text-[11px] text-stone-400">
-                                                    Klik tombol <strong className="text-blue-600 font-semibold">"Add Warehouse"</strong> di atas untuk menambahkan gudang baru.
+                                                <p className="text-[11px] text-muted-foreground">
+                                                    Klik tombol <strong className="text-primary font-semibold">"Add Warehouse"</strong> di atas untuk menambahkan gudang baru.
                                                 </p>
                                             </div>
                                         </td>
@@ -319,25 +314,27 @@ export default function WarehouseIndex({ warehouses, filters }: Props) {
                     </div>
 
                     {/* Pagination Footer */}
-                    <div className="p-4 bg-stone-50 border-t border-stone-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-stone-600">
+                    <div className="flex items-center justify-between border-t border-border bg-muted/20 p-4 text-sm text-muted-foreground">
                         <div>
-                            Page {warehouses.current_page} of {warehouses.last_page || 1}
+                            Page <span className="font-medium text-foreground">{warehouses.current_page}</span> of {warehouses.last_page || 1}
                         </div>
-                        <div className="flex gap-2">
-                            <button
+                        <div className="flex items-center space-x-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
                                 disabled={!warehouses.prev_page_url}
                                 onClick={() => warehouses.prev_page_url && router.visit(warehouses.prev_page_url)}
-                                className="px-3 py-1 bg-white border border-stone-200 rounded-md disabled:opacity-40 hover:bg-stone-100 transition text-xs font-medium cursor-pointer"
                             >
-                                &lt; Prev
-                            </button>
-                            <button
+                                Prev
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
                                 disabled={!warehouses.next_page_url}
                                 onClick={() => warehouses.next_page_url && router.visit(warehouses.next_page_url)}
-                                className="px-3 py-1 bg-white border border-stone-200 rounded-md disabled:opacity-40 hover:bg-stone-100 transition text-xs font-medium cursor-pointer"
                             >
-                                Next &gt;
-                            </button>
+                                Next
+                            </Button>
                         </div>
                     </div>
                 </div>
@@ -345,46 +342,44 @@ export default function WarehouseIndex({ warehouses, filters }: Props) {
 
             {/* MODAL CREATE / EDIT WAREHOUSE */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-stone-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl border border-stone-200">
-                        <h2 className="text-base font-bold text-stone-900 mb-4">
+                <div className="fixed inset-0 bg-background/80 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+                    <div className="bg-card rounded-lg p-6 w-full max-w-md shadow-xl border border-border text-card-foreground">
+                        <h2 className="text-base font-bold text-foreground mb-4">
                             {editMode ? 'Edit Data Gudang' : 'Tambah Gudang Baru'}
                         </h2>
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
-                                <label className="block text-xs font-semibold uppercase text-stone-500 mb-1">Kode Gudang</label>
-                                <input
+                                <label className="block text-xs font-semibold uppercase text-muted-foreground mb-1">Kode Gudang</label>
+                                <Input
                                     type="text"
                                     value={data.code}
                                     onChange={(e) => setData('code', e.target.value)}
-                                    className="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs font-mono font-medium focus:outline-none focus:border-blue-600 focus:bg-white"
                                     placeholder="Contoh: WH-JKT01"
+                                    className="font-mono"
                                 />
-                                {errors.code && <p className="text-rose-600 text-[11px] mt-1">{errors.code}</p>}
+                                {errors.code && <p className="text-destructive text-[11px] mt-1">{errors.code}</p>}
                             </div>
 
                             <div>
-                                <label className="block text-xs font-semibold uppercase text-stone-500 mb-1">Nama Warehouse</label>
-                                <input
+                                <label className="block text-xs font-semibold uppercase text-muted-foreground mb-1">Nama Warehouse</label>
+                                <Input
                                     type="text"
                                     value={data.name}
                                     onChange={(e) => setData('name', e.target.value)}
-                                    className="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs font-medium focus:outline-none focus:border-blue-600 focus:bg-white"
                                     placeholder="Contoh: Gudang Utama JKT"
                                 />
-                                {errors.name && <p className="text-rose-600 text-[11px] mt-1">{errors.name}</p>}
+                                {errors.name && <p className="text-destructive text-[11px] mt-1">{errors.name}</p>}
                             </div>
 
                             <div>
-                                <label className="block text-xs font-semibold uppercase text-stone-500 mb-1">Alamat / Deskripsi</label>
-                                <input
+                                <label className="block text-xs font-semibold uppercase text-muted-foreground mb-1">Alamat / Deskripsi</label>
+                                <Input
                                     type="text"
                                     value={data.desc}
                                     onChange={(e) => setData('desc', e.target.value)}
-                                    className="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs font-medium focus:outline-none focus:border-blue-600 focus:bg-white"
                                     placeholder="Contoh: Jl. Raya Cakung No. 12"
                                 />
-                                {errors.desc && <p className="text-rose-600 text-[11px] mt-1">{errors.desc}</p>}
+                                {errors.desc && <p className="text-destructive text-[11px] mt-1">{errors.desc}</p>}
                             </div>
 
                             <div className="flex items-center gap-2 pt-2">
@@ -393,25 +388,22 @@ export default function WarehouseIndex({ warehouses, filters }: Props) {
                                     id="is_active"
                                     checked={data.is_active}
                                     onChange={(e) => setData('is_active', e.target.checked)}
-                                    className="rounded border-stone-300 text-blue-600 focus:ring-0 w-4 h-4 cursor-pointer"
+                                    className="rounded border-border bg-background text-primary focus:ring-primary w-4 h-4 cursor-pointer"
                                 />
-                                <label htmlFor="is_active" className="text-xs font-semibold text-stone-700 cursor-pointer">Status Aktif Beroperasi</label>
+                                <label htmlFor="is_active" className="text-xs font-semibold text-foreground cursor-pointer">Status Aktif Beroperasi</label>
                             </div>
 
                             <div className="flex justify-end gap-2.5 mt-6 pt-2">
-                                <button
+                                <Button
                                     type="button"
+                                    variant="outline"
                                     onClick={() => setIsModalOpen(false)}
-                                    className="px-4 py-2 bg-white hover:bg-stone-50 border border-stone-200 text-stone-700 rounded-lg text-xs font-semibold transition-all cursor-pointer"
                                 >
                                     Batal
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white rounded-lg text-xs font-semibold transition-all shadow-xs cursor-pointer"
-                                >
+                                </Button>
+                                <Button type="submit">
                                     {editMode ? 'Simpan Perubahan' : 'Simpan Gudang'}
-                                </button>
+                                </Button>
                             </div>
                         </form>
                     </div>
