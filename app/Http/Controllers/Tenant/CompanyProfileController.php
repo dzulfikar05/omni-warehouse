@@ -31,6 +31,9 @@ class CompanyProfileController extends Controller
                 'slug' => $tenant->slug,
                 'logo' => $mediaUrl,
                 'phone' => $tenant->phone ?? '',
+                'email' => $tenant->email ?? '',
+                'website' => $tenant->website ?? '',
+                'tax_number' => $tenant->tax_number ?? '',
                 'address' => $tenant->address ?? '',
             ],
         ]);
@@ -38,10 +41,14 @@ class CompanyProfileController extends Controller
 
     public function update(CompanyProfileRequest $request, string $tenant_slug): RedirectResponse
     {
-        $this->service->updateCompanyProfile($tenant_slug, $request->validated());
+        // Service mengembalikan model tenant yang sudah diperbarui
+        $updatedTenant = $this->service->updateCompanyProfile($tenant_slug, $request->validated());
 
-        return to_route('tenant.settings.company-profile.edit', ['tenant_slug' => $tenant_slug])
-            ->with('success', 'Company profile updated successfully.');
+        // Gunakan slug baru jika slug diubah oleh user
+        $newSlug = $updatedTenant->slug ?? $request->input('slug', $tenant_slug);
+
+        return to_route('tenant.settings.company-profile.edit', ['tenant_slug' => $newSlug])
+            ->with('success', 'Company profile and tenant URL updated successfully.');
     }
 
     public function destroyLogo(string $tenant_slug): RedirectResponse

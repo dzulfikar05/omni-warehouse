@@ -37,8 +37,12 @@ export function AppSidebar() {
     const hasRole = (role: string) => userRoles.includes(role);
 
     // Penentuan Konteks Platform Central vs Tenant
-    const isCentralUser = !userTenantId && (hasRole('superadmin') || userPermissions.some(p => p.startsWith('central.')));
-    const isTenantUser = !isCentralUser && Boolean(current_tenant || userTenantId);
+    const isCentralUser =
+        !userTenantId &&
+        (hasRole('superadmin') ||
+            userPermissions.some((p) => p.startsWith('central.')));
+    const isTenantUser =
+        !isCentralUser && Boolean(current_tenant || userTenantId);
 
     const mainNavItems: NavItem[] = [];
 
@@ -61,7 +65,9 @@ export function AppSidebar() {
         if (can('tenant.dashboard.view')) {
             mainNavItems.push({
                 title: 'Dashboard',
-                href: activeTenantSlug ? `/${activeTenantSlug}/dashboard` : '/dashboard',
+                href: activeTenantSlug
+                    ? `/${activeTenantSlug}/dashboard`
+                    : '/dashboard',
                 icon: LayoutGrid,
             });
         }
@@ -71,7 +77,9 @@ export function AppSidebar() {
         if (can('tenant.skus.view')) {
             inventoryChildren.push({
                 title: 'SKUs',
-                href: activeTenantSlug ? `/${activeTenantSlug}/inventory/skus` : '#',
+                href: activeTenantSlug
+                    ? `/${activeTenantSlug}/inventory/skus`
+                    : '#',
             });
         }
 
@@ -116,19 +124,25 @@ export function AppSidebar() {
         if (can('tenant.warehouses.view')) {
             warehouseChildren.push({
                 title: 'Warehouses',
-                href: activeTenantSlug ? `/${activeTenantSlug}/warehouses` : '#',
+                href: activeTenantSlug
+                    ? `/${activeTenantSlug}/warehouses`
+                    : '#',
             });
         }
         if (can('tenant.stock_locations.view')) {
             warehouseChildren.push({
                 title: 'Rack & Stock Location',
-                href: activeTenantSlug ? `/${activeTenantSlug}/stock-locations` : '#',
+                href: activeTenantSlug
+                    ? `/${activeTenantSlug}/stock-locations`
+                    : '#',
             });
         }
         if (can('tenant.stock_opname.view')) {
             warehouseChildren.push({
                 title: 'Stock Opname',
-                href: activeTenantSlug ? `/${activeTenantSlug}/stock-opname` : '#',
+                href: activeTenantSlug
+                    ? `/${activeTenantSlug}/stock-opname`
+                    : '#',
             });
         }
 
@@ -146,19 +160,25 @@ export function AppSidebar() {
         if (can('tenant.inbound.view')) {
             transactionChildren.push({
                 title: 'Inbound Management',
-                href: activeTenantSlug ? `/${activeTenantSlug}/transactions/inbound` : '#',
+                href: activeTenantSlug
+                    ? `/${activeTenantSlug}/transactions/inbound`
+                    : '#',
             });
         }
         if (can('tenant.outbound.view')) {
             transactionChildren.push({
                 title: 'Outbound Management',
-                href: activeTenantSlug ? `/${activeTenantSlug}/transactions/outbound` : '#',
+                href: activeTenantSlug
+                    ? `/${activeTenantSlug}/transactions/outbound`
+                    : '#',
             });
         }
         if (can('tenant.stock_transfer.view')) {
             transactionChildren.push({
                 title: 'Stock Transfer',
-                href: activeTenantSlug ? `/${activeTenantSlug}/transactions/stock-transfer` : '#',
+                href: activeTenantSlug
+                    ? `/${activeTenantSlug}/transactions/stock-transfer`
+                    : '#',
             });
         }
 
@@ -176,13 +196,17 @@ export function AppSidebar() {
         if (can('tenant.contacts.customers.view')) {
             contactChildren.push({
                 title: 'Customer',
-                href: activeTenantSlug ? `/${activeTenantSlug}/contacts/customers` : '#',
+                href: activeTenantSlug
+                    ? `/${activeTenantSlug}/contacts/customers`
+                    : '#',
             });
         }
         if (can('tenant.contacts.suppliers.view')) {
             contactChildren.push({
                 title: 'Supplier',
-                href: activeTenantSlug ? `/${activeTenantSlug}/contacts/suppliers` : '#',
+                href: activeTenantSlug
+                    ? `/${activeTenantSlug}/contacts/suppliers`
+                    : '#',
             });
         }
 
@@ -200,25 +224,33 @@ export function AppSidebar() {
         if (can('tenant.stock_summary.view')) {
             reportChildren.push({
                 title: 'Stock Summary Report',
-                href: activeTenantSlug ? `/${activeTenantSlug}/reports/stock-summary` : '#',
+                href: activeTenantSlug
+                    ? `/${activeTenantSlug}/reports/stock-summary`
+                    : '#',
             });
         }
         if (can('tenant.stock_movement.view')) {
             reportChildren.push({
                 title: 'Stock Movement',
-                href: activeTenantSlug ? `/${activeTenantSlug}/reports/stock-movement` : '#',
+                href: activeTenantSlug
+                    ? `/${activeTenantSlug}/reports/stock-movement`
+                    : '#',
             });
         }
         if (can('tenant.valuation_asset.view')) {
             reportChildren.push({
                 title: 'Valuation & Asset Report',
-                href: activeTenantSlug ? `/${activeTenantSlug}/reports/valuation-asset` : '#',
+                href: activeTenantSlug
+                    ? `/${activeTenantSlug}/reports/valuation-asset`
+                    : '#',
             });
         }
         if (can('tenant.inbound_outbound.view')) {
             reportChildren.push({
                 title: 'Inbound / Outbound Summary',
-                href: activeTenantSlug ? `/${activeTenantSlug}/reports/inbound-outbound` : '#',
+                href: activeTenantSlug
+                    ? `/${activeTenantSlug}/reports/inbound-outbound`
+                    : '#',
             });
         }
 
@@ -233,16 +265,31 @@ export function AppSidebar() {
 
         // 7. Tenant Settings
         const settingsChildren = [];
+
         if (can('tenant.company_profile.view')) {
             settingsChildren.push({
                 title: 'Company Profile',
-                href: activeTenantSlug ? `/${activeTenantSlug}/settings/company-profile` : '#',
+                href: activeTenantSlug
+                    ? `/${activeTenantSlug}/settings/company-profile`
+                    : '#',
             });
         }
+
+        if (can('tenant.general_settings.view')) {
+            settingsChildren.push({
+                title: 'General Settings',
+                href: activeTenantSlug
+                    ? `/${activeTenantSlug}/settings/general-settings`
+                    : '#',
+            });
+        }
+
         if (can('tenant.users.view') || can('tenant.roles.view')) {
             settingsChildren.push({
                 title: 'User & Roles',
-                href: activeTenantSlug ? `/${activeTenantSlug}/settings/users-roles` : '#',
+                href: activeTenantSlug
+                    ? `/${activeTenantSlug}/settings/users-roles`
+                    : '#',
             });
         }
 
@@ -254,7 +301,6 @@ export function AppSidebar() {
                 children: settingsChildren,
             });
         }
-
     } else {
         // ----------------------------------------------------
         // CENTRAL PLATFORM NAVIGATION (Disaring dengan central.*)

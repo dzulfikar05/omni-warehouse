@@ -18,17 +18,17 @@ class CompanyProfileService implements CompanyProfileContract
 
         $tenant->update([
             'name' => $data['name'],
+            'slug' => $data['slug'],
             'phone' => $data['phone'] ?? null,
+            'email' => $data['email'] ?? null,
+            'website' => $data['website'] ?? null,
+            'tax_number' => $data['tax_number'] ?? null,
             'address' => $data['address'] ?? null,
         ]);
 
         if (isset($data['logo']) && $data['logo'] instanceof \Illuminate\Http\UploadedFile) {
-            $media = $tenant->addMedia($data['logo'])
-                ->toMediaCollection('logo');
-
-            $tenant->update([
-                'logo' => $media->getUrl(),
-            ]);
+            $tenant->clearMediaCollection('logo');
+            $tenant->addMedia($data['logo'])->toMediaCollection('logo');
         }
 
         return $tenant;

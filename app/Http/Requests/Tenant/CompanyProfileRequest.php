@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Tenant;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class CompanyProfileRequest extends FormRequest
 {
@@ -13,11 +14,23 @@ class CompanyProfileRequest extends FormRequest
 
     public function rules(): array
     {
+        $tenantSlug = $this->route('tenant_slug');
+
         return [
-            'name' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:50',
-            'address' => 'nullable|string',
-            'logo' => 'nullable|image|mimes:png,jpg,jpeg,svg|max:2048',
+            'name' => ['required', 'string', 'max:255'],
+            'slug' => [
+                'required',
+                'string',
+                'max:255',
+                'alpha_dash',
+                Rule::unique('tenants', 'slug')->ignore($tenantSlug, 'slug'),
+            ],
+            'phone' => ['nullable', 'string', 'max:50'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'website' => ['nullable', 'string', 'max:255'],
+            'tax_number' => ['nullable', 'string', 'max:50'],
+            'address' => ['nullable', 'string'],
+            'logo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,svg', 'max:2048'],
         ];
     }
 }
