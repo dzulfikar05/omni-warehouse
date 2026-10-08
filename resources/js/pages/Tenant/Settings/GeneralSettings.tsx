@@ -102,8 +102,12 @@ const SimpleRichTextEditor = ({
 };
 
 export default function GeneralSettings({ settings, tenant_profile }: SettingsProps) {
-    const { flash, current_tenant } = usePage().props as any;
-    const tenantSlug = current_tenant?.slug;
+    const { flash, current_tenant, auth } = usePage().props as any;
+
+    // Deteksi Slug Dinamis secara Aman
+    const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
+    const rawSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
+    const tenantSlug = rawSlug ? rawSlug.replace(/^\/+|\/+$/g, '') : '';
 
     // Ambil Data Profil Asli (Spatie Logo & Tax Number)
     const companyLogo = tenant_profile?.logo || current_tenant?.logo || null;
@@ -112,14 +116,14 @@ export default function GeneralSettings({ settings, tenant_profile }: SettingsPr
 
     const { data, setData, post, processing } = useForm({
         doc_header_html:
-            settings.doc_header_html ||
+            settings?.doc_header_html ||
             `<p style="text-align: center;"><strong>${companyName}</strong><br>Jl. Boulevard No. 123, Jakarta Selatan | Telp: (021) 555-1234</p>`,
         doc_footer_html:
-            settings.doc_footer_html ||
+            settings?.doc_footer_html ||
             '<p><em>* Barang yang sudah dibeli tidak dapat dikembalikan tanpa nota resmi.</em></p>',
-        doc_show_logo: settings.doc_show_logo === '1' || settings.doc_show_logo === undefined,
-        doc_show_npwp: settings.doc_show_npwp === '1' || settings.doc_show_npwp === undefined,
-        doc_paper_size: settings.doc_paper_size || 'A4',
+        doc_show_logo: settings?.doc_show_logo === '1' || settings?.doc_show_logo === undefined,
+        doc_show_npwp: settings?.doc_show_npwp === '1' || settings?.doc_show_npwp === undefined,
+        doc_paper_size: settings?.doc_paper_size || 'A4',
     });
 
     useEffect(() => {
@@ -130,6 +134,7 @@ export default function GeneralSettings({ settings, tenant_profile }: SettingsPr
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
+        // Memastikan URL Form tidak ganda slash
         post(`/${tenantSlug}/settings/general-settings`);
     };
 

@@ -5,8 +5,12 @@ namespace App\Http\Controllers\Tenant;
 use App\Contracts\CustomerContract;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\CustomerRequest;
+use App\Jobs\ExportCustomerExcelJob;
+use App\Jobs\ExportCustomerPdfJob;
 use App\Models\Customer;
+use App\Models\ExportLog;
 use App\Models\Tenant;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -29,7 +33,6 @@ class CustomerController extends Controller
 
         $customers = $this->service->getPaginatedCustomers($tenant_slug, $search, $perPage);
 
-        // Agregasi Statistik berbasis Tenant
         $stats = [
             'total_customers' => Customer::where('tenant_id', $tenant->id)->count(),
             'new_this_month'  => Customer::where('tenant_id', $tenant->id)
@@ -67,7 +70,6 @@ class CustomerController extends Controller
     {
         $customer = $this->service->getCustomerById($tenant_slug, $id);
 
-        // Load data riwayat outbound dan item barang yang dibeli secara riil
         $customer->load([
             'outbounds' => function ($query) {
                 $query->with(['items.sku.product'])->latest()->limit(5);
@@ -105,5 +107,49 @@ class CustomerController extends Controller
 
         return to_route('tenant.contacts.customers.index', ['tenant_slug' => $tenant_slug])
             ->with('success', 'Customer deleted successfully.');
+    }
+
+    public function exportPdf(string $tenant_slug): RedirectResponse
+    {
+        $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
+
+        $log = ExportLog::create([
+            'tenant_id' => $tenant->id,
+            'user_id'   => auth()->id(),
+            'type'      => 'pdf',
+            'filename'  => 'Customer_Report_' . date('Ymd_His') . '.pdf',
+            'status'    => 'pending',
+        ]);
+
+        ExportCustomerPdfJob::dispatch($log->id);
+
+        return back()->with('success', 'Added to export queue. Check the bell/download icon in the navbar.');
+    }
+
+    public function exportExcel(string $tenant_slug): RedirectResponse
+    {
+        $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
+
+        $log = ExportLog::create([
+            'tenant_id' => $tenant->id,
+            'user_id'   => auth()->id(),
+            'type'      => 'excel',
+            'filename'  => 'Customer_Report_' . date('Ymd_His') . '.xlsx',
+            'status'    => 'pending',
+        ]);
+
+        ExportCustomerExcelJob::dispatch($log->id);
+
+        return back()->with('success', 'Added to export queue. Check the bell/download icon in the navbar.');
+    }
+
+    public function getExportNotifications(): JsonResponse
+    {
+        $logs = ExportLog::where('user_id', auth()->id())
+            ->latest()
+            ->take(5)
+            ->get();
+
+        return response()->json($logs);
     }
 }

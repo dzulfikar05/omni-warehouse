@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -16,23 +17,46 @@ class HandleInertiaRequests extends Middleware
 
     public function share(Request $request): array
     {
+        $user = $request->user();
+        $tenant = app()->bound('current_tenant') ? app('current_tenant') : $user?->tenant;
+
+        // Ambil General Settings (Key-Value)
+        $settings = [];
+        if ($tenant) {
+            $settings = DB::table('general_settings')
+                ->where('tenant_id', $tenant->id)
+                ->pluck('value', 'name')
+                ->toArray();
+        }
+
+        // Ambil URL Logo Spatie / Fallback
+        $logoUrl = null;
+        if ($tenant) {
+            $logoUrl = method_exists($tenant, 'getFirstMediaUrl') && $tenant->getFirstMediaUrl('logo')
+                ? $tenant->getFirstMediaUrl('logo')
+                : $tenant->logo;
+        }
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $request->user() ? [
-                    'id' => $request->user()->id,
-                    'name' => $request->user()->name,
-                    'email' => $request->user()->email,
-                    'tenant_id' => $request->user()->tenant_id,
-                    'tax_number' => $request->user()->tenant->tax_number,
-                    'tenant_name' => $request->user()->tenant?->name,
-                    'logo' => $request->user()->tenant->getFirstMediaUrl('logo') ?: $request->user()->tenant->logo,
-                    'permissions' => $request->user()->getAllPermissions()->pluck('name')->toArray(),
-                    'roles' => $request->user()->getRoleNames(),
+                'user' => $user ? [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'tenant_id' => $user->tenant_id,
+                    'tax_number' => $user->tenant?->tax_number,
+                    'tenant_name' => $user->tenant?->name,
+                    'logo' => $logoUrl,
+                    'permissions' => $user->getAllPermissions()->pluck('name')->toArray(),
+                    'roles' => $user->getRoleNames(),
                 ] : null,
             ],
-            'current_tenant' => app()->bound('current_tenant') ? app('current_tenant') : null,
+            'current_tenant' => $tenant ? array_merge($tenant->toArray(), [
+                'logo_url' => $logoUrl,
+            ]) : null,
+            'settings' => $settings, // Di-share global untuk AppSidebar & Komponen lainnya
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

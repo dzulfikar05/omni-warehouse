@@ -10,7 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class GeneralSettingsController extends Controller
+class GeneralSettingController extends Controller
 {
     protected GeneralSettingsContract $service;
 
@@ -29,7 +29,7 @@ class GeneralSettingsController extends Controller
             'tenant_profile' => [
                 'name' => $tenant->name,
                 'tax_number' => $tenant->tax_number ?? '',
-                'logo' => $tenant->getFirstMediaUrl('logo') ?: $tenant->logo,
+                'logo' => method_exists($tenant, 'getFirstMediaUrl') ? $tenant->getFirstMediaUrl('logo') : $tenant->logo,
             ],
         ]);
     }

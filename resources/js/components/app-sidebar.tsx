@@ -26,7 +26,7 @@ import {
 import type { NavItem } from '@/types';
 
 export function AppSidebar() {
-    const { auth, current_tenant } = usePage().props as any;
+    const { auth, current_tenant, settings, tenant_profile } = usePage().props as any;
 
     const userPermissions: string[] = auth?.user?.permissions || [];
     const userRoles: string[] = auth?.user?.roles || [];
@@ -46,7 +46,7 @@ export function AppSidebar() {
 
     const mainNavItems: NavItem[] = [];
 
-    const currentPathSlug = window.location.pathname.split('/')[1];
+    const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
     const activeTenantSlug =
         current_tenant?.slug || (userTenantId ? currentPathSlug : null);
 
@@ -55,6 +55,17 @@ export function AppSidebar() {
         auth?.user?.tenant_name ||
         auth?.user?.tenant?.name ||
         'Tenant Portal';
+
+    // ----------------------------------------------------
+    // SHARING LOGO GENERAL SETTINGS KHUSUS TENANT
+    // ----------------------------------------------------
+    const showTenantLogo = settings?.doc_show_logo === '1' || settings?.doc_show_logo === undefined;
+
+    // Ambil logo dari tenant_profile (Spatie), current_tenant, atau null
+    const rawTenantLogo = tenant_profile?.logo || current_tenant?.logo || current_tenant?.logo_url || null;
+
+    // Hanya gunakan logo khusus tenant jika flag showTenantLogo aktif
+    const activeTenantLogo = isTenantUser && showTenantLogo ? rawTenantLogo : null;
 
     if (isTenantUser) {
         // ----------------------------------------------------
@@ -219,7 +230,7 @@ export function AppSidebar() {
             });
         }
 
-        // 6. Reports (Fitur Laporan)
+        // 6. Reports
         const reportChildren = [];
         if (can('tenant.stock_summary.view')) {
             reportChildren.push({
@@ -303,7 +314,7 @@ export function AppSidebar() {
         }
     } else {
         // ----------------------------------------------------
-        // CENTRAL PLATFORM NAVIGATION (Disaring dengan central.*)
+        // CENTRAL PLATFORM NAVIGATION
         // ----------------------------------------------------
         if (can('central.dashboard.view') || hasRole('superadmin')) {
             mainNavItems.push({
@@ -367,6 +378,7 @@ export function AppSidebar() {
                             >
                                 <AppLogo
                                     size="sm"
+                                    logoUrl={activeTenantLogo} // Mengirim URL logo khusus tenant jika aktif
                                     tenantName={
                                         isTenantUser
                                             ? activeTenantName

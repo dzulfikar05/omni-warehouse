@@ -31,6 +31,8 @@ interface Customer {
     name: string;
     phone?: string;
     email?: string;
+    tax_number?: string;
+    address?: string;
     notes?: string;
     outbounds?: OutboundTransaction[];
     purchased_products?: TransactionItem[];
@@ -69,7 +71,6 @@ export default function CustomerShow({ customer }: { customer?: Customer }) {
             <Head title={`Customer Details - ${customer.name}`} />
 
             <div className="space-y-6 p-4 sm:p-6">
-                {/* Top Bar Header */}
                 <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-sm">
                     <div>
                         <h2 className="text-xl font-bold tracking-tight">Customer Details</h2>
@@ -91,14 +92,13 @@ export default function CustomerShow({ customer }: { customer?: Customer }) {
                     </div>
                 </div>
 
-                {/* Form Read-Only Data Customer */}
                 <div className="space-y-4 rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-sm">
                     <div className="space-y-1.5">
                         <Label className="text-xs font-semibold">Customer Name</Label>
                         <Input value={customer.name || ''} readOnly className="h-10 rounded-xl border-border bg-muted/30 text-xs" />
                     </div>
 
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                         <div className="space-y-1.5">
                             <Label className="text-xs font-semibold">Phone</Label>
                             <Input value={customer.phone || '-'} readOnly className="h-10 rounded-xl border-border bg-muted/30 text-xs" />
@@ -108,6 +108,16 @@ export default function CustomerShow({ customer }: { customer?: Customer }) {
                             <Label className="text-xs font-semibold">Email</Label>
                             <Input value={customer.email || '-'} readOnly className="h-10 rounded-xl border-border bg-muted/30 text-xs" />
                         </div>
+
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-semibold">Tax Number / NPWP</Label>
+                            <Input value={customer.tax_number || '-'} readOnly className="h-10 rounded-xl border-border bg-muted/30 text-xs font-mono" />
+                        </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <Label className="text-xs font-semibold">Address</Label>
+                        <Textarea value={customer.address || '-'} readOnly rows={2} className="rounded-xl border-border bg-muted/30 p-3 text-xs" />
                     </div>
 
                     <div className="space-y-1.5">
@@ -127,9 +137,7 @@ export default function CustomerShow({ customer }: { customer?: Customer }) {
                     </div>
                 </div>
 
-                {/* Panel Outbound & Purchased Products Riil */}
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    {/* Outbound / Order History */}
                     <div className="space-y-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
                         <h3 className="border-b border-border pb-3 text-sm font-bold text-foreground">Outbound / Order History</h3>
 
@@ -138,9 +146,7 @@ export default function CustomerShow({ customer }: { customer?: Customer }) {
                                 {customer.outbounds.map((item) => (
                                     <div key={item.id} className="flex items-center justify-between rounded-xl border border-border bg-muted/20 p-3.5">
                                         <div>
-                                            <p className="text-xs font-bold text-foreground">
-                                                TRX-{item.local_uuid || item.id}
-                                            </p>
+                                            <p className="text-xs font-bold text-foreground">TRX-{item.local_uuid || item.id}</p>
                                             <p className="mt-0.5 text-[11px] text-muted-foreground">
                                                 {new Date(item.created_at || '').toLocaleDateString('id-ID')}
                                             </p>
@@ -165,7 +171,6 @@ export default function CustomerShow({ customer }: { customer?: Customer }) {
                         )}
                     </div>
 
-                    {/* Purchased Products */}
                     <div className="space-y-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
                         <h3 className="border-b border-border pb-3 text-sm font-bold text-foreground">Purchased Products</h3>
 

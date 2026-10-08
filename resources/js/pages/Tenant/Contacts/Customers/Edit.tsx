@@ -11,18 +11,22 @@ interface Customer {
     name: string;
     phone?: string;
     email?: string;
+    tax_number?: string;
+    address?: string;
     notes?: string;
 }
 
 export default function CustomerEdit({ customer }: { customer: Customer }) {
     const { current_tenant, auth } = usePage().props as any;
-    const currentPathSlug = window.location.pathname.split('/')[1];
+    const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
 
     const { data, setData, put, processing, errors } = useForm({
         name: customer.name || '',
         phone: customer.phone || '',
         email: customer.email || '',
+        tax_number: customer.tax_number || '',
+        address: customer.address || '',
         notes: customer.notes || '',
     });
 
@@ -91,6 +95,29 @@ export default function CustomerEdit({ customer }: { customer: Customer }) {
                                 />
                                 {errors.email && <span className="text-xs text-destructive">{errors.email}</span>}
                             </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <Label htmlFor="tax_number" className="text-xs font-semibold">Tax Number / NPWP</Label>
+                            <Input
+                                id="tax_number"
+                                value={data.tax_number}
+                                onChange={(e) => setData('tax_number', e.target.value)}
+                                className="h-10 text-xs border-border bg-background rounded-xl font-mono"
+                            />
+                            {errors.tax_number && <span className="text-xs text-destructive">{errors.tax_number}</span>}
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <Label htmlFor="address" className="text-xs font-semibold">Address</Label>
+                            <Textarea
+                                id="address"
+                                rows={2}
+                                value={data.address}
+                                onChange={(e) => setData('address', e.target.value)}
+                                className="text-xs border-border bg-background rounded-xl p-3"
+                            />
+                            {errors.address && <span className="text-xs text-destructive">{errors.address}</span>}
                         </div>
 
                         <div className="space-y-1.5">

@@ -12,14 +12,7 @@ class Customer extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'tenant_id',
-        'name',
-        'phone',
-        'email',
-        'notes',
-        'created_by',
-    ];
+    protected $guarded = [];
 
     public function tenant(): BelongsTo
     {
