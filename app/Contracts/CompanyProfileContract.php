@@ -10,5 +10,5 @@ interface CompanyProfileContract
 
     public function updateCompanyProfile(string $tenantSlug, array $data): Tenant;
 
-    public function deleteCompanyLogo(string $tenantSlug): Tenant;
+    public function deleteCompanyLogo(string $tenantSlug): void;
 }

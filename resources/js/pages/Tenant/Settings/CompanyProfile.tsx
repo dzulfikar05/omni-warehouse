@@ -33,14 +33,14 @@ export default function CompanyProfile({ company }: { company: CompanyData }) {
     const { flash, current_tenant } = usePage().props as any;
     const tenantSlug = current_tenant?.slug || company.slug;
 
-    // Mengambil baseUrl dari ENV (VITE_APP_URL) atau dari origin browser saat ini
-    const baseUrl = import.meta.env.VITE_APP_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
+    const baseUrl =
+        import.meta.env.VITE_APP_URL ||
+        (typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
 
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const [previewLogo, setPreviewLogo] = useState<string | null>(company.logo);
 
     const { data, setData, post, processing, errors } = useForm({
-        _method: 'POST',
         name: company.name || '',
         slug: company.slug || '',
         phone: company.phone || '',
@@ -84,8 +84,16 @@ export default function CompanyProfile({ company }: { company: CompanyData }) {
 
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        // Mengirimkan form data multipart
         post(`/${tenantSlug}/settings/company-profile`, {
             forceFormData: true,
+            onSuccess: () => {
+                setData('logo', null);
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                }
+            },
         });
     };
 
@@ -163,6 +171,10 @@ export default function CompanyProfile({ company }: { company: CompanyData }) {
                                     )}
                                 </div>
 
+                                {errors.logo && (
+                                    <p className="text-[11px] text-destructive">{errors.logo}</p>
+                                )}
+
                                 <p className="text-[11px] text-muted-foreground">
                                     Format: <strong>PNG, JPG, SVG</strong> (Maks: 2MB)
                                 </p>
@@ -195,10 +207,12 @@ export default function CompanyProfile({ company }: { company: CompanyData }) {
                                     required
                                     className="h-9 text-xs bg-background rounded-lg"
                                 />
-                                {errors.name && <span className="text-[11px] text-destructive">{errors.name}</span>}
+                                {errors.name && (
+                                    <span className="text-[11px] text-destructive">{errors.name}</span>
+                                )}
                             </div>
 
-                            {/* Field: Tenant Slug (Editable Website/URL Identifier) */}
+                            {/* Field: Tenant Slug */}
                             <div className="space-y-1.5">
                                 <Label htmlFor="slug" className="text-xs font-medium">
                                     Tenant Portal Slug (URL Identifier) <span className="text-destructive">*</span>
@@ -223,9 +237,14 @@ export default function CompanyProfile({ company }: { company: CompanyData }) {
                                     />
                                 </div>
                                 <p className="text-[11px] text-muted-foreground">
-                                    URL Portal: <code className="text-blue-600 dark:text-blue-400 font-mono">{baseUrl}/{data.slug || 'slug'}</code>
+                                    URL Portal:{' '}
+                                    <code className="text-blue-600 dark:text-blue-400 font-mono">
+                                        {baseUrl}/{data.slug || 'slug'}
+                                    </code>
                                 </p>
-                                {errors.slug && <span className="text-[11px] text-destructive">{errors.slug}</span>}
+                                {errors.slug && (
+                                    <span className="text-[11px] text-destructive">{errors.slug}</span>
+                                )}
                             </div>
 
                             {/* Field: Phone */}
@@ -243,7 +262,9 @@ export default function CompanyProfile({ company }: { company: CompanyData }) {
                                         className="pl-8 h-9 text-xs bg-background rounded-lg"
                                     />
                                 </div>
-                                {errors.phone && <span className="text-[11px] text-destructive">{errors.phone}</span>}
+                                {errors.phone && (
+                                    <span className="text-[11px] text-destructive">{errors.phone}</span>
+                                )}
                             </div>
 
                             {/* Field: Official Email */}
@@ -262,7 +283,9 @@ export default function CompanyProfile({ company }: { company: CompanyData }) {
                                         className="pl-8 h-9 text-xs bg-background rounded-lg"
                                     />
                                 </div>
-                                {errors.email && <span className="text-[11px] text-destructive">{errors.email}</span>}
+                                {errors.email && (
+                                    <span className="text-[11px] text-destructive">{errors.email}</span>
+                                )}
                             </div>
 
                             {/* Field: Tax Number (NPWP) */}
@@ -280,7 +303,9 @@ export default function CompanyProfile({ company }: { company: CompanyData }) {
                                         className="pl-8 h-9 text-xs bg-background font-mono rounded-lg"
                                     />
                                 </div>
-                                {errors.tax_number && <span className="text-[11px] text-destructive">{errors.tax_number}</span>}
+                                {errors.tax_number && (
+                                    <span className="text-[11px] text-destructive">{errors.tax_number}</span>
+                                )}
                             </div>
                         </div>
 
@@ -297,7 +322,9 @@ export default function CompanyProfile({ company }: { company: CompanyData }) {
                                 placeholder="Jl. Raya Boulevard No. 123, Jakarta..."
                                 className="text-xs bg-background rounded-lg p-2.5"
                             />
-                            {errors.address && <span className="text-[11px] text-destructive">{errors.address}</span>}
+                            {errors.address && (
+                                <span className="text-[11px] text-destructive">{errors.address}</span>
+                            )}
                         </div>
 
                         {/* Submit Action */}

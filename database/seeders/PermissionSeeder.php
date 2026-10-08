@@ -91,6 +91,9 @@ class PermissionSeeder extends Seeder
             // Submenu: User & Roles
             'tenant.users.view', 'tenant.users.show', 'tenant.users.create', 'tenant.users.edit', 'tenant.users.delete',
             'tenant.roles.view', 'tenant.roles.show', 'tenant.roles.create', 'tenant.roles.edit', 'tenant.roles.delete',
+
+            'tenant.general_settings.view',
+            'tenant.general_settings.edit',
         ];
 
         // Registrasi seluruh permission ke database

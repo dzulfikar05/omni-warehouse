@@ -22,6 +22,7 @@ class CompanyProfileController extends Controller
     {
         $tenant = $this->service->getCompanyProfile($tenant_slug);
 
+        // Mengambil URL logo dari Spatie MediaLibrary
         $mediaUrl = $tenant->getFirstMediaUrl('logo') ?: $tenant->logo;
 
         return Inertia::render('Tenant/Settings/CompanyProfile', [
@@ -29,10 +30,9 @@ class CompanyProfileController extends Controller
                 'id' => $tenant->id,
                 'name' => $tenant->name,
                 'slug' => $tenant->slug,
-                'logo' => $mediaUrl,
+                'logo' => $mediaUrl ?: null,
                 'phone' => $tenant->phone ?? '',
                 'email' => $tenant->email ?? '',
-                'website' => $tenant->website ?? '',
                 'tax_number' => $tenant->tax_number ?? '',
                 'address' => $tenant->address ?? '',
             ],
@@ -41,14 +41,12 @@ class CompanyProfileController extends Controller
 
     public function update(CompanyProfileRequest $request, string $tenant_slug): RedirectResponse
     {
-        // Service mengembalikan model tenant yang sudah diperbarui
         $updatedTenant = $this->service->updateCompanyProfile($tenant_slug, $request->validated());
 
-        // Gunakan slug baru jika slug diubah oleh user
-        $newSlug = $updatedTenant->slug ?? $request->input('slug', $tenant_slug);
+        $newSlug = $updatedTenant->slug ?? $tenant_slug;
 
         return to_route('tenant.settings.company-profile.edit', ['tenant_slug' => $newSlug])
-            ->with('success', 'Company profile and tenant URL updated successfully.');
+            ->with('success', 'Company profile updated successfully.');
     }
 
     public function destroyLogo(string $tenant_slug): RedirectResponse
