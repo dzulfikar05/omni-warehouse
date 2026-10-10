@@ -40,6 +40,28 @@ class TenantController extends Controller
         ]);
     }
 
+    public function show(Tenant $tenant): Response
+    {
+        // Memuat relasi subscription dan plan terkait
+        $tenant->load(['subscription.plan']);
+
+        return Inertia::render('Admin/Tenants/Show', [
+            'tenant' => $tenant,
+        ]);
+    }
+
+    public function edit(Tenant $tenant): Response
+    {
+        $tenant->load(['subscription.plan']);
+        $plans = Plan::where('is_active', true)->get();
+
+        return Inertia::render('Admin/Tenants/Edit', [
+            'tenant' => $tenant,
+            'plans' => $plans,
+        ]);
+    }
+
+
     public function store(TenantRequest $request): RedirectResponse
     {
         $this->tenantService->createTenant($request->validated());

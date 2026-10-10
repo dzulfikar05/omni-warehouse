@@ -1,8 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Head, router } from '@inertiajs/react';
-import { Plus, Search, Building2, Eye, Edit, Trash2 } from 'lucide-react';
+import { debounce } from 'lodash';
+import { Plus, Building2, Eye, Edit, Trash2, AlertTriangle, X } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
+import { TableFilter } from '@/components/table-filter';
+import { FilterDropdown } from '@/components/table-dropdown';
+import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 
 interface Tenant {
     id: number;
@@ -15,6 +26,7 @@ interface Tenant {
     subscription?: {
         status: string;
         plan?: {
+            id: number;
             name: string;
         };
     };
@@ -32,30 +44,104 @@ interface Props {
         last_page: number;
         prev_page_url: string | null;
         next_page_url: string | null;
+        total?: number;
     };
     plans: Plan[];
     filters: {
         search?: string;
-        plan_id?: string;
+        per_page?: string;
         status?: string;
+        plan_id?: string;
+        sort_by?: string;
+        sort_order?: string;
     };
 }
 
 export default function TenantIndex({ tenants, plans, filters }: Props) {
     const [search, setSearch] = useState(filters.search || '');
+    const [perPage, setPerPage] = useState(filters.per_page || '10');
+    
+    // State Filter Sementara (sebelum tombol Apply diklik)
+    const [tempStatus, setTempStatus] = useState(filters.status || 'all');
+    const [tempPlan, setTempPlan] = useState(filters.plan_id || 'all');
+    const [tempSortBy, setTempSortBy] = useState(filters.sort_by || 'created_at');
+    const [tempSortOrder, setTempSortOrder] = useState(filters.sort_order || 'desc');
+
     const [openDropdown, setOpenDropdown] = useState<number | null>(null);
 
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
-        router.get('/admin/tenants', { search }, { preserveState: true });
+    // State untuk Modal Hapus Profesional
+    const [tenantToDelete, setTenantToDelete] = useState<Tenant | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const applyFilters = useCallback(
+        (newSearch: string, newPerPage: string, status: string, plan: string, sortBy: string, sortOrder: string) => {
+            router.get(
+                window.location.pathname,
+                {
+                    search: newSearch,
+                    per_page: newPerPage,
+                    status: status !== 'all' ? status : undefined,
+                    plan_id: plan !== 'all' ? plan : undefined,
+                    sort_by: sortBy,
+                    sort_order: sortOrder,
+                },
+                { preserveState: true, replace: true, preserveScroll: true }
+            );
+        },
+        []
+    );
+
+    const debouncedSearch = useMemo(
+        () =>
+            debounce(
+                (q: string, p: string, s: string, pl: string, sb: string, so: string) =>
+                    applyFilters(q, p, s, pl, sb, so),
+                500
+            ),
+        [applyFilters]
+    );
+
+    useEffect(() => {
+        return () => debouncedSearch.cancel();
+    }, [debouncedSearch]);
+
+    const onSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setSearch(value);
+        debouncedSearch(value, perPage, tempStatus, tempPlan, tempSortBy, tempSortOrder);
     };
 
-    const handleDelete = (tenantId: number) => {
-        if (confirm('Apakah Anda yakin ingin menghapus tenant ini?')) {
-            router.delete(`/admin/tenants/${tenantId}`, {
-                preserveScroll: true,
-            });
-        }
+    const onPerPageChange = (value: string) => {
+        setPerPage(value);
+        applyFilters(search, value, tempStatus, tempPlan, tempSortBy, tempSortOrder);
+    };
+
+    const handleApplyFilter = () => {
+        applyFilters(search, perPage, tempStatus, tempPlan, tempSortBy, tempSortOrder);
+    };
+
+    const handleResetFilter = () => {
+        setTempStatus('all');
+        setTempPlan('all');
+        setTempSortBy('created_at');
+        setTempSortOrder('desc');
+        applyFilters(search, perPage, 'all', 'all', 'created_at', 'desc');
+    };
+
+    const confirmDelete = () => {
+        if (!tenantToDelete) return;
+
+        setIsDeleting(true);
+        router.delete(`/admin/tenants/${tenantToDelete.id}`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setIsDeleting(false);
+                setTenantToDelete(null);
+            },
+            onError: () => {
+                setIsDeleting(false);
+            }
+        });
     };
 
     return (
@@ -63,42 +149,87 @@ export default function TenantIndex({ tenants, plans, filters }: Props) {
             <Head title="Tenant Managements" />
 
             <div className="p-6 flex flex-col gap-6 text-foreground min-h-screen bg-background">
+                {/* PAGE HEADER & TOMBOL TAMBAH */}
                 <div className="flex items-center justify-between">
-                    <h1 className="text-xl font-bold tracking-tight">Tenant Managements</h1>
+                    <div>
+                        <h1 className="text-xl font-bold tracking-tight">Tenant Managements</h1>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                            Manage registered tenants, plan tiers, and resource usage.
+                        </p>
+                    </div>
+                    <Link
+                        href="/admin/tenants/create"
+                        className="h-9 px-4 bg-primary hover:bg-primary/95 text-primary-foreground rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm">
+                        <Plus className="w-4 h-4" />
+                        <span>Add New Tenant</span>
+                    </Link>
                 </div>
 
-                <div className="bg-card rounded-2xl border border-border shadow-xl overflow-hidden flex flex-col">
-                    {/* Header Card */}
-                    <div className="p-5 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div>
-                            <h2 className="text-base font-bold text-foreground">Tenant List</h2>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                                Manage registered tenants, plan tiers, and resource usage.
-                            </p>
+                {/* TABLE FILTER KUSTOM */}
+                <TableFilter
+                    search={search}
+                    onSearchChange={onSearchChange}
+                    perPage={perPage}
+                    onPerPageChange={onPerPageChange}
+                >
+                    <FilterDropdown onApply={handleApplyFilter} onReset={handleResetFilter}>
+                        <div className="space-y-4">
+                            {/* Status Tenant */}
+                            <div className="space-y-2">
+                                <Label className="text-xs font-bold uppercase tracking-wider">Status Tenant</Label>
+                                <Select value={tempStatus} onValueChange={setTempStatus}>
+                                    <SelectTrigger className="text-xs"><SelectValue placeholder="All Status" /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Status</SelectItem>
+                                        <SelectItem value="active">Active</SelectItem>
+                                        <SelectItem value="inactive">Inactive</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Paket Langganan */}
+                            <div className="space-y-2">
+                                <Label className="text-xs font-bold uppercase tracking-wider">Paket Langganan</Label>
+                                <Select value={tempPlan} onValueChange={setTempPlan}>
+                                    <SelectTrigger className="text-xs"><SelectValue placeholder="Semua Paket" /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Semua Paket</SelectItem>
+                                        {plans.map((p) => (
+                                            <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Urutkan Berdasarkan */}
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-1">
+                                    <Label className="text-xs font-bold uppercase tracking-wider">Urutkan</Label>
+                                    <Select value={tempSortBy} onValueChange={setTempSortBy}>
+                                        <SelectTrigger className="text-xs"><SelectValue placeholder="Berdasarkan" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="created_at">Tanggal</SelectItem>
+                                            <SelectItem value="name">Nama Tenant</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-1">
+                                    <Label className="text-xs font-bold uppercase tracking-wider">Urutan</Label>
+                                    <Select value={tempSortOrder} onValueChange={setTempSortOrder}>
+                                        <SelectTrigger className="text-xs"><SelectValue placeholder="Urutan" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="desc">Terbaru / Z-A</SelectItem>
+                                            <SelectItem value="asc">Terlama / A-Z</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
                         </div>
-                        <Link
-                            href="/admin/tenants/create"
-                            className="h-9 px-4 bg-primary hover:bg-primary/95 text-primary-foreground rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm">
-                            <Plus className="w-4 h-4" />
-                            <span>Add New Tenant</span>
-                        </Link>
-                    </div>
+                    </FilterDropdown>
+                </TableFilter>
 
-                    {/* Search Bar */}
-                    <div className="p-5 border-b border-border flex items-center justify-between gap-4">
-                        <form onSubmit={handleSearch} className="relative w-full max-w-sm">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                            <input
-                                type="text"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Search tenant..."
-                                className="w-full pl-9 pr-4 py-2 bg-muted/50 border border-border rounded-lg text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-ring transition-all"
-                            />
-                        </form>
-                    </div>
-
-                    {/* Table */}
+                {/* TABEL DATA TENANT */}
+                <div className="bg-card rounded-2xl border border-border shadow-xl overflow-hidden flex flex-col">
                     <div className="overflow-x-auto min-h-[300px]">
                         <table className="w-full text-left border-collapse text-xs">
                             <thead className="bg-muted/50 text-muted-foreground font-semibold border-b border-border">
@@ -112,7 +243,7 @@ export default function TenantIndex({ tenants, plans, filters }: Props) {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border text-foreground">
-                                {tenants.data.length > 0 ? (
+                                {tenants?.data && tenants.data.length > 0 ? (
                                     tenants.data.map((tenant, index) => {
                                         const isActive = tenant.subscription?.status === 'active';
                                         const usagePercent = Math.min(Math.round(((tenant.users_count || 0) / 25) * 100), 100);
@@ -162,24 +293,25 @@ export default function TenantIndex({ tenants, plans, filters }: Props) {
 
                                                         {openDropdown === tenant.id && (
                                                             <div className="absolute right-8 mt-1 w-36 bg-popover border border-border rounded-lg shadow-2xl py-1 z-50 text-left text-popover-foreground">
-                                                                <button
-                                                                    onClick={() => alert(`View details for ${tenant.name}`)}
+                                                                <Link
+                                                                    href={`/admin/tenants/${tenant.id}`}
                                                                     className="w-full px-3 py-1.5 text-xs text-foreground hover:bg-accent hover:text-accent-foreground flex items-center gap-2 cursor-pointer"
                                                                 >
                                                                     <Eye className="w-3.5 h-3.5 text-muted-foreground" />
                                                                     <span>View Details</span>
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => alert(`Edit tenant ${tenant.name}`)}
+                                                                </Link>
+                                                                <Link
+                                                                    href={`/admin/tenants/${tenant.id}/edit`}
                                                                     className="w-full px-3 py-1.5 text-xs text-foreground hover:bg-accent hover:text-accent-foreground flex items-center gap-2 cursor-pointer"
                                                                 >
                                                                     <Edit className="w-3.5 h-3.5 text-muted-foreground" />
                                                                     <span>Edit Data</span>
-                                                                </button>
+                                                                </Link>
                                                                 <button
+                                                                    type="button"
                                                                     onClick={() => {
                                                                         setOpenDropdown(null);
-                                                                        handleDelete(tenant.id);
+                                                                        setTenantToDelete(tenant);
                                                                     }}
                                                                     className="w-full px-3 py-1.5 text-xs text-destructive hover:bg-destructive/10 flex items-center gap-2 border-t border-border cursor-pointer"
                                                                 >
@@ -212,19 +344,19 @@ export default function TenantIndex({ tenants, plans, filters }: Props) {
                     {/* Pagination Footer */}
                     <div className="p-4 bg-muted/30 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
                         <div>
-                            Page {tenants.current_page} of {tenants.last_page || 1}
+                            Page {tenants?.current_page || 1} of {tenants?.last_page || 1}
                         </div>
                         <div className="flex gap-2">
                             <button
-                                disabled={!tenants.prev_page_url}
-                                onClick={() => tenants.prev_page_url && router.visit(tenants.prev_page_url)}
+                                disabled={!tenants?.prev_page_url}
+                                onClick={() => tenants?.prev_page_url && router.visit(tenants.prev_page_url)}
                                 className="px-3 py-1 bg-muted border border-border rounded-md disabled:opacity-40 hover:bg-muted/80 transition text-foreground cursor-pointer"
                             >
                                 Prev
                             </button>
                             <button
-                                disabled={!tenants.next_page_url}
-                                onClick={() => tenants.next_page_url && router.visit(tenants.next_page_url)}
+                                disabled={!tenants?.next_page_url}
+                                onClick={() => tenants?.next_page_url && router.visit(tenants.next_page_url)}
                                 className="px-3 py-1 bg-muted border border-border rounded-md disabled:opacity-40 hover:bg-muted/80 transition text-foreground cursor-pointer"
                             >
                                 Next
@@ -233,6 +365,53 @@ export default function TenantIndex({ tenants, plans, filters }: Props) {
                     </div>
                 </div>
             </div>
+
+            {/* MODAL KONFIRMASI HAPUS PROFESIONAL */}
+            {tenantToDelete && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+                    <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-md w-full overflow-hidden p-6 flex flex-col gap-5">
+                        <div className="flex items-start justify-between">
+                            <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center text-destructive shrink-0">
+                                <AlertTriangle className="w-5 h-5" />
+                            </div>
+                            <button
+                                onClick={() => setTenantToDelete(null)}
+                                className="text-muted-foreground hover:text-foreground transition-colors p-1"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                            <h3 className="text-base font-bold text-foreground">
+                                Hapus Tenant "{tenantToDelete.name}"?
+                            </h3>
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                Tindakan ini bersifat permanen. Seluruh data, langganan, dan informasi terkait tenant ini akan dihapus secara permanen dari sistem database.
+                            </p>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-3 pt-2">
+                            <button
+                                type="button"
+                                disabled={isDeleting}
+                                onClick={() => setTenantToDelete(null)}
+                                className="h-9 px-4 bg-muted hover:bg-muted/80 border border-border text-foreground rounded-lg text-xs font-medium transition-all cursor-pointer"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                type="button"
+                                disabled={isDeleting}
+                                onClick={confirmDelete}
+                                className="h-9 px-4 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer disabled:opacity-50"
+                            >
+                                <span>{isDeleting ? 'Menghapus...' : 'Ya, Hapus Tenant'}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }
