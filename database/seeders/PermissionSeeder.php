@@ -79,13 +79,13 @@ class PermissionSeeder extends Seeder
 
             // Menu Group: Reports
             // Submenu: Stock Summary
-            'tenant.stock_summary.view',
+            'tenant.stock_summary.view', 'tenant.stock_summary.export',
             // Submenu: Stock Movement
-            'tenant.stock_movement.view',
+            'tenant.stock_movement.view', 'tenant.stock_movement.export',
             // Submenu: Valuation Asset
-            'tenant.valuation_asset.view',
+            'tenant.valuation_asset.view', 'tenant.valuation_asset.export',
             // Submenu: Inbound & Outbound
-            'tenant.inbound_outbound.view',
+            'tenant.inbound_outbound.view', 'tenant.inbound_outbound.export',
 
 
             // Submenu: User & Roles

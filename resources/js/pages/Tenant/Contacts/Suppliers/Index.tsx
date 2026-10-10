@@ -84,6 +84,17 @@ export default function SupplierIndex({ suppliers, stats, filters }: PageProps) 
         router.delete(`/${tenantSlug}/contacts/suppliers/${id}`);
     };
 
+    const handleExportPdf = () => {
+        router.post(`/${tenantSlug}/contacts/suppliers/export/pdf`);
+    };
+
+    const handleExportExcel = () => {
+        router.post(`/${tenantSlug}/contacts/suppliers/export/excel`);
+    };
+
+    const canExport = can('tenant.contacts.suppliers.export') || can('suppliers.export');
+    const canCreate = can('tenant.contacts.suppliers.create') || can('suppliers.create');
+
     return (
         <>
             <Head title="Suppliers Management" />
@@ -94,29 +105,35 @@ export default function SupplierIndex({ suppliers, stats, filters }: PageProps) 
                     description="Manage supplier list and vendor contacts."
                     renderAction={
                         <div className="flex items-center gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-9 gap-1.5 border-red-200 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
-                                onClick={() => router.post(`/${tenantSlug}/contacts/suppliers/export/pdf`)}
-                            >
-                                <FileText size={15} /> Export PDF
-                            </Button>
+                            {canExport && (
+                                <>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-9 gap-1.5 border-red-200 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                                        onClick={handleExportPdf}
+                                    >
+                                        <FileText size={15} /> Export PDF
+                                    </Button>
 
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-9 gap-1.5 border-emerald-200 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
-                                onClick={() => router.post(`/${tenantSlug}/contacts/suppliers/export/excel`)}
-                            >
-                                <FileSpreadsheet size={15} /> Export Excel
-                            </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-9 gap-1.5 border-emerald-200 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                                        onClick={handleExportExcel}
+                                    >
+                                        <FileSpreadsheet size={15} /> Export Excel
+                                    </Button>
+                                </>
+                            )}
 
-                            <Button asChild className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700">
-                                <Link href={`/${tenantSlug}/contacts/suppliers/create`}>
-                                    <Plus className="mr-1.5 h-4 w-4" /> Add Supplier
-                                </Link>
-                            </Button>
+                            {canCreate && (
+                                <Button asChild className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700">
+                                    <Link href={`/${tenantSlug}/contacts/suppliers/create`}>
+                                        <Plus className="mr-1.5 h-4 w-4" /> Add Supplier
+                                    </Link>
+                                </Button>
+                            )}
                         </div>
                     }
                 />
@@ -193,9 +210,9 @@ export default function SupplierIndex({ suppliers, stats, filters }: PageProps) 
                                     showUrl={`/${tenantSlug}/contacts/suppliers/${supplier.id}`}
                                     editUrl={`/${tenantSlug}/contacts/suppliers/${supplier.id}/edit`}
                                     onDelete={() => handleDelete(supplier.id)}
-                                    canShow={can('tenant.contacts.suppliers.show') || true}
-                                    canEdit={can('tenant.contacts.suppliers.edit') || true}
-                                    canDelete={can('tenant.contacts.suppliers.delete') || true}
+                                    canShow={can('tenant.contacts.suppliers.show') || can('suppliers.show')}
+                                    canEdit={can('tenant.contacts.suppliers.edit') || can('suppliers.edit')}
+                                    canDelete={can('tenant.contacts.suppliers.delete') || can('suppliers.delete')}
                                 />
                             </TableCell>
                         </>

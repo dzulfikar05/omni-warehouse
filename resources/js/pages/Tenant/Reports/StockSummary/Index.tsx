@@ -1,15 +1,16 @@
-import { Head, router } from '@inertiajs/react';
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { debounce } from 'lodash';
 import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import { TableCell } from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TableFilter } from '@/components/table-filter';
 import { FilterDropdown } from '@/components/table-dropdown';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import {
     Select,
     SelectContent,
@@ -17,7 +18,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { ShoppingCart, PackageX, Boxes } from 'lucide-react';
+import { Boxes, PackageX, ShoppingCart, DollarSign, AlertTriangle, FileText, FileSpreadsheet } from 'lucide-react';
+import { usePermission } from '@/utils/permission';
 
 interface Warehouse {
     id: number;
@@ -60,6 +62,9 @@ interface StockSummaryProps {
 }
 
 export default function Index({ reports, summary, warehouses, categories, filters }: StockSummaryProps) {
+    const { flash, current_tenant, auth } = usePage().props as any;
+    const { can } = usePermission();
+
     const [search, setSearch] = useState(filters.search || '');
     const [perPage, setPerPage] = useState(filters.per_page || '10');
     const [tempWarehouse, setTempWarehouse] = useState(filters.warehouse_id || 'all');
@@ -68,14 +73,27 @@ export default function Index({ reports, summary, warehouses, categories, filter
     const [tempDateFrom, setTempDateFrom] = useState(filters.date_from || '');
     const [tempDateTo, setTempDateTo] = useState(filters.date_to || '');
 
+    const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
+    const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
+
+    const lastShownFlash = useRef<string | null>(null);
+
+    useEffect(() => {
+        if (flash?.success && lastShownFlash.current !== flash.success) {
+            toast.success(flash.success);
+            lastShownFlash.current = flash.success;
+        }
+    }, [flash?.success]);
+
     const formatRp = (val: number) => {
+        if (!val || isNaN(val)) return 'Rp 0';
         if (val >= 1_000_000_000) {
             return `Rp ${(val / 1_000_000_000).toFixed(2)} M`;
         }
         if (val >= 1_000_000) {
             return `Rp ${(val / 1_000_000).toFixed(2)} Jt`;
         }
-        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(val);
+        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
     };
 
     const applyFilters = useCallback(
@@ -143,133 +161,202 @@ export default function Index({ reports, summary, warehouses, categories, filter
         applyFilters(search, perPage, 'all', 'all', 'all', '', '');
     };
 
+    const getFilterPayload = () => ({
+        search: search || undefined,
+        warehouse_id: tempWarehouse !== 'all' ? tempWarehouse : undefined,
+        category_id: tempCategory !== 'all' ? tempCategory : undefined,
+        status: tempStatus !== 'all' ? tempStatus : undefined,
+        date_from: tempDateFrom || undefined,
+        date_to: tempDateTo || undefined,
+    });
+
+    const handleExportPdf = () => {
+        router.post(`/${tenantSlug}/reports/stock-summary/export/pdf`, getFilterPayload());
+    };
+
+    const handleExportExcel = () => {
+        router.post(`/${tenantSlug}/reports/stock-summary/export/excel`, getFilterPayload());
+    };
+
+    const canExport = can('tenant.stock_summary.export') || can('stock_summary.export');
+
     return (
         <>
             <Head title="Stock Summary Report" />
-            <div className="space-y-6 p-4">
+
+            <div className="space-y-6 p-4 sm:p-6">
                 <PageHeader
                     title="Stock Summary Report"
-                    description="Welcome back! Here is your stock summary report."
-                >
-                    <TableFilter
-                        search={search}
-                        onSearchChange={onSearchChange}
-                        perPage={perPage}
-                        onPerPageChange={onPerPageChange}
-                    >
-                        <FilterDropdown onApply={handleApplyFilter} onReset={handleResetFilter}>
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label className="text-xs">Warehouse</Label>
-                                    <Select value={tempWarehouse} onValueChange={setTempWarehouse}>
-                                        <SelectTrigger><SelectValue placeholder="All Warehouse" /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">All Warehouse</SelectItem>
-                                            {warehouses.map((w) => (
-                                                <SelectItem key={w.id} value={w.id.toString()}>{w.name}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                    description="Real-time stock inventory balances, location positioning, and valuation summary."
+                    renderAction={
+                        <div className="flex items-center gap-2">
+                            {canExport && (
+                                <>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleExportPdf}
+                                        className="h-9 gap-1.5 border-red-200 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                                    >
+                                        <FileText size={15} /> Export PDF
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleExportExcel}
+                                        className="h-9 gap-1.5 border-emerald-200 text-xs text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                                    >
+                                        <FileSpreadsheet size={15} /> Export Excel
+                                    </Button>
+                                </>
+                            )}
+                        </div>
+                    }
+                />
 
-                                <div className="space-y-2">
-                                    <Label className="text-xs">Category</Label>
-                                    <Select value={tempCategory} onValueChange={setTempCategory}>
-                                        <SelectTrigger><SelectValue placeholder="All Category" /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">All Category</SelectItem>
-                                            {categories.map((c) => (
-                                                <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                {/* Stat Cards - Desain konsisten dengan Customer/Supplier */}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-5">
+                    <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
+                        <div>
+                            <p className="text-xs font-medium text-muted-foreground">Total SKUs</p>
+                            <h3 className="mt-1 text-2xl font-bold text-foreground">
+                                {summary.total_products.toLocaleString()}
+                            </h3>
+                        </div>
+                        <div className="rounded-xl bg-blue-50 p-3 text-blue-600 dark:bg-blue-950/50">
+                            <Boxes size={22} />
+                        </div>
+                    </div>
 
-                                <div className="space-y-2">
-                                    <Label className="text-xs">Stock Status</Label>
-                                    <Select value={tempStatus} onValueChange={setTempStatus}>
-                                        <SelectTrigger><SelectValue placeholder="All Status" /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">All Status</SelectItem>
-                                            <SelectItem value="in_stock">In Stock</SelectItem>
-                                            <SelectItem value="low_stock">Low Stock</SelectItem>
-                                            <SelectItem value="out_of_stock">Out of Stock</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                    <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
+                        <div>
+                            <p className="text-xs font-medium text-muted-foreground">Total Quantity</p>
+                            <h3 className="mt-1 text-2xl font-bold text-foreground">
+                                {summary.total_quantity.toLocaleString()}
+                            </h3>
+                        </div>
+                        <div className="rounded-xl bg-purple-50 p-3 text-purple-600 dark:bg-purple-950/50">
+                            <ShoppingCart size={22} />
+                        </div>
+                    </div>
 
-                                <div className="grid grid-cols-2 gap-2">
-                                    <div className="space-y-1">
-                                        <Label className="text-xs">Date From</Label>
-                                        <Input
-                                            type="date"
-                                            value={tempDateFrom}
-                                            onChange={(e) => setTempDateFrom(e.target.value)}
-                                            className="text-xs"
-                                        />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <Label className="text-xs">Date To</Label>
-                                        <Input
-                                            type="date"
-                                            value={tempDateTo}
-                                            onChange={(e) => setTempDateTo(e.target.value)}
-                                            className="text-xs"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </FilterDropdown>
-                    </TableFilter>
-                </PageHeader>
+                    <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
+                        <div>
+                            <p className="text-xs font-medium text-muted-foreground">Valuation</p>
+                            <h3 className="mt-1 text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                                {formatRp(summary.total_inventory_value)}
+                            </h3>
+                        </div>
+                        <div className="rounded-xl bg-emerald-50 p-3 text-emerald-600 dark:bg-emerald-950/50">
+                            <DollarSign size={22} />
+                        </div>
+                    </div>
 
-                {/* Cards Summary dengan Aksen Biru */}
-                <div className="grid gap-4 md:grid-cols-5">
-                    <Card className="border-blue-100 bg-blue-50/20">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-xs font-medium text-muted-foreground">Total Products:</CardTitle>
-                            <Boxes className="h-4 w-4 text-blue-600" />
-                        </CardHeader>
-                        <CardContent><div className="text-2xl font-bold text-blue-900">{summary.total_products.toLocaleString()}</div></CardContent>
-                    </Card>
+                    <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
+                        <div>
+                            <p className="text-xs font-medium text-muted-foreground">Low Stock</p>
+                            <h3 className="mt-1 text-2xl font-bold text-amber-600 dark:text-amber-400">
+                                {summary.low_stock_items}
+                            </h3>
+                        </div>
+                        <div className="rounded-xl bg-amber-50 p-3 text-amber-600 dark:bg-amber-950/50">
+                            <AlertTriangle size={22} />
+                        </div>
+                    </div>
 
-                    <Card className="border-blue-100 bg-blue-50/20">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-xs font-medium text-muted-foreground">Total Quantity:</CardTitle>
-                            <ShoppingCart className="h-4 w-4 text-blue-600" />
-                        </CardHeader>
-                        <CardContent><div className="text-2xl font-bold text-blue-900">{summary.total_quantity.toLocaleString()}</div></CardContent>
-                    </Card>
-
-                    <Card className="border-blue-100 bg-blue-50/20">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-xs font-medium text-muted-foreground">Total Inventory Value:</CardTitle>
-                        </CardHeader>
-                        <CardContent><div className="text-2xl font-bold text-blue-600">{formatRp(summary.total_inventory_value)}</div></CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-xs font-medium text-muted-foreground">Low Stock Items:</CardTitle>
-                        </CardHeader>
-                        <CardContent><div className="text-2xl font-bold text-amber-600">{summary.low_stock_items}</div></CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-xs font-medium text-muted-foreground">Out Of Stock:</CardTitle>
-                            <PackageX className="h-4 w-4 text-rose-500" />
-                        </CardHeader>
-                        <CardContent><div className="text-2xl font-bold text-rose-600">{summary.out_of_stock}</div></CardContent>
-                    </Card>
+                    <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
+                        <div>
+                            <p className="text-xs font-medium text-muted-foreground">Out Of Stock</p>
+                            <h3 className="mt-1 text-2xl font-bold text-rose-600 dark:text-rose-400">
+                                {summary.out_of_stock}
+                            </h3>
+                        </div>
+                        <div className="rounded-xl bg-rose-50 p-3 text-rose-600 dark:bg-rose-950/50">
+                            <PackageX size={22} />
+                        </div>
+                    </div>
                 </div>
 
+                <TableFilter
+                    search={search}
+                    onSearchChange={onSearchChange}
+                    perPage={perPage}
+                    onPerPageChange={onPerPageChange}
+                >
+                    <FilterDropdown onApply={handleApplyFilter} onReset={handleResetFilter}>
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label className="text-xs font-semibold">Warehouse</Label>
+                                <Select value={tempWarehouse} onValueChange={setTempWarehouse}>
+                                    <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="All Warehouse" /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Warehouse</SelectItem>
+                                        {warehouses.map((w) => (
+                                            <SelectItem key={w.id} value={w.id.toString()}>{w.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-xs font-semibold">Category</Label>
+                                <Select value={tempCategory} onValueChange={setTempCategory}>
+                                    <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="All Category" /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Category</SelectItem>
+                                        {categories.map((c) => (
+                                            <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-xs font-semibold">Stock Status</Label>
+                                <Select value={tempStatus} onValueChange={setTempStatus}>
+                                    <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="All Status" /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Status</SelectItem>
+                                        <SelectItem value="in_stock">In Stock (&gt; 15)</SelectItem>
+                                        <SelectItem value="low_stock">Low Stock (1 - 15)</SelectItem>
+                                        <SelectItem value="out_of_stock">Out of Stock (0)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-1">
+                                    <Label className="text-xs font-semibold">Updated From</Label>
+                                    <Input
+                                        type="date"
+                                        value={tempDateFrom}
+                                        onChange={(e) => setTempDateFrom(e.target.value)}
+                                        className="h-9 text-xs"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label className="text-xs font-semibold">Updated To</Label>
+                                    <Input
+                                        type="date"
+                                        value={tempDateTo}
+                                        onChange={(e) => setTempDateTo(e.target.value)}
+                                        className="h-9 text-xs"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </FilterDropdown>
+                </TableFilter>
+
                 <DataTable
-                    headers={['SKU Code', 'Product Name', 'Warehouse', 'Current Stock', 'Unit', 'Category', 'Status']}
+                    headers={['SKU CODE', 'PRODUCT NAME', 'BATCH NO', 'WAREHOUSE', 'LOCATION', 'STOCK QTY', 'BASE COST', 'TOTAL VALUE', 'STATUS']}
                     data={reports.data}
                     pagination={reports}
                     renderRow={(item: any) => {
-                        const qty = item.quantity;
+                        const qty = Number(item.quantity) || 0;
+                        const cost = Number(item.sku?.base_cost) || 0;
+                        const totalVal = qty * cost;
+
                         let statusText = 'In Stock';
                         let badgeStyle = 'bg-blue-600 hover:bg-blue-700 text-white';
 
@@ -281,14 +368,23 @@ export default function Index({ reports, summary, warehouses, categories, filter
                             badgeStyle = 'bg-amber-500 hover:bg-amber-600 text-white';
                         }
 
+                        const loc = item.location;
+                        const rackZone = loc
+                            ? trimRackZone(loc.rack_code, loc.zone)
+                            : '-';
+
                         return (
                             <>
-                                <TableCell className="font-mono text-xs">{item.sku?.sku_code}</TableCell>
-                                <TableCell className="font-medium text-foreground">{item.sku?.product?.name}</TableCell>
-                                <TableCell>{item.location?.warehouse?.name || '-'}</TableCell>
-                                <TableCell className="font-bold">{qty}</TableCell>
-                                <TableCell>{item.sku?.unit?.symbol || '-'}</TableCell>
-                                <TableCell>{item.sku?.product?.category?.name || '-'}</TableCell>
+                                <TableCell className="font-mono text-xs font-semibold">{item.sku?.sku_code || '-'}</TableCell>
+                                <TableCell className="text-xs font-bold text-foreground">{item.sku?.product?.name || '-'}</TableCell>
+                                <TableCell className="font-mono text-xs text-muted-foreground">{item.batch_number || '-'}</TableCell>
+                                <TableCell className="text-xs text-muted-foreground">{item.location?.warehouse?.name || '-'}</TableCell>
+                                <TableCell className="font-mono text-xs text-muted-foreground">{rackZone}</TableCell>
+                                <TableCell className="text-xs font-bold text-foreground">
+                                    {qty.toLocaleString()} <span className="font-normal text-muted-foreground">{item.sku?.unit?.symbol || ''}</span>
+                                </TableCell>
+                                <TableCell className="text-xs font-mono text-muted-foreground">{formatRp(cost)}</TableCell>
+                                <TableCell className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">{formatRp(totalVal)}</TableCell>
                                 <TableCell>
                                     <Badge className={badgeStyle}>
                                         {statusText}
@@ -302,3 +398,15 @@ export default function Index({ reports, summary, warehouses, categories, filter
         </>
     );
 }
+
+function trimRackZone(rack?: string, zone?: string) {
+    const parts = [rack, zone].filter(Boolean);
+    return parts.length > 0 ? parts.join(' / ') : '-';
+}
+
+Index.layout = {
+    breadcrumbs: [
+        { title: 'Reports', href: '#' },
+        { title: 'Stock Summary', href: '#' },
+    ],
+};
