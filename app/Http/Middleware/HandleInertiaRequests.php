@@ -32,6 +32,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'current_tenant' => app()->bound('current_tenant') ? app('current_tenant') : null,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'appearance' => $request->cookie('appearance') ?? 'system',
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
