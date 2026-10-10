@@ -67,6 +67,7 @@ require __DIR__ . '/web/tenant/valuation_asset.php';
 require __DIR__ . '/web/tenant/inbound_outbound.php';
 require __DIR__ . '/web/tenant/outbound.php';
 require __DIR__ . '/web/tenant/stock_transfer.php';
+require __DIR__ . '/web/tenant/general_setting.php';
 
 
 /*

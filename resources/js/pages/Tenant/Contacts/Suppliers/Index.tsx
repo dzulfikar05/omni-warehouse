@@ -9,7 +9,7 @@ import { PageHeader } from '@/components/page-header';
 import { toast } from 'sonner';
 import { debounce } from 'lodash';
 import { usePermission } from '@/utils/permission';
-import { Plus, Truck, UserPlus, PhoneCall } from 'lucide-react';
+import { Plus, Truck, UserPlus, PhoneCall, FileText, FileSpreadsheet } from 'lucide-react';
 
 interface Supplier {
     id: number;
@@ -17,6 +17,8 @@ interface Supplier {
     pic?: string;
     phone?: string;
     email?: string;
+    tax_number?: string;
+    address?: string;
     notes?: string;
     created_at: string;
 }
@@ -49,7 +51,6 @@ export default function SupplierIndex({ suppliers, stats, filters }: PageProps) 
     const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
 
-    // Tracker cegah toast ganda
     const lastShownFlash = useRef<string | null>(null);
 
     useEffect(() => {
@@ -83,6 +84,17 @@ export default function SupplierIndex({ suppliers, stats, filters }: PageProps) 
         router.delete(`/${tenantSlug}/contacts/suppliers/${id}`);
     };
 
+    const handleExportPdf = () => {
+        router.post(`/${tenantSlug}/contacts/suppliers/export/pdf`);
+    };
+
+    const handleExportExcel = () => {
+        router.post(`/${tenantSlug}/contacts/suppliers/export/excel`);
+    };
+
+    const canExport = can('tenant.contacts.suppliers.export') || can('suppliers.export');
+    const canCreate = can('tenant.contacts.suppliers.create') || can('suppliers.create');
+
     return (
         <>
             <Head title="Suppliers Management" />
@@ -92,15 +104,41 @@ export default function SupplierIndex({ suppliers, stats, filters }: PageProps) 
                     title="Suppliers Management"
                     description="Manage supplier list and vendor contacts."
                     renderAction={
-                        <Button asChild className="bg-blue-600 text-white shadow-md hover:bg-blue-700">
-                            <Link href={`/${tenantSlug}/contacts/suppliers/create`}>
-                                <Plus className="mr-2 h-4 w-4" /> Add Supplier
-                            </Link>
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            {canExport && (
+                                <>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-9 gap-1.5 border-red-200 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                                        onClick={handleExportPdf}
+                                    >
+                                        <FileText size={15} /> Export PDF
+                                    </Button>
+
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-9 gap-1.5 border-emerald-200 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                                        onClick={handleExportExcel}
+                                    >
+                                        <FileSpreadsheet size={15} /> Export Excel
+                                    </Button>
+                                </>
+                            )}
+
+                            {canCreate && (
+                                <Button asChild className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700">
+                                    <Link href={`/${tenantSlug}/contacts/suppliers/create`}>
+                                        <Plus className="mr-1.5 h-4 w-4" /> Add Supplier
+                                    </Link>
+                                </Button>
+                            )}
+                        </div>
                     }
                 />
 
-                {/* Stat Cards - Disesuaikan dengan Database (Tanpa status) */}
+                {/* Stat Cards */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
@@ -152,9 +190,8 @@ export default function SupplierIndex({ suppliers, stats, filters }: PageProps) 
                     }}
                 />
 
-                {/* DataTable Asli Kembali Seperti Semula */}
                 <DataTable
-                    headers={['#', 'SUPPLIER NAME', 'PIC', 'CONTACT INFO', 'ACTIONS']}
+                    headers={['#', 'SUPPLIER NAME', 'PIC', 'CONTACT INFO', 'TAX ID', 'ACTIONS']}
                     data={suppliers.data}
                     pagination={suppliers}
                     renderRow={(supplier: Supplier) => (
@@ -166,15 +203,16 @@ export default function SupplierIndex({ suppliers, stats, filters }: PageProps) 
                                 <div className="text-xs font-medium text-foreground">{supplier.phone || '-'}</div>
                                 <div className="text-[11px] text-muted-foreground">{supplier.email || '-'}</div>
                             </TableCell>
+                            <TableCell className="text-xs font-mono text-muted-foreground">{supplier.tax_number || '-'}</TableCell>
                             <TableCell className="text-right">
                                 <ActionButton
                                     label={supplier.name}
                                     showUrl={`/${tenantSlug}/contacts/suppliers/${supplier.id}`}
                                     editUrl={`/${tenantSlug}/contacts/suppliers/${supplier.id}/edit`}
                                     onDelete={() => handleDelete(supplier.id)}
-                                    canShow={can('suppliers.show') || true}
-                                    canEdit={can('suppliers.edit') || true}
-                                    canDelete={can('suppliers.delete') || true}
+                                    canShow={can('tenant.contacts.suppliers.show') || can('suppliers.show')}
+                                    canEdit={can('tenant.contacts.suppliers.edit') || can('suppliers.edit')}
+                                    canDelete={can('tenant.contacts.suppliers.delete') || can('suppliers.delete')}
                                 />
                             </TableCell>
                         </>

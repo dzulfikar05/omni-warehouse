@@ -69,9 +69,9 @@ class PermissionSeeder extends Seeder
 
             // Menu Group: Contact
             // Submenu: Customer
-            'tenant.contacts.customers.view', 'tenant.contacts.customers.show', 'tenant.contacts.customers.create', 'tenant.contacts.customers.edit', 'tenant.contacts.customers.delete',
+            'tenant.contacts.customers.view', 'tenant.contacts.customers.show', 'tenant.contacts.customers.create', 'tenant.contacts.customers.edit', 'tenant.contacts.customers.delete', 'tenant.contacts.customers.export',
             // Submenu: Supplier
-            'tenant.contacts.suppliers.view', 'tenant.contacts.suppliers.show', 'tenant.contacts.suppliers.create', 'tenant.contacts.suppliers.edit', 'tenant.contacts.suppliers.delete',
+            'tenant.contacts.suppliers.view', 'tenant.contacts.suppliers.show', 'tenant.contacts.suppliers.create', 'tenant.contacts.suppliers.edit', 'tenant.contacts.suppliers.delete','tenant.contacts.suppliers.export',
 
             // Menu Group: Settings
             // Submenu: Company Profile
@@ -79,18 +79,21 @@ class PermissionSeeder extends Seeder
 
             // Menu Group: Reports
             // Submenu: Stock Summary
-            'tenant.stock_summary.view',
+            'tenant.stock_summary.view', 'tenant.stock_summary.export',
             // Submenu: Stock Movement
-            'tenant.stock_movement.view',
+            'tenant.stock_movement.view', 'tenant.stock_movement.export',
             // Submenu: Valuation Asset
-            'tenant.valuation_asset.view',
+            'tenant.valuation_asset.view', 'tenant.valuation_asset.export',
             // Submenu: Inbound & Outbound
-            'tenant.inbound_outbound.view',
+            'tenant.inbound_outbound.view', 'tenant.inbound_outbound.export',
 
 
             // Submenu: User & Roles
             'tenant.users.view', 'tenant.users.show', 'tenant.users.create', 'tenant.users.edit', 'tenant.users.delete',
             'tenant.roles.view', 'tenant.roles.show', 'tenant.roles.create', 'tenant.roles.edit', 'tenant.roles.delete',
+
+            'tenant.general_settings.view',
+            'tenant.general_settings.edit',
         ];
 
         // Registrasi seluruh permission ke database

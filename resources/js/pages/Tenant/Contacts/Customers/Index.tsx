@@ -9,13 +9,15 @@ import { PageHeader } from '@/components/page-header';
 import { toast } from 'sonner';
 import { debounce } from 'lodash';
 import { usePermission } from '@/utils/permission';
-import { Plus, UserCheck, UserPlus, PhoneCall } from 'lucide-react';
+import { Plus, UserCheck, UserPlus, PhoneCall, FileText, FileSpreadsheet } from 'lucide-react';
 
 interface Customer {
     id: number;
     name: string;
     phone?: string;
     email?: string;
+    address?: string;
+    tax_number?: string;
     notes?: string;
     created_at: string;
 }
@@ -81,6 +83,17 @@ export default function CustomerIndex({ customers, stats, filters }: PageProps) 
         router.delete(`/${tenantSlug}/contacts/customers/${id}`);
     };
 
+    const handleExportPdf = () => {
+        router.post(`/${tenantSlug}/contacts/customers/export/pdf`);
+    };
+
+    const handleExportExcel = () => {
+        router.post(`/${tenantSlug}/contacts/customers/export/excel`);
+    };
+
+    const canExport = can('tenant.contacts.customers.export') || can('customers.export');
+    const canCreate = can('tenant.contacts.customers.create') || can('customers.create');
+
     return (
         <>
             <Head title="Customers Management" />
@@ -90,15 +103,40 @@ export default function CustomerIndex({ customers, stats, filters }: PageProps) 
                     title="Customers Management"
                     description="Manage customer database, contacts, and transaction profiles."
                     renderAction={
-                        <Button asChild className="bg-blue-600 text-white shadow-md hover:bg-blue-700">
-                            <Link href={`/${tenantSlug}/contacts/customers/create`}>
-                                <Plus className="mr-2 h-4 w-4" /> Add Customer
-                            </Link>
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            {canExport && (
+                                <>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleExportPdf}
+                                        className="h-9 gap-1.5 border-border text-xs"
+                                    >
+                                        <FileText size={15} className="text-red-500" /> Export PDF
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleExportExcel}
+                                        className="h-9 gap-1.5 border-border text-xs"
+                                    >
+                                        <FileSpreadsheet size={15} className="text-emerald-500" /> Export Excel
+                                    </Button>
+                                </>
+                            )}
+
+                            {canCreate && (
+                                <Button asChild className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700">
+                                    <Link href={`/${tenantSlug}/contacts/customers/create`}>
+                                        <Plus className="mr-1.5 h-4 w-4" /> Add Customer
+                                    </Link>
+                                </Button>
+                            )}
+                        </div>
                     }
                 />
 
-                {/* 3 Stat Cards Riil */}
+                {/* Stat Cards */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
@@ -151,7 +189,7 @@ export default function CustomerIndex({ customers, stats, filters }: PageProps) 
                 />
 
                 <DataTable
-                    headers={['#', 'CUSTOMER NAME', 'PHONE', 'EMAIL', 'ACTIONS']}
+                    headers={['#', 'CUSTOMER NAME', 'PHONE', 'EMAIL', 'TAX ID / NPWP', 'ACTIONS']}
                     data={customers.data}
                     pagination={customers}
                     renderRow={(customer: Customer) => (
@@ -160,15 +198,16 @@ export default function CustomerIndex({ customers, stats, filters }: PageProps) 
                             <TableCell className="text-xs font-bold text-foreground">{customer.name}</TableCell>
                             <TableCell className="text-xs text-muted-foreground">{customer.phone || '-'}</TableCell>
                             <TableCell className="text-xs text-muted-foreground">{customer.email || '-'}</TableCell>
+                            <TableCell className="text-xs font-mono text-muted-foreground">{customer.tax_number || '-'}</TableCell>
                             <TableCell className="text-right">
                                 <ActionButton
                                     label={customer.name}
                                     showUrl={`/${tenantSlug}/contacts/customers/${customer.id}`}
                                     editUrl={`/${tenantSlug}/contacts/customers/${customer.id}/edit`}
                                     onDelete={() => handleDelete(customer.id)}
-                                    canShow={can('customers.show') || true}
-                                    canEdit={can('customers.edit') || true}
-                                    canDelete={can('customers.delete') || true}
+                                    canShow={can('tenant.contacts.customers.show') || can('customers.show')}
+                                    canEdit={can('tenant.contacts.customers.edit') || can('customers.edit')}
+                                    canDelete={can('tenant.contacts.customers.delete') || can('customers.delete')}
                                 />
                             </TableCell>
                         </>

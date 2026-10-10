@@ -14,14 +14,12 @@ class Tenant extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia;
 
-    protected $fillable = [
-        'name',
-        'slug',
-        'logo',
-        'phone',
-        'address',
-        'created_by',
-    ];
+    protected $guarded = [];
+
+    public function getLogoUrlAttribute(): ?string
+    {
+        return $this->getFirstMediaUrl('logo') ?: $this->logo;
+    }
 
     public function registerMediaCollections(): void
     {

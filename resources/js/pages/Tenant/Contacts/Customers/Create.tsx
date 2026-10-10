@@ -8,13 +8,15 @@ import { ArrowLeftCircleIcon, Save, RotateCcw } from 'lucide-react';
 
 export default function CustomerCreate() {
     const { current_tenant, auth } = usePage().props as any;
-    const currentPathSlug = window.location.pathname.split('/')[1];
+    const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
 
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         phone: '',
         email: '',
+        tax_number: '',
+        address: '',
         notes: '',
     });
 
@@ -84,6 +86,31 @@ export default function CustomerCreate() {
                                 />
                                 {errors.email && <span className="text-xs text-destructive">{errors.email}</span>}
                             </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <Label htmlFor="tax_number" className="text-xs font-semibold">Tax Number / NPWP</Label>
+                            <Input
+                                id="tax_number"
+                                value={data.tax_number}
+                                onChange={(e) => setData('tax_number', e.target.value)}
+                                placeholder="01.234.567.8-901.000"
+                                className="h-10 text-xs border-border bg-background rounded-xl font-mono"
+                            />
+                            {errors.tax_number && <span className="text-xs text-destructive">{errors.tax_number}</span>}
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <Label htmlFor="address" className="text-xs font-semibold">Address</Label>
+                            <Textarea
+                                id="address"
+                                rows={2}
+                                value={data.address}
+                                onChange={(e) => setData('address', e.target.value)}
+                                placeholder="Customer complete address..."
+                                className="text-xs border-border bg-background rounded-xl p-3"
+                            />
+                            {errors.address && <span className="text-xs text-destructive">{errors.address}</span>}
                         </div>
 
                         <div className="space-y-1.5">

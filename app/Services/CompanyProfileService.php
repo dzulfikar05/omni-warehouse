@@ -16,31 +16,28 @@ class CompanyProfileService implements CompanyProfileContract
     {
         $tenant = Tenant::where('slug', $tenantSlug)->firstOrFail();
 
+        // Update data profil & legalitas
         $tenant->update([
             'name' => $data['name'],
+            'slug' => $data['slug'],
             'phone' => $data['phone'] ?? null,
+            'email' => $data['email'] ?? null,
+            'tax_number' => $data['tax_number'] ?? null, // Simpan NPWP
             'address' => $data['address'] ?? null,
         ]);
 
+        // Penanganan Upload File via Spatie MediaLibrary
         if (isset($data['logo']) && $data['logo'] instanceof \Illuminate\Http\UploadedFile) {
-            $media = $tenant->addMedia($data['logo'])
-                ->toMediaCollection('logo');
-
-            $tenant->update([
-                'logo' => $media->getUrl(),
-            ]);
+            $tenant->clearMediaCollection('logo');
+            $tenant->addMedia($data['logo'])->toMediaCollection('logo');
         }
 
         return $tenant;
     }
 
-    public function deleteCompanyLogo(string $tenantSlug): Tenant
+    public function deleteCompanyLogo(string $tenantSlug): void
     {
         $tenant = Tenant::where('slug', $tenantSlug)->firstOrFail();
-
         $tenant->clearMediaCollection('logo');
-        $tenant->update(['logo' => null]);
-
-        return $tenant;
     }
 }

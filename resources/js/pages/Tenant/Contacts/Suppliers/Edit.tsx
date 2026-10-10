@@ -13,6 +13,8 @@ interface Supplier {
     pic?: string;
     phone?: string;
     email?: string;
+    tax_number?: string;
+    address?: string;
     notes?: string;
 }
 
@@ -23,7 +25,6 @@ export default function SupplierEdit({ supplier }: { supplier: Supplier }) {
 
     const lastShownFlash = useRef<string | null>(null);
 
-    // Penanganan Notifikasi Toast Error & Success
     useEffect(() => {
         if (flash?.error && lastShownFlash.current !== flash.error) {
             toast.error(flash.error);
@@ -40,6 +41,8 @@ export default function SupplierEdit({ supplier }: { supplier: Supplier }) {
         pic: supplier.pic || '',
         phone: supplier.phone || '',
         email: supplier.email || '',
+        tax_number: supplier.tax_number || '',
+        address: supplier.address || '',
         notes: supplier.notes || '',
     });
 
@@ -47,7 +50,7 @@ export default function SupplierEdit({ supplier }: { supplier: Supplier }) {
         e.preventDefault();
         put(`/${tenantSlug}/contacts/suppliers/${supplier.id}`, {
             preserveScroll: true,
-            onError: (err) => {
+            onError: () => {
                 toast.error('Gagal memperbarui data supplier. Periksa inputan Anda.');
             },
         });
@@ -58,7 +61,6 @@ export default function SupplierEdit({ supplier }: { supplier: Supplier }) {
             <Head title={`Edit Supplier - ${supplier.name}`} />
 
             <div className="space-y-6 p-4 sm:p-6">
-                {/* Header Top Bar */}
                 <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-sm">
                     <div>
                         <h2 className="text-xl font-bold tracking-tight">
@@ -75,7 +77,6 @@ export default function SupplierEdit({ supplier }: { supplier: Supplier }) {
                     </Button>
                 </div>
 
-                {/* Form Body */}
                 <div className="rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-sm">
                     <form onSubmit={handleSubmit} className="max-w-2xl space-y-5">
                         <div className="space-y-1.5">
@@ -116,16 +117,41 @@ export default function SupplierEdit({ supplier }: { supplier: Supplier }) {
                             </div>
                         </div>
 
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div className="space-y-1.5">
+                                <Label htmlFor="email" className="text-xs font-semibold">Email</Label>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    value={data.email}
+                                    onChange={(e) => setData('email', e.target.value)}
+                                    className="h-10 rounded-xl border-border bg-background text-xs"
+                                />
+                                {errors.email && <span className="text-xs text-destructive">{errors.email}</span>}
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <Label htmlFor="tax_number" className="text-xs font-semibold">NPWP / Tax ID</Label>
+                                <Input
+                                    id="tax_number"
+                                    value={data.tax_number}
+                                    onChange={(e) => setData('tax_number', e.target.value)}
+                                    className="h-10 rounded-xl border-border bg-background text-xs font-mono"
+                                />
+                                {errors.tax_number && <span className="text-xs text-destructive">{errors.tax_number}</span>}
+                            </div>
+                        </div>
+
                         <div className="space-y-1.5">
-                            <Label htmlFor="email" className="text-xs font-semibold">Email</Label>
-                            <Input
-                                id="email"
-                                type="email"
-                                value={data.email}
-                                onChange={(e) => setData('email', e.target.value)}
-                                className="h-10 rounded-xl border-border bg-background text-xs"
+                            <Label htmlFor="address" className="text-xs font-semibold">Address</Label>
+                            <Textarea
+                                id="address"
+                                rows={2}
+                                value={data.address}
+                                onChange={(e) => setData('address', e.target.value)}
+                                className="rounded-xl border-border bg-background p-3 text-xs"
                             />
-                            {errors.email && <span className="text-xs text-destructive">{errors.email}</span>}
+                            {errors.address && <span className="text-xs text-destructive">{errors.address}</span>}
                         </div>
 
                         <div className="space-y-1.5">
