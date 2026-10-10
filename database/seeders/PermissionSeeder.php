@@ -71,7 +71,7 @@ class PermissionSeeder extends Seeder
             // Submenu: Customer
             'tenant.contacts.customers.view', 'tenant.contacts.customers.show', 'tenant.contacts.customers.create', 'tenant.contacts.customers.edit', 'tenant.contacts.customers.delete', 'tenant.contacts.customers.export',
             // Submenu: Supplier
-            'tenant.contacts.suppliers.view', 'tenant.contacts.suppliers.show', 'tenant.contacts.suppliers.create', 'tenant.contacts.suppliers.edit', 'tenant.contacts.suppliers.delete',
+            'tenant.contacts.suppliers.view', 'tenant.contacts.suppliers.show', 'tenant.contacts.suppliers.create', 'tenant.contacts.suppliers.edit', 'tenant.contacts.suppliers.delete','tenant.contacts.suppliers.export',
 
             // Menu Group: Settings
             // Submenu: Company Profile

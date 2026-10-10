@@ -32,6 +32,8 @@ interface Supplier {
     pic?: string;
     phone?: string;
     email?: string;
+    tax_number?: string;
+    address?: string;
     notes?: string;
     inbounds?: InboundTransaction[];
     supplied_products?: TransactionItem[];
@@ -62,7 +64,6 @@ export default function SupplierShow({ supplier }: { supplier: Supplier }) {
             <Head title={`Supplier Details - ${supplier.name}`} />
 
             <div className="space-y-6 p-4 sm:p-6">
-                {/* Header Top Bar */}
                 <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-sm">
                     <div>
                         <h2 className="text-xl font-bold tracking-tight">Supplier Details</h2>
@@ -77,14 +78,13 @@ export default function SupplierShow({ supplier }: { supplier: Supplier }) {
                             </Link>
                         </Button>
                         <Button asChild className="rounded-xl bg-blue-600 px-4 text-xs font-semibold text-white hover:bg-blue-700">
-                            <Link href={`/${tenantSlug}/warehouse-stocks/inbound/create?supplier_id=${supplier.id}`}>
+                            <Link href={`/${tenantSlug}/transactions/inbound/create?supplier_id=${supplier.id}`}>
                                 <ArrowRightCircleIcon className="mr-2 h-4 w-4" /> Add Inbound
                             </Link>
                         </Button>
                     </div>
                 </div>
 
-                {/* Form Data Supplier */}
                 <div className="space-y-4 rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-sm">
                     <div className="space-y-1.5">
                         <Label className="text-xs font-semibold">Supplier Name</Label>
@@ -103,9 +103,21 @@ export default function SupplierShow({ supplier }: { supplier: Supplier }) {
                         </div>
                     </div>
 
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-semibold">Email</Label>
+                            <Input value={supplier.email || '-'} readOnly className="h-10 rounded-xl border-border bg-muted/30 text-xs" />
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-semibold">NPWP / Tax ID</Label>
+                            <Input value={supplier.tax_number || '-'} readOnly className="h-10 rounded-xl border-border bg-muted/30 text-xs font-mono" />
+                        </div>
+                    </div>
+
                     <div className="space-y-1.5">
-                        <Label className="text-xs font-semibold">Email</Label>
-                        <Input value={supplier.email || '-'} readOnly className="h-10 rounded-xl border-border bg-muted/30 text-xs" />
+                        <Label className="text-xs font-semibold">Address</Label>
+                        <Textarea value={supplier.address || '-'} readOnly rows={2} className="rounded-xl border-border bg-muted/30 p-3 text-xs" />
                     </div>
 
                     <div className="space-y-1.5">
@@ -125,9 +137,8 @@ export default function SupplierShow({ supplier }: { supplier: Supplier }) {
                     </div>
                 </div>
 
-                {/* Panel Inbound & Supplied Products Riil */}
+                {/* Panel Inbound & Supplied Products */}
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    {/* Inbound History */}
                     <div className="space-y-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
                         <h3 className="border-b border-border pb-3 text-sm font-bold text-foreground">Inbound History</h3>
 
@@ -163,7 +174,6 @@ export default function SupplierShow({ supplier }: { supplier: Supplier }) {
                         )}
                     </div>
 
-                    {/* Supplied Products */}
                     <div className="space-y-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
                         <h3 className="border-b border-border pb-3 text-sm font-bold text-foreground">Supplied Products</h3>
 

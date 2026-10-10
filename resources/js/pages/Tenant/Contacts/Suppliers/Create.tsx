@@ -8,7 +8,7 @@ import { ArrowLeftCircleIcon, Save, RotateCcw } from 'lucide-react';
 
 export default function SupplierCreate() {
     const { current_tenant, auth } = usePage().props as any;
-    const currentPathSlug = window.location.pathname.split('/')[1];
+    const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
 
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -16,6 +16,8 @@ export default function SupplierCreate() {
         pic: '',
         phone: '',
         email: '',
+        tax_number: '',
+        address: '',
         notes: '',
     });
 
@@ -86,17 +88,44 @@ export default function SupplierCreate() {
                             </div>
                         </div>
 
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <Label htmlFor="email" className="text-xs font-semibold">Email</Label>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    value={data.email}
+                                    onChange={(e) => setData('email', e.target.value)}
+                                    placeholder="Email Address"
+                                    className="h-10 text-xs border-border bg-background rounded-xl"
+                                />
+                                {errors.email && <span className="text-xs text-destructive">{errors.email}</span>}
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <Label htmlFor="tax_number" className="text-xs font-semibold">NPWP / Tax ID</Label>
+                                <Input
+                                    id="tax_number"
+                                    value={data.tax_number}
+                                    onChange={(e) => setData('tax_number', e.target.value)}
+                                    placeholder="00.000.000.0-000.000"
+                                    className="h-10 text-xs border-border bg-background rounded-xl font-mono"
+                                />
+                                {errors.tax_number && <span className="text-xs text-destructive">{errors.tax_number}</span>}
+                            </div>
+                        </div>
+
                         <div className="space-y-1.5">
-                            <Label htmlFor="email" className="text-xs font-semibold">Email</Label>
-                            <Input
-                                id="email"
-                                type="email"
-                                value={data.email}
-                                onChange={(e) => setData('email', e.target.value)}
-                                placeholder="Email Address"
-                                className="h-10 text-xs border-border bg-background rounded-xl"
+                            <Label htmlFor="address" className="text-xs font-semibold">Address</Label>
+                            <Textarea
+                                id="address"
+                                rows={2}
+                                value={data.address}
+                                onChange={(e) => setData('address', e.target.value)}
+                                placeholder="Supplier physical address..."
+                                className="text-xs border-border bg-background rounded-xl p-3"
                             />
-                            {errors.email && <span className="text-xs text-destructive">{errors.email}</span>}
+                            {errors.address && <span className="text-xs text-destructive">{errors.address}</span>}
                         </div>
 
                         <div className="space-y-1.5">
