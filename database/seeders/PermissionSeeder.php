@@ -43,7 +43,7 @@ class PermissionSeeder extends Seeder
 
             // Menu Group: Warehouse & Stocks
             // Submenu: Warehouses
-            'tenant.warehouses.view', 'tenant.warehouses.create', 'tenant.warehouses.edit', 'tenant.warehouses.delete',
+            'tenant.warehouses.view', 'tenant.warehouses.create', 'tenant.warehouses.show', 'tenant.warehouses.edit', 'tenant.warehouses.delete', 'tenant.warehouses.export',
             // Submenu: Rack & Stock Location
             'tenant.stock_locations.view', 'tenant.stock_locations.create', 'tenant.stock_locations.edit', 'tenant.stock_locations.delete',
             // Submenu: Stock Opname
