@@ -31,12 +31,36 @@ class TenantSeeder extends Seeder
         // ----------------------------------------------------
         // 1. PLAN & TENANT BASE DATA
         // ----------------------------------------------------
+
+        // 1. Starter MVP Plan
         $proPlan = Plan::firstOrCreate(
             ['slug' => 'pro-plan'],
             [
                 'name' => 'Pro Plan',
                 'desc' => 'Paket lengkap untuk bisnis menengah',
                 'price' => 250000.00,
+                'is_active' => true,
+            ]
+        );
+
+        // 2. Pro Warehouse Plan (Paket Menengah)
+        $proPlan = Plan::firstOrCreate(
+            ['slug' => 'pro-warehouse'],
+            [
+                'name' => 'Pro Warehouse',
+                'desc' => 'Paket lengkap untuk manajemen gudang menengah.',
+                'price' => 750000.00,
+                'is_active' => true,
+            ]
+        );
+
+        // 3. Enterprise & AI Plan
+        $enterprisePlan = Plan::firstOrCreate(
+            ['slug' => 'enterprise-ai'],
+            [
+                'name' => 'Enterprise & AI',
+                'desc' => 'Solusi tanpa batas dengan modul AI canggih.',
+                'price' => 1500000.00,
                 'is_active' => true,
             ]
         );

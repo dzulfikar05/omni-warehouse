@@ -347,6 +347,14 @@ export function AppSidebar() {
                 icon: FolderGit2,
             });
         }
+
+        if (can('central.plans.view') || hasRole('superadmin')) {
+            mainNavItems.push({
+                title: 'Plans & Features',
+                href: '/admin/plans',
+                icon: LayoutGrid,
+            });
+        }
     }
 
     const footerNavItems: NavItem[] = [
