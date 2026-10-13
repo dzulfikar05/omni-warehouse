@@ -1,6 +1,14 @@
-import React, { useState } from 'react';
-import { Head, useForm, Link } from '@inertiajs/react';
-import { Plus, Trash2, ArrowLeft } from 'lucide-react';
+import React from 'react';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+    ArrowLeftCircleIcon,
+    Plus,
+    Trash2,
+    Save,
+} from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 
 export default function PlanCreate() {
@@ -34,101 +42,173 @@ export default function PlanCreate() {
     return (
         <>
             <Head title="Add New Plan" />
-            <div className="p-6 max-w-3xl mx-auto flex flex-col gap-6 text-foreground">
-                <div className="flex items-center gap-3">
-                    <Link href="/admin/plans" className="p-2 bg-muted rounded-lg hover:bg-muted/80 transition">
-                        <ArrowLeft className="w-4 h-4" />
-                    </Link>
-                    <div>
-                        <h1 className="text-xl font-bold tracking-tight">Add New Plan</h1>
-                        <p className="text-xs text-muted-foreground">Buat tier paket langganan baru beserta daftar fiturnya.</p>
+
+            <div className="space-y-6 p-4">
+                {/* Header Card */}
+                <div className="mx-auto rounded-lg bg-card text-card-foreground border border-border p-6 shadow-md">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h2 className="text-xl font-bold text-foreground">
+                                Add New Plan
+                            </h2>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                                Buat tier paket langganan baru beserta daftar fiturnya.
+                            </p>
+                        </div>
+
+                        <Button asChild variant="outline">
+                            <Link href="/admin/plans">
+                                <ArrowLeftCircleIcon className="mr-2 h-4 w-4" />
+                                Back
+                            </Link>
+                        </Button>
                     </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="bg-card border border-border rounded-2xl p-6 shadow-xl flex flex-col gap-5">
-                    <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-bold uppercase tracking-wider">Nama Paket</label>
-                        <input
-                            type="text"
-                            value={data.name}
-                            onChange={(e) => setData('name', e.target.value)}
-                            placeholder="Contoh: Ultra Warehouse"
-                            className="h-10 px-3 bg-background border border-border rounded-lg text-xs"
-                        />
-                        {errors.name && <span className="text-xs text-destructive">{errors.name}</span>}
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-bold uppercase tracking-wider">Harga per Bulan (IDR)</label>
-                        <input
-                            type="number"
-                            value={data.price}
-                            onChange={(e) => setData('price', e.target.value)}
-                            placeholder="750000"
-                            className="h-10 px-3 bg-background border border-border rounded-lg text-xs"
-                        />
-                        {errors.price && <span className="text-xs text-destructive">{errors.price}</span>}
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-bold uppercase tracking-wider">Deskripsi Singkat</label>
-                        <textarea
-                            value={data.desc}
-                            onChange={(e) => setData('desc', e.target.value)}
-                            placeholder="Penjelasan singkat mengenai paket..."
-                            className="p-3 bg-background border border-border rounded-lg text-xs min-h-[80px]"
-                        />
-                        {errors.desc && <span className="text-xs text-destructive">{errors.desc}</span>}
-                    </div>
-
-                    <div className="flex flex-col gap-3 pt-2 border-t border-border">
-                        <div className="flex items-center justify-between">
-                            <label className="text-xs font-bold uppercase tracking-wider">Daftar Fitur (Features)</label>
-                            <button
-                                type="button"
-                                onClick={addFeatureField}
-                                className="h-8 px-3 bg-muted hover:bg-muted/80 rounded-lg text-xs font-semibold flex items-center gap-1 cursor-pointer"
-                            >
-                                <Plus className="w-3.5 h-3.5" /> Tambah Fitur
-                            </button>
+                {/* Form Card */}
+                <div className="mx-auto rounded-lg bg-card text-card-foreground border border-border p-6 shadow-md">
+                    <form onSubmit={handleSubmit} className="max-w-xl space-y-4">
+                        {/* Nama Paket */}
+                        <div className="space-y-1">
+                            <Label htmlFor="name">Nama Paket</Label>
+                            <Input
+                                id="name"
+                                value={data.name}
+                                onChange={(e) =>
+                                    setData('name', e.target.value)
+                                }
+                                placeholder="Contoh: Ultra Warehouse"
+                            />
+                            {errors.name && (
+                                <span className="text-sm text-red-500">
+                                    {errors.name}
+                                </span>
+                            )}
                         </div>
 
-                        {data.features.map((feat, index) => (
-                            <div key={index} className="flex items-center gap-2">
-                                <input
-                                    type="text"
-                                    value={feat}
-                                    onChange={(e) => handleFeatureChange(index, e.target.value)}
-                                    placeholder="Contoh: Multi-warehouse (up to 5 facilities)"
-                                    className="h-10 px-3 bg-background border border-border rounded-lg text-xs flex-1"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => removeFeatureField(index)}
-                                    className="h-10 w-10 bg-destructive/10 text-destructive rounded-lg flex items-center justify-center hover:bg-destructive/20 transition cursor-pointer"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
-                            </div>
-                        ))}
-                    </div>
+                        {/* Harga per Bulan */}
+                        <div className="space-y-1">
+                            <Label htmlFor="price">
+                                Harga per Bulan (IDR)
+                            </Label>
+                            <Input
+                                id="price"
+                                type="number"
+                                value={data.price}
+                                onChange={(e) =>
+                                    setData('price', e.target.value)
+                                }
+                                placeholder="750000"
+                            />
+                            {errors.price && (
+                                <span className="text-sm text-red-500">
+                                    {errors.price}
+                                </span>
+                            )}
+                        </div>
 
-                    <div className="flex justify-end gap-3 pt-4 border-t border-border">
-                        <Link href="/admin/plans" className="h-9 px-4 bg-muted flex items-center rounded-lg text-xs font-medium">
-                            Batal
-                        </Link>
-                        <button
-                            type="submit"
-                            disabled={processing}
-                            className="h-9 px-4 bg-primary text-primary-foreground rounded-lg text-xs font-semibold hover:bg-primary/90 cursor-pointer"
-                        >
-                            Simpan Paket
-                        </button>
-                    </div>
-                </form>
+                        {/* Deskripsi Singkat */}
+                        <div className="space-y-1">
+                            <Label htmlFor="desc">Deskripsi Singkat</Label>
+                            <textarea
+                                id="desc"
+                                value={data.desc}
+                                onChange={(e) =>
+                                    setData('desc', e.target.value)
+                                }
+                                placeholder="Penjelasan singkat mengenai paket..."
+                                rows={3}
+                                className="w-full p-3 bg-background border border-input rounded-md text-xs focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
+                            />
+                            {errors.desc && (
+                                <span className="text-sm text-red-500">
+                                    {errors.desc}
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Daftar Fitur */}
+                        <div className="space-y-3 pt-4 border-t border-border">
+                            <div className="flex items-center justify-between gap-3">
+                                <Label>Daftar Fitur (Features)</Label>
+
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={addFeatureField}
+                                    className="h-8 px-3 text-xs"
+                                >
+                                    <Plus className="w-3.5 h-3.5 mr-1" />
+                                    Tambah Fitur
+                                </Button>
+                            </div>
+
+                            {data.features.map((feat, index) => (
+                                <div
+                                    key={index}
+                                    className="flex items-center gap-2"
+                                >
+                                    <Input
+                                        type="text"
+                                        value={feat}
+                                        onChange={(e) =>
+                                            handleFeatureChange(
+                                                index,
+                                                e.target.value
+                                            )
+                                        }
+                                        placeholder="Contoh: Multi-warehouse (up to 5 facilities)"
+                                    />
+
+                                    <Button
+                                        type="button"
+                                        variant="destructive"
+                                        size="icon"
+                                        onClick={() =>
+                                            removeFeatureField(index)
+                                        }
+                                        className="h-9 w-9 shrink-0"
+                                        aria-label={`Hapus fitur ${index + 1}`}
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Submit Button */}
+                        <div className="pt-4">
+                            <Button
+                                type="submit"
+                                className="w-full sm:w-auto flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
+                                disabled={processing}
+                            >
+                                <Save className="h-4 w-4" />
+                                {processing
+                                    ? 'Menyimpan...'
+                                    : 'Simpan Paket'}
+                            </Button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </>
     );
 }
 
-PlanCreate.layout = (page: React.ReactNode) => <AppLayout children={page} breadcrumbs={[{ title: 'Plans Management', href: '/admin/plans' }]} />;
+PlanCreate.layout = (page: React.ReactNode) => (
+    <AppLayout
+        children={page}
+        breadcrumbs={[
+            {
+                title: 'Plans Management',
+                href: '/admin/plans',
+            },
+            {
+                title: 'Create Plan',
+                href: '/admin/plans/create',
+            },
+        ]}
+    />
+);
