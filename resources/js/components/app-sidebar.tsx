@@ -3,6 +3,7 @@ import {
     ArrowLeftRight,
     BookOpen,
     Building2,
+    CreditCard,
     FileText,
     FolderGit2,
     LayoutGrid,
@@ -353,6 +354,14 @@ export function AppSidebar() {
                 title: 'Plans & Features',
                 href: '/admin/plans',
                 icon: LayoutGrid,
+            });
+        }
+
+        if (can('central.subscriptions.view') || hasRole('superadmin')) {
+            mainNavItems.push({
+                title: 'Subscriptions',
+                href: '/admin/subscriptions',
+                icon: CreditCard,
             });
         }
     }
