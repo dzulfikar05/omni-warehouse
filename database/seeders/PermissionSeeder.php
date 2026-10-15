@@ -98,6 +98,8 @@ class PermissionSeeder extends Seeder
             'tenant.products.create',
             'tenant.products.edit',
             'tenant.products.delete',
+            'tenant.products.export',
+
             // Submenu: Categories
             'tenant.categories.view',
             'tenant.categories.show',
