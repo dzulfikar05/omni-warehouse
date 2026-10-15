@@ -1,151 +1,125 @@
-import { Head, Link } from '@inertiajs/react';
-
+import React from 'react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-
-interface Unit {
-    id: number;
-    name: string;
-    symbol: string;
-}
-
-interface Sku {
-    id: number;
-    product_id: number;
-    unit_id: number;
-    sku_code: string;
-    barcode: string | null;
-    base_cost: number;
-    current_stock: number;
-    unit: Unit;
-    created_at: string;
-    updated_at: string;
-}
+import { ArrowLeft, Edit3, Boxes, Tag, Calendar } from 'lucide-react';
+import { SkuItem } from './Index';
 
 interface Props {
     tenant_slug: string;
-    sku: Sku;
+    sku: SkuItem;
 }
 
 export default function Show({ tenant_slug, sku }: Props) {
+    const { auth } = usePage().props as any;
+    const permissions: string[] = auth?.permissions || auth?.user?.permissions || [];
+
+    const hasPermission = (permissionName: string) => {
+        if (auth?.user?.roles?.some((r: any) => r.name === 'superadmin' || r.name === 'admin')) {
+            return true;
+        }
+        return permissions.includes(permissionName);
+    };
+
+    const formatCurrency = (val: number) => {
+        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
+    };
+
     return (
         <>
-            <Head title={`SKU - ${sku.sku_code}`} />
+            <Head title={`Detail SKU - ${sku.sku_code}`} />
 
-            <div className="space-y-6 p-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-foreground">
-                        SKU Details
-                    </h1>
+            <div className="space-y-6 p-4 sm:p-6 font-sans">
+                <PageHeader
+                    title={`Detail SKU: ${sku.sku_code}`}
+                    description="Rincian informasi varian barang dan kondisi persediaan terkini."
+                    renderAction={
+                        <div className="flex items-center gap-2">
+                            <Button variant="outline" asChild className="h-9 px-4 rounded-xl border-border text-xs">
+                                <Link href={`/${tenant_slug}/inventory/skus`}>
+                                    <ArrowLeft className="w-3.5 h-3.5 mr-1.5" /> Kembali
+                                </Link>
+                            </Button>
+                            {hasPermission('tenant.skus.edit') && (
+                                <Button asChild className="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold gap-1.5 shadow-md">
+                                    <Link href={`/${tenant_slug}/inventory/skus/${sku.id}/edit`}>
+                                        <Edit3 className="w-3.5 h-3.5" /> Edit Data SKU
+                                    </Link>
+                                </Button>
+                            )}
+                        </div>
+                    }
+                />
 
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        View SKU information.
-                    </p>
-                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4 text-xs text-card-foreground">
+                        <h3 className="font-bold text-sm text-foreground border-b border-border pb-3 flex items-center gap-2">
+                            <Tag className="w-4 h-4 text-blue-600" /> Identitas SKU & Produk
+                        </h3>
 
-                <div className="rounded-lg border border-border bg-card p-6 shadow-md">
-                    <div className="grid gap-6 md:grid-cols-2">
-                        {/* SKU Code */}
-                        <div>
-                            <p className="text-sm text-muted-foreground">
-                                SKU Code
-                            </p>
-
-                            <p className="mt-1 font-medium text-foreground">
-                                {sku.sku_code}
-                            </p>
+                        <div className="grid grid-cols-2 gap-4 font-mono">
+                            <div>
+                                <span className="text-muted-foreground block text-[11px]">Kode SKU:</span>
+                                <strong className="text-blue-600 dark:text-blue-400 font-bold text-sm">{sku.sku_code}</strong>
+                            </div>
+                            <div>
+                                <span className="text-muted-foreground block text-[11px]">Barcode / EAN-13:</span>
+                                <strong className="text-foreground">{sku.barcode || '-'}</strong>
+                            </div>
                         </div>
 
-                        {/* Barcode */}
                         <div>
-                            <p className="text-sm text-muted-foreground">
-                                Barcode
-                            </p>
-
-                            <p className="mt-1 font-medium text-foreground">
-                                {sku.barcode ?? 'N/A'}
-                            </p>
+                            <span className="text-muted-foreground block text-[11px]">Nama Produk Induk:</span>
+                            <strong className="text-foreground font-sans text-sm">{sku.product?.name ?? '-'}</strong>
                         </div>
 
-                        {/* Base Cost */}
-                        <div>
-                            <p className="text-sm text-muted-foreground">
-                                Base Cost
-                            </p>
-
-                            <p className="mt-1 font-medium text-foreground">
-                                {sku.base_cost}
-                            </p>
-                        </div>
-
-                        {/* Current Stock */}
-                        <div>
-                            <p className="text-sm text-muted-foreground">
-                                Current Stock
-                            </p>
-
-                            <p className="mt-1 font-medium text-foreground">
-                                {sku.current_stock}
-                            </p>
-                        </div>
-
-                        {/* Unit */}
-                        <div>
-                            <p className="text-sm text-muted-foreground">
-                                Unit
-                            </p>
-
-                            <p className="mt-1 font-medium text-foreground">
-                                {sku.unit?.name ?? 'N/A'} (
-                                {sku.unit?.symbol ?? 'N/A'})
-                            </p>
-                        </div>
-
-                        {/* Date Added */}
-                        <div>
-                            <p className="text-sm text-muted-foreground">
-                                Date Added
-                            </p>
-
-                            <p className="mt-1 font-medium text-foreground">
-                                {new Date(
-                                    sku.created_at,
-                                ).toLocaleDateString('en-GB')}
-                            </p>
-                        </div>
-
-                        {/* Last Updated */}
-                        <div>
-                            <p className="text-sm text-muted-foreground">
-                                Last Updated
-                            </p>
-
-                            <p className="mt-1 font-medium text-foreground">
-                                {new Date(
-                                    sku.updated_at,
-                                ).toLocaleDateString('en-GB')}
-                            </p>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <span className="text-muted-foreground block text-[11px]">Kategori:</span>
+                                <span className="px-2 py-0.5 bg-muted border border-border rounded-lg font-medium">{sku.product?.category?.name ?? '-'}</span>
+                            </div>
+                            <div>
+                                <span className="text-muted-foreground block text-[11px]">Satuan (Unit):</span>
+                                <strong className="text-foreground font-mono">{sku.unit?.name ?? sku.unit?.symbol ?? '-'}</strong>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="mt-6 flex justify-end gap-3">
-                        <Button variant="outline" asChild>
-                            <Link
-                                href={`/${tenant_slug}/inventory/skus`}
-                            >
-                                Back
-                            </Link>
-                        </Button>
+                    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4 text-xs text-card-foreground">
+                        <h3 className="font-bold text-sm text-foreground border-b border-border pb-3 flex items-center gap-2">
+                            <Boxes className="w-4 h-4 text-blue-600" /> Biaya & Persediaan Stok
+                        </h3>
 
-                        <Button asChild>
-                            <Link
-                                href={`/${tenant_slug}/inventory/skus/${sku.id}/edit`}
-                            >
-                                Edit SKU
-                            </Link>
-                        </Button>
+                        <div className="grid grid-cols-2 gap-4 font-mono">
+                            <div>
+                                <span className="text-muted-foreground block text-[11px]">Base Cost / HPP:</span>
+                                <strong className="text-foreground text-sm font-bold">{formatCurrency(sku.base_cost)}</strong>
+                            </div>
+                            <div>
+                                <span className="text-muted-foreground block text-[11px]">Stok Aktual Saat Ini:</span>
+                                <span className="px-2.5 py-0.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    {sku.current_stock} Unit
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="p-4 bg-muted/40 border border-border rounded-xl space-y-2">
+                            <div className="flex items-center justify-between text-muted-foreground text-[11px]">
+                                <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> Tanggal Dibuat:</span>
+                                <span className="font-mono text-foreground font-semibold">{new Date(sku.created_at).toLocaleDateString('id-ID')}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </>
     );
 }
+
+Show.layout = {
+    breadcrumbs: [
+        { title: 'Inventory Management', href: '#' },
+        { title: 'Master SKU', href: '#' },
+        { title: 'Detail SKU', href: '#' },
+    ],
+};

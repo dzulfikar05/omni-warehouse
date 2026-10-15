@@ -91,6 +91,7 @@ class PermissionSeeder extends Seeder
             'tenant.skus.create',
             'tenant.skus.edit',
             'tenant.skus.delete',
+            'tenant.skus.export',
             // Submenu: Products
             'tenant.products.view',
             'tenant.products.show',

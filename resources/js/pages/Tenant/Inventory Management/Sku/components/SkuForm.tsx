@@ -1,18 +1,19 @@
-import { Link, useForm } from '@inertiajs/react';
-
+import React, { FormEvent } from 'react';
+import { useForm, Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Check, ArrowLeft } from 'lucide-react';
 
-interface Product {
-    id: number;
-    name: string;
-}
-
-interface Unit {
-    id: number;
-    symbol: string;
-}
-
+interface Product { id: number; name: string; }
+interface Unit { id: number; name: string; symbol: string; }
 interface Sku {
     id?: number;
     product_id: number;
@@ -21,243 +22,154 @@ interface Sku {
     barcode: string | null;
     base_cost: number;
     current_stock: number;
+    min_stock?: number;
 }
 
-interface Props {
+interface SkuFormProps {
     tenant_slug: string;
-    sku?: Sku;
     products: Product[];
     units: Unit[];
+    sku?: Sku;
     mode: 'create' | 'edit';
 }
 
-export default function SkuForm({
-    tenant_slug,
-    sku,
-    products,
-    units,
-    mode,
-}: Props) {
-    const isEdit = mode === 'edit';
-
-    const form = useForm({
-        sku_code: sku?.sku_code ?? '',
-        barcode: sku?.barcode ?? '',
-        product_id: sku?.product_id ?? 0,
-        unit_id: sku?.unit_id ?? 0,
-        base_cost: sku?.base_cost ?? 0,
-        current_stock: sku?.current_stock ?? 0,
+export default function SkuForm({ tenant_slug, products, units, sku, mode }: SkuFormProps) {
+    const { data, setData, post, put, processing, errors } = useForm({
+        product_id: sku ? String(sku.product_id) : '',
+        unit_id: sku ? String(sku.unit_id) : '',
+        sku_code: sku?.sku_code || '',
+        barcode: sku?.barcode || '',
+        base_cost: sku?.base_cost || 0,
+        current_stock: sku?.current_stock || 0,
+        min_stock: sku?.min_stock || 5,
     });
 
-    const submit = (e: React.FormEvent) => {
+    const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
-
-        if (isEdit && sku?.id) {
-            form.put(`/${tenant_slug}/inventory/skus/${sku.id}`);
+        if (mode === 'create') {
+            post(`/${tenant_slug}/inventory/skus`);
         } else {
-            form.post(`/${tenant_slug}/inventory/skus`);
+            put(`/${tenant_slug}/inventory/skus/${sku?.id}`);
         }
     };
 
     return (
-        <form onSubmit={submit} className="space-y-6">
-            {/* Product */}
-            <div className="space-y-2">
-                <label
-                    htmlFor="product_id"
-                    className="text-sm font-medium text-foreground"
-                >
-                    Product
-                </label>
+        <form onSubmit={handleSubmit} className="space-y-6 text-xs font-sans">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                    <Label className="font-semibold text-foreground">
+                        Pilih Produk Induk <span className="text-red-500">*</span>
+                    </Label>
+                    <Select value={data.product_id} onValueChange={(val) => setData('product_id', val)}>
+                        <SelectTrigger className="h-9 text-xs rounded-xl border-border bg-background">
+                            <SelectValue placeholder="Pilih Produk" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {products.map((p) => (
+                                <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    {errors.product_id && <span className="text-destructive text-[11px]">{errors.product_id}</span>}
+                </div>
 
-                <select
-                    id="product_id"
-                    value={form.data.product_id}
-                    onChange={(e) =>
-                        form.setData('product_id', Number(e.target.value))
-                    }
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                >
-                    <option value={0}>Select product</option>
-
-                    {products.map((product) => (
-                        <option key={product.id} value={product.id}>
-                            {product.name}
-                        </option>
-                    ))}
-                </select>
-
-                {form.errors.product_id && (
-                    <p className="text-sm text-red-500">
-                        {form.errors.product_id}
-                    </p>
-                )}
+                <div className="space-y-1.5">
+                    <Label className="font-semibold text-foreground">
+                        Satuan / Unit <span className="text-red-500">*</span>
+                    </Label>
+                    <Select value={data.unit_id} onValueChange={(val) => setData('unit_id', val)}>
+                        <SelectTrigger className="h-9 text-xs rounded-xl border-border bg-background">
+                            <SelectValue placeholder="Pilih Satuan" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {units.map((u) => (
+                                <SelectItem key={u.id} value={String(u.id)}>{u.name} ({u.symbol})</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    {errors.unit_id && <span className="text-destructive text-[11px]">{errors.unit_id}</span>}
+                </div>
             </div>
 
-            {/* Unit */}
-            <div className="space-y-2">
-                <label
-                    htmlFor="unit_id"
-                    className="text-sm font-medium text-foreground"
-                >
-                    Unit
-                </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                    <Label className="font-semibold text-foreground">
+                        Kode SKU Unik <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                        type="text"
+                        value={data.sku_code}
+                        onChange={(e) => setData('sku_code', e.target.value)}
+                        placeholder="Cth: SKU-IND-001"
+                        className="h-9 font-mono rounded-xl border-border bg-background"
+                    />
+                    {errors.sku_code && <span className="text-destructive text-[11px]">{errors.sku_code}</span>}
+                </div>
 
-                <select
-                    id="unit_id"
-                    value={form.data.unit_id}
-                    onChange={(e) =>
-                        form.setData('unit_id', Number(e.target.value))
-                    }
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                >
-                    <option value={0}>Select unit</option>
-
-                    {units.map((unit) => (
-                        <option key={unit.id} value={unit.id}>
-                            {unit.symbol}
-                        </option>
-                    ))}
-                </select>
-
-                {form.errors.unit_id && (
-                    <p className="text-sm text-red-500">
-                        {form.errors.unit_id}
-                    </p>
-                )}
+                <div className="space-y-1.5">
+                    <Label className="font-semibold text-foreground">Barcode / EAN-13</Label>
+                    <Input
+                        type="text"
+                        value={data.barcode}
+                        onChange={(e) => setData('barcode', e.target.value)}
+                        placeholder="Cth: 8998866200114"
+                        className="h-9 font-mono rounded-xl border-border bg-background"
+                    />
+                    {errors.barcode && <span className="text-destructive text-[11px]">{errors.barcode}</span>}
+                </div>
             </div>
 
-            {/* SKU Code */}
-            <div className="space-y-2">
-                <label
-                    htmlFor="sku_code"
-                    className="text-sm font-medium text-foreground"
-                >
-                    SKU Code
-                </label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                    <Label className="font-semibold text-foreground">
+                        Harga Dasar / Base Cost (Rp) <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                        type="number"
+                        value={data.base_cost}
+                        onChange={(e) => setData('base_cost', Number(e.target.value))}
+                        className="h-9 font-mono rounded-xl border-border bg-background"
+                    />
+                    {errors.base_cost && <span className="text-destructive text-[11px]">{errors.base_cost}</span>}
+                </div>
 
-                <Input
-                    id="sku_code"
-                    type="text"
-                    value={form.data.sku_code}
-                    onChange={(e) =>
-                        form.setData('sku_code', e.target.value)
-                    }
-                    placeholder="Enter SKU code"
-                />
+                <div className="space-y-1.5">
+                    <Label className="font-semibold text-foreground">
+                        Stok Awal <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                        type="number"
+                        value={data.current_stock}
+                        onChange={(e) => setData('current_stock', Number(e.target.value))}
+                        className="h-9 font-mono rounded-xl border-border bg-background"
+                    />
+                    {errors.current_stock && <span className="text-destructive text-[11px]">{errors.current_stock}</span>}
+                </div>
 
-                {form.errors.sku_code && (
-                    <p className="text-sm text-red-500">
-                        {form.errors.sku_code}
-                    </p>
-                )}
+                <div className="space-y-1.5">
+                    <Label className="font-semibold text-foreground">Batas Minimum Stok (Alert)</Label>
+                    <Input
+                        type="number"
+                        value={data.min_stock}
+                        onChange={(e) => setData('min_stock', Number(e.target.value))}
+                        className="h-9 font-mono rounded-xl border-border bg-background"
+                    />
+                </div>
             </div>
 
-            {/* Barcode */}
-            <div className="space-y-2">
-                <label
-                    htmlFor="barcode"
-                    className="text-sm font-medium text-foreground"
-                >
-                    Barcode
-                </label>
-
-                <Input
-                    id="barcode"
-                    type="text"
-                    value={form.data.barcode}
-                    onChange={(e) =>
-                        form.setData('barcode', e.target.value)
-                    }
-                    placeholder="Enter barcode"
-                />
-
-                {form.errors.barcode && (
-                    <p className="text-sm text-red-500">
-                        {form.errors.barcode}
-                    </p>
-                )}
-            </div>
-
-            {/* Base Cost */}
-            <div className="space-y-2">
-                <label
-                    htmlFor="base_cost"
-                    className="text-sm font-medium text-foreground"
-                >
-                    Base Cost
-                </label>
-
-                <Input
-                    id="base_cost"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={form.data.base_cost}
-                    onChange={(e) =>
-                        form.setData(
-                            'base_cost',
-                            e.target.value === ''
-                                ? 0
-                                : parseFloat(e.target.value),
-                        )
-                    }
-                    placeholder="Enter base cost"
-                />
-
-                {form.errors.base_cost && (
-                    <p className="text-sm text-red-500">
-                        {form.errors.base_cost}
-                    </p>
-                )}
-            </div>
-
-            {/* Current Stock */}
-            <div className="space-y-2">
-                <label
-                    htmlFor="current_stock"
-                    className="text-sm font-medium text-foreground"
-                >
-                    Current Stock
-                </label>
-
-                <Input
-                    id="current_stock"
-                    type="number"
-                    min="0"
-                    value={form.data.current_stock}
-                    onChange={(e) =>
-                        form.setData(
-                            'current_stock',
-                            e.target.value === ''
-                                ? 0
-                                : parseInt(e.target.value, 10),
-                        )
-                    }
-                    placeholder="Enter current stock"
-                />
-
-                {form.errors.current_stock && (
-                    <p className="text-sm text-red-500">
-                        {form.errors.current_stock}
-                    </p>
-                )}
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center justify-end gap-3">
-                <Button variant="outline" type="button" asChild>
+            <div className="pt-4 border-t border-border flex items-center justify-end gap-2">
+                <Button variant="outline" asChild className="h-9 px-4 rounded-xl border-border">
                     <Link href={`/${tenant_slug}/inventory/skus`}>
-                        Cancel
+                        <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Batal
                     </Link>
                 </Button>
-
-                <Button type="submit" disabled={form.processing}>
-                    {form.processing
-                        ? 'Saving...'
-                        : isEdit
-                          ? 'Update SKU'
-                          : 'Create SKU'}
+                <Button
+                    type="submit"
+                    disabled={processing}
+                    className="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold gap-1.5 shadow-md"
+                >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>{processing ? 'Menyimpan...' : mode === 'create' ? 'Simpan SKU' : 'Perbarui SKU'}</span>
                 </Button>
             </div>
         </form>
