@@ -14,12 +14,16 @@ use App\Contracts\InboundOutboundReportContract;
 use App\Contracts\RoleContract;
 use App\Contracts\StockTransferContract;
 use App\Contracts\LocationsContract;
+use App\Contracts\ProductContract;
+use App\Contracts\CategoryContract;
 use App\Contracts\WarehousesContract;
 use App\Contracts\StockOpnameContract;
 use App\Contracts\SupplierContract;
 use App\Contracts\TenantContract;
 use App\Contracts\TenantUserRoleContract;
+use App\Contracts\UnitContract;
 use App\Contracts\UserContract;
+use App\Services\CategoryService;
 use App\Services\CompanyProfileService;
 use App\Services\CustomerService;
 use App\Services\GeneralSettingsService;
@@ -31,11 +35,13 @@ use App\Services\StockSummaryReportService;
 use App\Services\RoleService;
 use App\Services\StockTransferService;
 use App\Services\LocationsService;
+use App\Services\ProductService;
 use App\Services\WarehousesService;
 use App\Services\StockOpnameService;
 use App\Services\SupplierService;
 use App\Services\TenantService;
 use App\Services\TenantUserRoleService;
+use App\Services\UnitService;
 use App\Services\UserService;
 use App\Services\ValuationAssetReportService;
 use Carbon\CarbonImmutable;
@@ -69,6 +75,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(LocationsContract::class, LocationsService::class);
         $this->app->bind(StockTransferContract::class, StockTransferService::class);
         $this->app->bind(GeneralSettingsContract::class, GeneralSettingsService::class);
+        $this->app->bind(ProductContract::class, ProductService::class);
+        $this->app->bind(CategoryContract::class, CategoryService::class);
+        $this->app->bind(UnitContract::class, UnitService::class);
     }
 
     /**

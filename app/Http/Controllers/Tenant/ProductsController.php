@@ -2,181 +2,113 @@
 
 namespace App\Http\Controllers\Tenant;
 
+use App\Contracts\ProductContract;
 use App\Http\Controllers\Controller;
-use App\Models\Products;
+use App\Http\Requests\ProductRequest;
+use App\Models\Category;
+use App\Models\Product;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use App\Models\Category;
+use Inertia\Response;
 
 class ProductsController extends Controller
 {
-    /**
-     * Menampilkan daftar produk.
-     */
-    public function index(Request $request)
+    public function __construct(
+        protected ProductContract $productService
+    ) {}
+
+    public function index(Request $request): Response
     {
         $tenantSlug = $request->route('tenant_slug');
-        $search     = $request->input('search');
-        $categoryId = $request->input('category_id');
-        $sortBy     = $request->input('sort_by', 'latest');
-        $perPage    = (int) $request->input('per_page', 10);
-
-        // Batasi pilihan jumlah data per halaman
+        $filters = [
+            'search'      => $request->input('search'),
+            'category_id' => $request->input('category_id'),
+            'status'      => $request->input('status'),
+            'sort_by'     => $request->input('sort_by', 'latest'),
+        ];
+        $perPage = (int) $request->input('per_page', 10);
         if (! in_array($perPage, [10, 25, 50])) {
             $perPage = 10;
         }
 
-        $products = Products::query()
-            ->with('category')
-            // Filter Search
-            ->when($search, function ($query, $search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('id', 'like', "%{$search}%")
-                        ->orWhereHas('category', function ($catQuery) use ($search) {
-                            $catQuery->where('name', 'like', "%{$search}%");
-                        });
-                });
-            })
-            // Filter Berdasarkan Kategori
-            ->when($categoryId, function ($query, $categoryId) {
-                $query->where('category_id', $categoryId);
-            })
-            // Filter Sorting
-            ->when($sortBy, function ($query, $sortBy) {
-                match ($sortBy) {
-                    'oldest'    => $query->oldest(),
-                    'name_asc'  => $query->orderBy('name', 'asc'),
-                    'name_desc' => $query->orderBy('name', 'desc'),
-                    default     => $query->latest(),
-                };
-            }, function ($query) {
-                $query->latest();
-            })
-            ->paginate($perPage)
-            ->withQueryString();
-
-        // Ambil daftar kategori untuk dropdown filter di frontend
-        // Sesuaikan nama Model 'Category' jika di project Anda berbeda (misal: Categories)
+        $products   = $this->productService->getPaginatedProducts($filters, $perPage);
+        $stats      = $this->productService->getProductStats($filters);
         $categories = Category::select('id', 'name')->get();
 
-        return Inertia::render(
-            'Tenant/Inventory Management/Products/index',
-            [
-                'tenant_slug' => $tenantSlug,
-                'products'    => $products,
-                'categories'  => $categories,
-                'filters'     => [
-                    'search'      => $search,
-                    'category_id' => $categoryId,
-                    'sort_by'     => $sortBy,
-                    'per_page'    => (string) $perPage,
-                ],
-            ]
-        );
-    }
-    /**
-     * Menampilkan form untuk menambah produk baru.
-     */
-    public function create(Request $request)
-    {
-        return Inertia::render(
-            'Tenant/Inventory Management/Products/create',
-            [
-                'tenant_slug' => $request->route('tenant_slug'),
-            ]
-        );
-    }
-
-    /**
-     * Menyimpan produk baru.
-     */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'category_id' => ['required', 'exists:categories,id'],
-            'name'        => ['required', 'string', 'max:255'],
+        return Inertia::render('Tenant/InventoryManagement/Products/Index', [
+            'tenant_slug' => $tenantSlug,
+            'products'    => $products,
+            'stats'       => $stats,
+            'categories'  => $categories,
+            'filters'     => array_merge($filters, ['per_page' => (string) $perPage]),
         ]);
-
-        Products::create([
-            'tenant_id'   => app('current_tenant')->id,
-            'category_id' => $validated['category_id'],
-            'name'        => $validated['name'],
-        ]);
-
-        return redirect()
-            ->route('tenant.inventory.products.index', [
-                'tenant_slug' => $request->route('tenant_slug'),
-            ])
-            ->with('success', 'Product created successfully.');
     }
 
-    /**
-     * Menampilkan detail produk.
-     */
-    public function show(Request $request, $tenant_slug, Products $product)
+    public function create(Request $request): Response
     {
-        $product->load('category');
+        $categories = Category::select('id', 'name')->get();
 
-        return Inertia::render(
-            'Tenant/Inventory Management/Products/show',
-            [
-                'tenant_slug' => $tenant_slug,
-                'product'     => $product,
-            ]
-        );
-    }
-
-    /**
-     * Menampilkan form edit produk.
-     */
-    public function edit(Request $request, $tenant_slug, Products $product)
-    {
-        return Inertia::render(
-            'Tenant/Inventory Management/Products/edit',
-            [
-                'tenant_slug' => $tenant_slug,
-                'product'     => $product,
-            ]
-        );
-    }
-
-    /**
-     * Memperbarui produk.
-     */
-    public function update(
-        Request $request,
-        $tenant_slug,
-        Products $product
-    ) {
-        $validated = $request->validate([
-            'category_id' => ['required', 'exists:categories,id'],
-            'name'        => ['required', 'string', 'max:255'],
+        return Inertia::render('Tenant/InventoryManagement/Products/Create', [
+            'tenant_slug' => $request->route('tenant_slug'),
+            'categories'  => $categories,
         ]);
-
-        $product->update($validated);
-
-        return redirect()
-            ->route('tenant.inventory.products.index', [
-                'tenant_slug' => $tenant_slug,
-            ])
-            ->with('success', 'Product updated successfully.');
     }
 
-    /**
-     * Menghapus produk.
-     */
-    public function destroy(
-        Request $request,
-        $tenant_slug,
-        Products $product
-    ) {
-        $product->delete();
+    public function store(ProductRequest $request, string $tenant_slug): RedirectResponse
+    {
+        $this->productService->createProduct($request->validated());
 
-        return redirect()
-            ->route('tenant.inventory.products.index', [
-                'tenant_slug' => $tenant_slug,
-            ])
-            ->with('success', 'Product deleted successfully.');
+        return to_route('tenant.inventory.products.index', ['tenant_slug' => $tenant_slug])
+            ->with('success', 'Produk baru berhasil dibuat.');
+    }
+
+    public function show(Request $request, string $tenant_slug, Product $product): Response
+    {
+        $product->load(['category', 'skus.unit']);
+
+        return Inertia::render('Tenant/InventoryManagement/Products/Show', [
+            'tenant_slug' => $tenant_slug,
+            'product'     => $product,
+        ]);
+    }
+
+    public function edit(Request $request, string $tenant_slug, Product $product): Response
+    {
+        $categories = Category::select('id', 'name')->get();
+
+        return Inertia::render('Tenant/InventoryManagement/Products/Edit', [
+            'tenant_slug' => $tenant_slug,
+            'product'     => $product,
+            'categories'  => $categories,
+        ]);
+    }
+
+    public function update(ProductRequest $request, string $tenant_slug, Product $product): RedirectResponse
+    {
+        $this->productService->updateProduct($product, $request->validated());
+
+        return to_route('tenant.inventory.products.index', ['tenant_slug' => $tenant_slug])
+            ->with('success', 'Data produk berhasil diperbarui.');
+    }
+
+    public function destroy(Request $request, string $tenant_slug, Product $product): RedirectResponse
+    {
+        $this->productService->deleteProduct($product);
+
+        return to_route('tenant.inventory.products.index', ['tenant_slug' => $tenant_slug])
+            ->with('success', 'Produk berhasil dihapus.');
+    }
+
+    public function exportPdf(Request $request, string $tenant_slug): RedirectResponse
+    {
+        $this->productService->exportPdf($tenant_slug);
+        return back()->with('success', 'Added to export queue. Check the bell/download icon in navbar.');
+    }
+
+    public function exportExcel(Request $request, string $tenant_slug): RedirectResponse
+    {
+        $this->productService->exportExcel($tenant_slug);
+        return back()->with('success', 'Added to export queue. Check the bell/download icon in navbar.');
     }
 }

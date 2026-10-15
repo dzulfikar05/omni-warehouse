@@ -3,19 +3,24 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\SkuRequest;
+use App\Jobs\ExportSkuExcelJob;
+use App\Jobs\ExportSkuPdfJob;
 use App\Models\Category;
-use App\Models\Products;
+use App\Models\ExportLog;
+use App\Models\Product;
 use App\Models\Sku;
+use App\Models\Tenant;
 use App\Models\Unit;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class SkusController extends Controller
 {
-    /**
-     * Menampilkan daftar SKU.
-     */
-    public function index(Request $request)
+    public function index(Request $request): Response
     {
         $tenantSlug = $request->route('tenant_slug');
         $search     = $request->input('search');
@@ -24,195 +29,171 @@ class SkusController extends Controller
         $sortBy     = $request->input('sort_by', 'latest');
         $perPage    = (int) $request->input('per_page', 10);
 
-        // Batasi pilihan jumlah data per halaman
         if (! in_array($perPage, [10, 25, 50])) {
             $perPage = 10;
         }
 
-        $skus = Sku::query()
+        $query = Sku::query()
             ->with(['product.category', 'unit'])
-            // Filter Search
-            ->when($search, function ($query, $search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('sku_code', 'like', "%{$search}%")
+            ->when($search, function ($q, $search) {
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('sku_code', 'like', "%{$search}%")
                         ->orWhere('barcode', 'like', "%{$search}%")
                         ->orWhereHas('product', function ($productQuery) use ($search) {
                             $productQuery->where('name', 'like', "%{$search}%");
                         });
                 });
             })
-            // Filter Berdasarkan Kategori Product
-            ->when($categoryId, function ($query, $categoryId) {
-                $query->whereHas('product', function ($q) use ($categoryId) {
-                    $q->where('category_id', $categoryId);
+            ->when($categoryId, function ($q, $categoryId) {
+                $q->whereHas('product', function ($p) use ($categoryId) {
+                    $p->where('category_id', $categoryId);
                 });
             })
-            // Filter Berdasarkan Unit
-            ->when($unitId, function ($query, $unitId) {
-                $query->where('unit_id', $unitId);
-            })
-            // Filter Sorting
-            ->when($sortBy, function ($query, $sortBy) {
+            ->when($unitId, function ($q, $unitId) {
+                $q->where('unit_id', $unitId);
+            });
+
+        // Hitung Ringkasan Statistik untuk seluruh data (bukan cuma halaman aktif)
+        $stats = [
+            'total_skus'      => (clone $query)->count(),
+            'total_stock'     => (int) (clone $query)->sum('current_stock'),
+            'low_stock_count' => (clone $query)->whereRaw('current_stock <= COALESCE(min_stock, 5)')->count(),
+            'total_valuation' => (float) (clone $query)->select(DB::raw('SUM(base_cost * current_stock) as total'))->value('total') ?? 0,
+        ];
+
+        // Apply Sorting & Pagination
+        $skus = (clone $query)
+            ->when($sortBy, function ($q, $sortBy) {
                 match ($sortBy) {
-                    'oldest'     => $query->oldest(),
-                    'code_asc'   => $query->orderBy('sku_code', 'asc'),
-                    'code_desc'  => $query->orderBy('sku_code', 'desc'),
-                    'stock_low'  => $query->orderBy('current_stock', 'asc'),
-                    'stock_high' => $query->orderBy('current_stock', 'desc'),
-                    default      => $query->latest(),
+                    'oldest'     => $q->oldest(),
+                    'code_asc'   => $q->orderBy('sku_code', 'asc'),
+                    'code_desc'  => $q->orderBy('sku_code', 'desc'),
+                    'stock_low'  => $q->orderBy('current_stock', 'asc'),
+                    'stock_high' => $q->orderBy('current_stock', 'desc'),
+                    default      => $q->latest(),
                 };
-            }, function ($query) {
-                $query->latest();
+            }, function ($q) {
+                $q->latest();
             })
             ->paginate($perPage)
             ->withQueryString();
 
-        // Ambil daftar kategori dan unit untuk dropdown filter di frontend
         $categories = Category::select('id', 'name')->get();
-        $units      = Unit::select('id', 'symbol')->get();
+        $units      = Unit::select('id', 'name', 'symbol')->get();
 
-        return Inertia::render(
-            'Tenant/Inventory Management/Sku/index',
-            [
-                'tenant_slug' => $tenantSlug,
-                'skus'        => $skus,
-                'categories'  => $categories,
-                'units'       => $units,
-                'filters'     => [
-                    'search'      => $search,
-                    'category_id' => $categoryId,
-                    'unit_id'     => $unitId,
-                    'sort_by'     => $sortBy,
-                    'per_page'    => (string) $perPage,
-                ],
-            ]
-        );
-    }
-
-    /**
-     * Menampilkan form untuk menambah SKU baru.
-     */
-    public function create(Request $request)
-    {
-        $products = Products::select('id', 'name')->get();
-        $units    = Unit::select('id', 'symbol')->get();
-
-        return Inertia::render(
-            'Tenant/Inventory Management/Sku/create',
-            [
-                'tenant_slug' => $request->route('tenant_slug'),
-                'products'    => $products,
-                'units'       => $units,
-            ]
-        );
-    }
-
-    /**
-     * Menyimpan SKU baru.
-     */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'product_id'    => ['required', 'exists:products,id'],
-            'unit_id'       => ['required', 'exists:units,id'],
-            'sku_code'      => ['required', 'string', 'max:255', 'unique:skus,sku_code'],
-            'barcode'       => ['nullable', 'string', 'max:255'],
-            'base_cost'     => ['required', 'numeric', 'min:0'],
-            'current_stock' => ['required', 'integer', 'min:0'],
+        return Inertia::render('Tenant/InventoryManagement/Sku/Index', [
+            'tenant_slug' => $tenantSlug,
+            'skus'        => $skus,
+            'stats'       => $stats,
+            'categories'  => $categories,
+            'units'       => $units,
+            'filters'     => [
+                'search'      => $search,
+                'category_id' => $categoryId,
+                'unit_id'     => $unitId,
+                'sort_by'     => $sortBy,
+                'per_page'    => (string) $perPage,
+            ],
         ]);
-
-        Sku::create([
-            'product_id'    => $validated['product_id'],
-            'unit_id'       => $validated['unit_id'],
-            'sku_code'      => $validated['sku_code'],
-            'barcode'       => $validated['barcode'] ?? null,
-            'base_cost'     => $validated['base_cost'],
-            'current_stock' => $validated['current_stock'],
-            'created_by'    => app('current_tenant')->id,
-        ]);
-
-        return redirect()
-            ->route('tenant.inventory.skus.index', [
-                'tenant_slug' => $request->route('tenant_slug'),
-            ])
-            ->with('success', 'SKU created successfully.');
     }
 
-    /**
-     * Menampilkan detail SKU.
-     */
-    public function show(Request $request, $tenant_slug, Sku $sku)
+    public function create(Request $request): Response
+    {
+        $products = Product::select('id', 'name')->get();
+        $units    = Unit::select('id', 'name', 'symbol')->get();
+
+        return Inertia::render('Tenant/InventoryManagement/Sku/Create', [
+            'tenant_slug' => $request->route('tenant_slug'),
+            'products'    => $products,
+            'units'       => $units,
+        ]);
+    }
+
+    public function store(SkuRequest $request, string $tenant_slug): RedirectResponse
+    {
+        $validated = $request->validated();
+        $tenant = app('current_tenant');
+
+        Sku::create(array_merge($validated, [
+            'created_by' => $tenant ? $tenant->id : null,
+        ]));
+
+        return to_route('tenant.inventory.skus.index', ['tenant_slug' => $tenant_slug])
+            ->with('success', 'SKU baru berhasil dibuat.');
+    }
+
+    public function show(Request $request, string $tenant_slug, Sku $sku): Response
     {
         $sku->load(['product.category', 'unit']);
 
-        return Inertia::render(
-            'Tenant/Inventory Management/Sku/show',
-            [
-                'tenant_slug' => $tenant_slug,
-                'sku'         => $sku,
-            ]
-        );
-    }
-
-    /**
-     * Menampilkan form edit SKU.
-     */
-    public function edit(Request $request, $tenant_slug, Sku $sku)
-    {
-        $products = Products::select('id', 'name')->get();
-        $units    = Unit::select('id', 'symbol')->get();
-
-        return Inertia::render(
-            'Tenant/Inventory Management/Sku/edit',
-            [
-                'tenant_slug' => $tenant_slug,
-                'sku'         => $sku,
-                'products'    => $products,
-                'units'       => $units,
-            ]
-        );
-    }
-
-    /**
-     * Memperbarui SKU.
-     */
-    public function update(
-        Request $request,
-        $tenant_slug,
-        Sku $sku
-    ) {
-        $validated = $request->validate([
-            'product_id'    => ['required', 'exists:products,id'],
-            'unit_id'       => ['required', 'exists:units,id'],
-            'sku_code'      => ['required', 'string', 'max:255', "unique:skus,sku_code,{$sku->id}"],
-            'barcode'       => ['nullable', 'string', 'max:255'],
-            'base_cost'     => ['required', 'numeric', 'min:0'],
-            'current_stock' => ['required', 'integer', 'min:0'],
+        return Inertia::render('Tenant/InventoryManagement/Sku/Show', [
+            'tenant_slug' => $tenant_slug,
+            'sku'         => $sku,
         ]);
-
-        $sku->update($validated);
-
-        return redirect()
-            ->route('tenant.inventory.skus.index', [
-                'tenant_slug' => $tenant_slug,
-            ])
-            ->with('success', 'SKU updated successfully.');
     }
 
-    /**
-     * Menghapus SKU.
-     */
-    public function destroy(
-        Request $request,
-        $tenant_slug,
-        Sku $sku
-    ) {
+    public function edit(Request $request, string $tenant_slug, Sku $sku): Response
+    {
+        $products = Product::select('id', 'name')->get();
+        $units    = Unit::select('id', 'name', 'symbol')->get();
+
+        return Inertia::render('Tenant/InventoryManagement/Sku/Edit', [
+            'tenant_slug' => $tenant_slug,
+            'sku'         => $sku,
+            'products'    => $products,
+            'units'       => $units,
+        ]);
+    }
+
+    public function update(SkuRequest $request, string $tenant_slug, Sku $sku): RedirectResponse
+    {
+        $sku->update($request->validated());
+
+        return to_route('tenant.inventory.skus.index', ['tenant_slug' => $tenant_slug])
+            ->with('success', 'Data SKU berhasil diperbarui.');
+    }
+
+    public function destroy(Request $request, string $tenant_slug, Sku $sku): RedirectResponse
+    {
         $sku->delete();
 
-        return redirect()
-            ->route('tenant.inventory.skus.index', [
-                'tenant_slug' => $tenant_slug,
-            ])
-            ->with('success', 'SKU deleted successfully.');
+        return to_route('tenant.inventory.skus.index', ['tenant_slug' => $tenant_slug])
+            ->with('success', 'SKU berhasil dihapus.');
+    }
+
+    public function exportPdf(Request $request, string $tenant_slug): RedirectResponse
+    {
+        $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
+        $skus = Sku::with(['product.category', 'unit'])->get()->toArray();
+
+        $log = ExportLog::create([
+            'tenant_id' => $tenant->id,
+            'user_id'   => auth()->id(),
+            'type'      => 'pdf',
+            'filename'  => 'SKU_Master_' . date('Ymd_His') . '.pdf',
+            'status'    => 'pending',
+        ]);
+
+        ExportSkuPdfJob::dispatch($log->id, $skus);
+
+        return back()->with('success', 'Added to export queue. Check the bell/download icon in navbar.');
+    }
+
+    public function exportExcel(Request $request, string $tenant_slug): RedirectResponse
+    {
+        $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
+        $skus = Sku::with(['product.category', 'unit'])->get()->toArray();
+
+        $log = ExportLog::create([
+            'tenant_id' => $tenant->id,
+            'user_id'   => auth()->id(),
+            'type'      => 'excel',
+            'filename'  => 'SKU_Master_' . date('Ymd_His') . '.xlsx',
+            'status'    => 'pending',
+        ]);
+
+        ExportSkuExcelJob::dispatch($log->id, $skus);
+
+        return back()->with('success', 'Added to export queue. Check the bell/download icon in navbar.');
     }
 }

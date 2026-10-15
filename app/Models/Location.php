@@ -20,7 +20,12 @@ class Location extends Model
 
     public function warehouse(): BelongsTo
     {
-        return $this->belongsTo(Warehouse::class);
+        return $this->belongsTo(Warehouse::class, 'warehouse_id');
+    }
+
+    public function inventoryStocks(): HasMany
+    {
+        return $this->hasMany(InventoryStock::class, 'location_id');
     }
 
     public function transactionItems(): HasMany
@@ -28,9 +33,5 @@ class Location extends Model
         return $this->hasMany(TransactionItem::class, 'to_location_id');
     }
 
-    public function inventoryStocks(): HasMany
-    {
-        return $this->hasMany(InventoryStock::class, 'location_id');
-    }
 }
 

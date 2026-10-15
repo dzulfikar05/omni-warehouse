@@ -2,165 +2,108 @@
 
 namespace App\Http\Controllers\Tenant;
 
+use App\Contracts\CategoryContract;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CategoryRequest;
 use App\Models\Category;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class CategoryController extends Controller
 {
-    /**
-     * Menampilkan daftar kategori dengan fitur search, sorting, & pagination.
-     */
-    public function index(Request $request)
+    public function __construct(
+        protected CategoryContract $categoryService
+    ) {}
+
+    public function index(Request $request): Response
     {
         $tenantSlug = $request->route('tenant_slug');
-        $search     = $request->input('search');
-        $sortBy     = $request->input('sort_by', 'latest');
-        $perPage    = (int) $request->input('per_page', 10);
+        $filters = [
+            'search'  => $request->input('search'),
+            'sort_by' => $request->input('sort_by', 'latest'),
+        ];
 
-        // Batasi pilihan jumlah data per halaman
+        $perPage = (int) $request->input('per_page', 10);
         if (! in_array($perPage, [10, 25, 50])) {
             $perPage = 10;
         }
 
-        $categories = Category::query()
-            // Filter Search (Berdasarkan name, desc, atau id)
-            ->when($search, function ($query, $search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('id', 'like', "%{$search}%")
-                        ->orWhere('desc', 'like', "%{$search}%");
-                });
-            })
-            // Filter Sorting
-            ->when($sortBy, function ($query, $sortBy) {
-                match ($sortBy) {
-                    'oldest'    => $query->oldest(),
-                    'name_asc'  => $query->orderBy('name', 'asc'),
-                    'name_desc' => $query->orderBy('name', 'desc'),
-                    default     => $query->latest(),
-                };
-            }, function ($query) {
-                $query->latest();
-            })
-            ->paginate($perPage)
-            ->withQueryString();
+        $categories = $this->categoryService->getPaginatedCategories($filters, $perPage);
+        $stats      = $this->categoryService->getCategoryStats($filters);
 
-        return Inertia::render(
-            'Tenant/Inventory Management/Categories/index',
-            [
-                'tenant_slug' => $tenantSlug,
-                'categories'  => $categories,
-                'filters'     => [
-                    'search'    => $search,
-                    'sort_by'   => $sortBy,
-                    'per_page'  => (string) $perPage,
-                ],
-            ]
-        );
+        return Inertia::render('Tenant/InventoryManagement/Categories/Index', [
+            'tenant_slug' => $tenantSlug,
+            'categories'  => $categories,
+            'stats'       => $stats,
+            'filters'     => array_merge($filters, ['per_page' => (string) $perPage]),
+        ]);
     }
 
-    /**
-     * Menampilkan form untuk menambah kategori baru.
-     */
-    public function create(Request $request)
+    public function create(Request $request): Response
     {
-        return Inertia::render(
-            'Tenant/Inventory Management/Categories/create',
-            [
-                'tenant_slug' => $request->route('tenant_slug'),
-            ]
-        );
+        return Inertia::render('Tenant/InventoryManagement/Categories/Create', [
+            'tenant_slug' => $request->route('tenant_slug'),
+        ]);
     }
 
-    /**
-     * Menyimpan kategori baru ke database.
-     */
-    public function store(Request $request)
+    public function store(CategoryRequest $request, string $tenant_slug): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'desc' => ['nullable', 'string'],
-        ]);
+        $this->categoryService->createCategory($request->validated());
 
-        Category::create([
-            'tenant_id' => app('current_tenant')->id,
-            'name'      => $validated['name'],
-            'desc'      => $validated['desc'] ?? null,
-        ]);
-
-        return redirect()
-            ->route('tenant.inventory.categories.index', [
-                'tenant_slug' => $request->route('tenant_slug'),
-            ])
+        return to_route('tenant.inventory.categories.index', ['tenant_slug' => $tenant_slug])
             ->with('success', 'Category created successfully.');
     }
 
-    /**
-     * Menampilkan detail kategori.
-     */
-    public function show(Request $request, $tenant_slug, Category $category)
+    public function show(Request $request, string $tenant_slug, Category $category): Response
     {
-        return Inertia::render(
-            'Tenant/Inventory Management/Categories/show',
-            [
-                'tenant_slug' => $tenant_slug,
-                'category'    => $category,
-            ]
-        );
-    }
+        $category->loadCount('products');
+        $category->load(['products' => function ($query) {
+            $query->latest()->take(5);
+        }]);
 
-    /**
-     * Menampilkan form edit kategori.
-     */
-    public function edit(Request $request, $tenant_slug, Category $category)
-    {
-        return Inertia::render(
-            'Tenant/Inventory Management/Categories/edit',
-            [
-                'tenant_slug' => $tenant_slug,
-                'category'    => $category,
-            ]
-        );
-    }
-
-    /**
-     * Memperbarui data kategori.
-     */
-    public function update(
-        Request $request,
-        $tenant_slug,
-        Category $category
-    ) {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'desc' => ['nullable', 'string'],
+        return Inertia::render('Tenant/InventoryManagement/Categories/Show', [
+            'tenant_slug' => $tenant_slug,
+            'category'    => $category,
         ]);
+    }
 
-        $category->update($validated);
+    public function edit(Request $request, string $tenant_slug, Category $category): Response
+    {
+        return Inertia::render('Tenant/InventoryManagement/Categories/Edit', [
+            'tenant_slug' => $tenant_slug,
+            'category'    => $category,
+        ]);
+    }
 
-        return redirect()
-            ->route('tenant.inventory.categories.index', [
-                'tenant_slug' => $tenant_slug,
-            ])
+    public function update(CategoryRequest $request, string $tenant_slug, Category $category): RedirectResponse
+    {
+        $this->categoryService->updateCategory($category, $request->validated());
+
+        return to_route('tenant.inventory.categories.index', ['tenant_slug' => $tenant_slug])
             ->with('success', 'Category updated successfully.');
     }
 
-    /**
-     * Menghapus kategori.
-     */
-    public function destroy(
-        Request $request,
-        $tenant_slug,
-        Category $category
-    ) {
-        $category->delete();
+    public function destroy(Request $request, string $tenant_slug, Category $category): RedirectResponse
+    {
+        $this->categoryService->deleteCategory($category);
 
-        return redirect()
-            ->route('tenant.inventory.categories.index', [
-                'tenant_slug' => $tenant_slug,
-            ])
+        return to_route('tenant.inventory.categories.index', ['tenant_slug' => $tenant_slug])
             ->with('success', 'Category deleted successfully.');
+    }
+
+    public function exportPdf(Request $request, string $tenant_slug): RedirectResponse
+    {
+        $this->categoryService->exportPdf($tenant_slug);
+
+        return back()->with('success', 'Added to export queue. Check the notification icon in navbar.');
+    }
+
+    public function exportExcel(Request $request, string $tenant_slug): RedirectResponse
+    {
+        $this->categoryService->exportExcel($tenant_slug);
+
+        return back()->with('success', 'Added to export queue. Check the notification icon in navbar.');
     }
 }

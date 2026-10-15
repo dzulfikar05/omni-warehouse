@@ -2,164 +2,103 @@
 
 namespace App\Http\Controllers\Tenant;
 
+use App\Contracts\UnitContract;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\UnitRequest;
 use App\Models\Unit;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class UnitsController extends Controller
 {
-    /**
-     * Menampilkan daftar unit.
-     */
-    public function index(Request $request)
+    public function __construct(
+        protected UnitContract $unitService
+    ) {}
+
+    public function index(Request $request): Response
     {
         $tenantSlug = $request->route('tenant_slug');
-        $search = $request->input('search');
-        $sortBy = $request->input('sort_by', 'latest');
-        $perPage = (int) $request->input('per_page', 10);
+        $filters = [
+            'search'  => $request->input('search'),
+            'sort_by' => $request->input('sort_by', 'latest'),
+        ];
 
-        // Batasi pilihan jumlah data per halaman
+        $perPage = (int) $request->input('per_page', 10);
         if (! in_array($perPage, [10, 25, 50])) {
             $perPage = 10;
         }
 
-        $units = Unit::query()
-            // Filter Search
-            ->when($search, function ($query, $search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('id', 'like', "%{$search}%")
-                        ->orWhere('symbol', 'like', "%{$search}%");
-                });
-            })
-            // Filter Sorting
-            ->when($sortBy, function ($query, $sortBy) {
-                match ($sortBy) {
-                    'oldest' => $query->oldest(),
-                    'name_asc' => $query->orderBy('name', 'asc'),
-                    'name_desc' => $query->orderBy('name', 'desc'),
-                    default => $query->latest(),
-                };
-            }, function ($query) {
-                $query->latest();
-            })
-            ->paginate($perPage)
-            ->withQueryString();
+        $units = $this->unitService->getPaginatedUnits($filters, $perPage);
+        $stats = $this->unitService->getUnitStats($filters);
 
-        return Inertia::render(
-            'Tenant/Inventory Management/Units/index',
-            [
-                'tenant_slug' => $tenantSlug,
-                'units' => $units,
-                'filters' => [
-                    'search' => $search,
-                    'sort_by' => $sortBy,
-                    'per_page' => (string) $perPage,
-                ],
-            ]
-        );
+        return Inertia::render('Tenant/InventoryManagement/Units/Index', [
+            'tenant_slug' => $tenantSlug,
+            'units'       => $units,
+            'stats'       => $stats,
+            'filters'     => array_merge($filters, ['per_page' => (string) $perPage]),
+        ]);
     }
 
-    /**
-     * Menampilkan form untuk menambah unit baru.
-     */
-    public function create(Request $request)
+    public function create(Request $request): Response
     {
-        return Inertia::render(
-            'Tenant/Inventory Management/Units/create',
-            [
-                'tenant_slug' => $request->route('tenant_slug'),
-            ]
-        );
+        return Inertia::render('Tenant/InventoryManagement/Units/Create', [
+            'tenant_slug' => $request->route('tenant_slug'),
+        ]);
     }
 
-    /**
-     * Menyimpan unit baru ke database.
-     */
-    public function store(Request $request)
+    public function store(UnitRequest $request, string $tenant_slug): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'symbol' => ['required', 'string', 'max:10'],
-        ]);
+        $this->unitService->createUnit($request->validated());
 
-        Unit::create([
-            'name' => $validated['name'],
-            'symbol' => $validated['symbol'],
-        ]);
-
-        return redirect()
-            ->route('tenant.inventory.units.index', [
-                'tenant_slug' => $request->route('tenant_slug'),
-            ])
+        return to_route('tenant.inventory.units.index', ['tenant_slug' => $tenant_slug])
             ->with('success', 'Unit created successfully.');
     }
 
-    /**
-     * Menampilkan detail unit.
-     */
-    public function show(Request $request, $tenant_slug, Unit $unit)
+    public function show(Request $request, string $tenant_slug, Unit $unit): Response
     {
-        return Inertia::render(
-            'Tenant/Inventory Management/Units/show',
-            [
-                'tenant_slug' => $tenant_slug,
-                'unit' => $unit,
-            ]
-        );
-    }
-
-    /**
-     * Menampilkan form edit unit.
-     */
-    public function edit(Request $request, $tenant_slug, Unit $unit)
-    {
-        return Inertia::render(
-            'Tenant/Inventory Management/Units/edit',
-            [
-                'tenant_slug' => $tenant_slug,
-                'unit' => $unit,
-            ]
-        );
-    }
-
-    /**
-     * Memperbarui data unit.
-     */
-    public function update(
-        Request $request,
-        $tenant_slug,
-        Unit $unit
-    ) {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'symbol' => ['required', 'string', 'max:10'],
+        return Inertia::render('Tenant/InventoryManagement/Units/Show', [
+            'tenant_slug' => $tenant_slug,
+            'unit'        => $unit,
         ]);
+    }
 
-        $unit->update($validated);
+    public function edit(Request $request, string $tenant_slug, Unit $unit): Response
+    {
+        return Inertia::render('Tenant/InventoryManagement/Units/Edit', [
+            'tenant_slug' => $tenant_slug,
+            'unit'        => $unit,
+        ]);
+    }
 
-        return redirect()
-            ->route('tenant.inventory.units.index', [
-                'tenant_slug' => $tenant_slug,
-            ])
+    public function update(UnitRequest $request, string $tenant_slug, Unit $unit): RedirectResponse
+    {
+        $this->unitService->updateUnit($unit, $request->validated());
+
+        return to_route('tenant.inventory.units.index', ['tenant_slug' => $tenant_slug])
             ->with('success', 'Unit updated successfully.');
     }
 
-    /**
-     * Menghapus unit.
-     */
-    public function destroy(
-        Request $request,
-        $tenant_slug,
-        Unit $unit
-    ) {
-        $unit->delete();
+    public function destroy(Request $request, string $tenant_slug, Unit $unit): RedirectResponse
+    {
+        $this->unitService->deleteUnit($unit);
 
-        return redirect()
-            ->route('tenant.inventory.units.index', [
-                'tenant_slug' => $tenant_slug,
-            ])
+        return to_route('tenant.inventory.units.index', ['tenant_slug' => $tenant_slug])
             ->with('success', 'Unit deleted successfully.');
+    }
+
+    public function exportPdf(Request $request, string $tenant_slug): RedirectResponse
+    {
+        $this->unitService->exportPdf($tenant_slug);
+
+        return back()->with('success', 'Added to export queue. Check the notification icon in navbar.');
+    }
+
+    public function exportExcel(Request $request, string $tenant_slug): RedirectResponse
+    {
+        $this->unitService->exportExcel($tenant_slug);
+
+        return back()->with('success', 'Added to export queue. Check the notification icon in navbar.');
     }
 }

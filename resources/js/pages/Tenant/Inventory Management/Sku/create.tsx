@@ -1,16 +1,10 @@
+import React from 'react';
 import { Head } from '@inertiajs/react';
-
+import { PageHeader } from '@/components/page-header';
 import SkuForm from './components/SkuForm';
 
-interface Product {
-    id: number;
-    name: string;
-}
-
-interface Unit {
-    id: number;
-    symbol: string;
-}
+interface Product { id: number; name: string; }
+interface Unit { id: number; name: string; symbol: string; }
 
 interface Props {
     tenant_slug: string;
@@ -18,27 +12,18 @@ interface Props {
     units: Unit[];
 }
 
-export default function Create({
-    tenant_slug,
-    products,
-    units,
-}: Props) {
+export default function Create({ tenant_slug, products, units }: Props) {
     return (
         <>
-            <Head title="Add SKU" />
+            <Head title="Tambah SKU Baru" />
 
-            <div className="space-y-6 p-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-foreground">
-                        Add SKU
-                    </h1>
+            <div className="space-y-6 p-4 sm:p-6 font-sans">
+                <PageHeader
+                    title="Tambah SKU Baru"
+                    description="Buat varian baru untuk produk inventory beserta acuan HPP dan barcode."
+                />
 
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        Create a new SKU for your inventory.
-                    </p>
-                </div>
-
-                <div className="rounded-lg border border-border bg-card p-6 shadow-md">
+                <div className="rounded-2xl border border-border bg-card p-6 shadow-sm text-card-foreground">
                     <SkuForm
                         tenant_slug={tenant_slug}
                         products={products}
@@ -53,8 +38,8 @@ export default function Create({
 
 Create.layout = {
     breadcrumbs: [
-        { title: 'Inventory Management', href: '/skus' },
-        { title: 'SKUs', href: '/skus' },
-        { title: 'Add SKU', href: '#' },
+        { title: 'Inventory Management', href: '#' },
+        { title: 'Master SKU', href: '#' },
+        { title: 'Tambah SKU', href: '#' },
     ],
 };

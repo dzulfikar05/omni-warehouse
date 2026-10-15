@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Head, router, usePage } from '@inertiajs/react';
 import { toast } from 'sonner';
 import {
@@ -15,34 +15,51 @@ import {
     Check,
     Edit3,
     CheckCheck,
+    FileText,
+    FileSpreadsheet,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/page-header';
+import { TableFilter } from '@/components/table-filter';
+import { FilterDropdown } from '@/components/table-dropdown';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { ReconciliationItem, StockOpnamePageProps } from '@/types/stock-opname';
 import { CreateOpnameModal } from './components/CreateOpnameModal';
 import { VerificationModal } from './components/VerificationModal';
 import { PrintSheetModal } from './components/PrintSheetModal';
 
 export default function Index({ session: initialSession, items: initialItems }: StockOpnamePageProps) {
-    const { current_tenant, auth, flash } = usePage().props as any;
+    const { current_tenant, auth } = usePage().props as any;
 
     const [items, setItems] = useState<ReconciliationItem[]>(initialItems || []);
     const [barcodeInput, setBarcodeInput] = useState<string>('');
+
+    // Filter States
+    const [search, setSearch] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [perPage, setPerPage] = useState('10');
 
     // Modal States
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
     const [verifModalItem, setVerifModalItem] = useState<ReconciliationItem | null>(null);
 
-    const currentPathSlug = window.location.pathname.split('/')[1];
+    const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
 
     const activeTenantName =
         current_tenant?.name ||
         auth?.user?.tenant_name ||
         auth?.user?.tenant?.name ||
-        initialSession.warehouse_name ||
+        initialSession?.warehouse_name ||
         'Gudang Utama';
 
     // Derived Statistics
@@ -54,7 +71,23 @@ export default function Index({ session: initialSession, items: initialItems }: 
     const netVariance = deficitUnits + surplusUnits;
     const matchPercentage = totalSkus > 0 ? ((matchedSkus / totalSkus) * 100).toFixed(1) : '0';
 
-    // Scanner Quick Bar Input Handler
+    // Filtered Items for Data Table
+    const filteredItems = useMemo(() => {
+        return items.filter((item) => {
+            const matchesSearch =
+                item.sku.toLowerCase().includes(search.toLowerCase()) ||
+                item.barcode.toLowerCase().includes(search.toLowerCase()) ||
+                item.name.toLowerCase().includes(search.toLowerCase()) ||
+                item.rack.toLowerCase().includes(search.toLowerCase());
+
+            const matchesStatus =
+                statusFilter === 'all' || item.status.toLowerCase() === statusFilter.toLowerCase();
+
+            return matchesSearch && matchesStatus;
+        });
+    }, [items, search, statusFilter]);
+
+    // Barcode Quick Input Handler
     const handleScannerSubmit = (e?: React.FormEvent) => {
         if (e) e.preventDefault();
         const query = barcodeInput.trim().toLowerCase();
@@ -75,7 +108,7 @@ export default function Index({ session: initialSession, items: initialItems }: 
         }
     };
 
-    // Save Updated Physical Item Handler
+    // Save Physical Qty Handler
     const handleItemSave = (updatedItem: ReconciliationItem) => {
         setItems((prev) => prev.map((it) => (it.id === updatedItem.id ? updatedItem : it)));
 
@@ -84,6 +117,7 @@ export default function Index({ session: initialSession, items: initialItems }: 
             {
                 item_id: updatedItem.id,
                 physical_qty: updatedItem.physical_qty,
+                notes: updatedItem.notes,
             },
             {
                 preserveScroll: true,
@@ -96,18 +130,33 @@ export default function Index({ session: initialSession, items: initialItems }: 
 
     // Execute Adjustment Handler
     const handleExecuteAdjustment = () => {
-        router.post(
-            `/${tenantSlug}/stock-opname/adjust`,
-            {
-                session_id: initialSession.id,
-            },
-            {
-                preserveScroll: true,
-                onSuccess: () => {
-                    toast.success('Adjustment stok berhasil dieksekusi ke database!');
+        if (!initialSession?.id) {
+            toast.error('Tidak ada sesi opname aktif untuk dieksekusi!');
+            return;
+        }
+
+        if (confirm('Apakah Anda yakin ingin mengeksekusi adjustment stok ke database live WMS?')) {
+            router.post(
+                `/${tenantSlug}/stock-opname/adjust`,
+                {
+                    session_id: initialSession.id,
                 },
-            },
-        );
+                {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        toast.success('Adjustment stok berhasil dieksekusi ke database!');
+                    },
+                },
+            );
+        }
+    };
+
+    const handleExportPdf = () => {
+        router.post(`/${tenantSlug}/stock-opname/export/pdf`);
+    };
+
+    const handleExportExcel = () => {
+        router.post(`/${tenantSlug}/stock-opname/export/excel`);
     };
 
     return (
@@ -115,65 +164,81 @@ export default function Index({ session: initialSession, items: initialItems }: 
             <Head title="Stock Opname & Rekonsiliasi Audit" />
 
             <div className="space-y-6 p-4 sm:p-6 font-sans">
-                {/* HERO BANNER CARD */}
+                <PageHeader
+                    title="Stock Opname & Rekonsiliasi Audit"
+                    description="Kelola jadwal pemeriksaan fisik persediaan barang, verifikasi blind count, dan eksekusi penyesuaian stok otomatis."
+                    renderAction={
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleExportPdf}
+                                className="h-9 gap-1.5 border-border text-xs rounded-xl"
+                            >
+                                <FileText size={15} className="text-red-500" /> Export PDF
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleExportExcel}
+                                className="h-9 gap-1.5 border-border text-xs rounded-xl"
+                            >
+                                <FileSpreadsheet size={15} className="text-emerald-500" /> Export Excel
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setIsPrintModalOpen(true)}
+                                className="h-9 gap-1.5 border-border text-xs rounded-xl"
+                            >
+                                <Printer size={15} className="text-muted-foreground" /> Cetak Blanko A4
+                            </Button>
+                            <Button
+                                onClick={() => setIsCreateModalOpen(true)}
+                                className="h-9 bg-blue-600 hover:bg-blue-700 text-white shadow-md text-xs rounded-xl gap-1.5"
+                            >
+                                <Plus size={16} /> Buat Sesi Opname Baru
+                            </Button>
+                        </div>
+                    }
+                />
+
+                {/* ACTIVE SESSION HERO CARD */}
                 <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col gap-4 text-card-foreground">
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                         <div className="flex flex-col gap-2">
                             <div className="flex items-center gap-2.5 flex-wrap">
-                                <h1 className="text-xl font-bold text-foreground tracking-tight">
+                                <h2 className="text-lg font-bold text-foreground tracking-tight">
                                     Stock Opname Sesi Aktif
-                                </h1>
+                                </h2>
                                 <span className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 px-2.5 py-0.5 rounded-md">
-                                    {initialSession.session_code}
+                                    {initialSession?.session_code || 'OPN-DRAFT'}
                                 </span>
                                 <span className="text-[10px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-400 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded-md flex items-center gap-1.5 font-mono">
                                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                                    {initialSession.status}
+                                    {initialSession?.status || 'Active Audit'}
                                 </span>
                             </div>
 
-                            {/* Clean metadata pills row */}
                             <div className="flex items-center gap-2 flex-wrap text-xs text-muted-foreground">
                                 <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-muted/60 border border-border font-medium text-foreground">
                                     <Layers className="w-3.5 h-3.5 text-muted-foreground" />
-                                    <span>Zona Audit: <strong className="text-foreground font-semibold">{initialSession.zone}</strong></span>
+                                    <span>Zona Audit: <strong className="text-foreground font-semibold">{initialSession?.zone || 'Semua Zona'}</strong></span>
                                 </div>
                                 <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-muted/60 border border-border font-medium text-foreground">
                                     <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
-                                    <span>Gudang: <strong className="text-foreground font-semibold">{activeTenantName}</strong> ({initialSession.warehouse_code})</span>
+                                    <span>Gudang: <strong className="text-foreground font-semibold">{activeTenantName}</strong></span>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Top Action Bar */}
-                        <div className="flex flex-wrap items-center gap-2.5">
-                            <div className="h-9 px-3 bg-muted/60 border border-border rounded-xl flex items-center gap-2 text-xs font-semibold text-foreground">
-                                <WarehouseIcon className="w-3.5 h-3.5 text-muted-foreground" />
-                                <span>{activeTenantName}</span>
-                            </div>
-
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setIsPrintModalOpen(true)}
-                                className="h-9 px-3 border-border rounded-xl text-xs font-semibold gap-1.5"
-                            >
-                                <Printer className="w-3.5 h-3.5 text-muted-foreground" />
-                                <span>Cetak Blanko A4</span>
-                            </Button>
-
-                            <Button
-                                type="button"
-                                onClick={() => setIsCreateModalOpen(true)}
-                                className="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold gap-1.5 shadow-md"
-                            >
-                                <Plus className="w-3.5 h-3.5" />
-                                <span>Buat Sesi Opname Baru</span>
-                            </Button>
+                        <div className="h-9 px-3 bg-muted/60 border border-border rounded-xl flex items-center gap-2 text-xs font-semibold text-foreground self-start lg:self-auto">
+                            <WarehouseIcon className="w-3.5 h-3.5 text-muted-foreground" />
+                            <span>{activeTenantName}</span>
                         </div>
                     </div>
 
-                    {/* Scanner / Barcode Quick Bar */}
+                    {/* Barcode Quick Input Bar */}
                     <form onSubmit={handleScannerSubmit} className="pt-3 border-t border-border flex flex-col sm:flex-row items-center gap-3">
                         <div className="relative flex-1 w-full">
                             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
@@ -183,7 +248,7 @@ export default function Index({ session: initialSession, items: initialItems }: 
                                 type="text"
                                 value={barcodeInput}
                                 onChange={(e) => setBarcodeInput(e.target.value)}
-                                placeholder="Scan Barcode Rak (cth: A-01-01) atau Barcode SKU (cth: 8998866200114) untuk input/koreksi fisik..."
+                                placeholder="Scan Barcode Rak (cth: A-01-01) atau Barcode SKU (cth: 8998866200114) untuk koreksi..."
                                 className="pl-9 pr-14 h-9 bg-background border-border text-xs font-mono font-medium rounded-xl"
                             />
                             <kbd className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[10px] bg-muted border border-border text-muted-foreground px-1.5 py-0.5 rounded font-bold">
@@ -200,7 +265,7 @@ export default function Index({ session: initialSession, items: initialItems }: 
                     </form>
                 </div>
 
-                {/* 4 METRIC CARDS GRID */}
+                {/* 4 STAT CARDS GRID */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between h-36 text-card-foreground">
                         <div className="flex items-center justify-between">
@@ -270,15 +335,46 @@ export default function Index({ session: initialSession, items: initialItems }: 
                     </div>
                 </div>
 
-                {/* RECONCILIATION LEDGER TABLE */}
+                {/* FILTER BAR */}
+                <TableFilter
+                    search={search}
+                    onSearchChange={(e) => setSearch(e.target.value)}
+                    perPage={perPage}
+                    onPerPageChange={setPerPage}
+                >
+                    <FilterDropdown
+                        onApply={() => {}}
+                        onReset={() => {
+                            setSearch('');
+                            setStatusFilter('all');
+                        }}
+                    >
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label className="text-xs font-semibold">Status Selisih</Label>
+                                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                    <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Semua Status" /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Semua Status</SelectItem>
+                                        <SelectItem value="match">Match (Cocok)</SelectItem>
+                                        <SelectItem value="defisit">Defisit</SelectItem>
+                                        <SelectItem value="surplus">Surplus</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                    </FilterDropdown>
+                </TableFilter>
+
+                {/* RECONCILIATION TABLE */}
                 <div className="rounded-2xl border border-border bg-card shadow-sm flex flex-col overflow-hidden text-card-foreground">
                     <div className="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
-                            <h2 className="text-sm font-bold text-foreground">Lembar Rekonsiliasi Saldo Buku vs Hasil Hitung</h2>
+                            <h3 className="text-sm font-bold text-foreground">Lembar Rekonsiliasi Saldo Buku vs Hasil Hitung</h3>
                             <p className="text-xs text-muted-foreground">Membaca saldo live inventory_stocks dibandingkan fisik aktual lapangan</p>
                         </div>
                         <div className="flex items-center gap-1.5 bg-muted/60 p-1 rounded-xl text-xs font-mono">
-                            <span className="px-2 py-0.5 font-semibold text-foreground">{items.length} Baris Terpantau</span>
+                            <span className="px-2 py-0.5 font-semibold text-foreground">{filteredItems.length} Baris Terpantau</span>
                         </div>
                     </div>
 
@@ -297,8 +393,8 @@ export default function Index({ session: initialSession, items: initialItems }: 
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border text-foreground font-sans">
-                                {items.length > 0 ? (
-                                    items.map((item) => (
+                                {filteredItems.length > 0 ? (
+                                    filteredItems.map((item) => (
                                         <tr
                                             key={item.id}
                                             className={`transition-colors ${
@@ -368,10 +464,10 @@ export default function Index({ session: initialSession, items: initialItems }: 
                                                 <button
                                                     type="button"
                                                     onClick={() => setVerifModalItem(item)}
-                                                    className="p-1 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                                                    className="p-1.5 hover:bg-muted rounded-xl text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                                                     title="Koreksi Hitungan"
                                                 >
-                                                    <Edit3 className="w-4 h-4" />
+                                                    <Edit3 className="w-4 h-4 text-blue-600" />
                                                 </button>
                                             </td>
                                         </tr>
@@ -395,7 +491,7 @@ export default function Index({ session: initialSession, items: initialItems }: 
                         </table>
                     </div>
 
-                    {/* Table Sticky Footer */}
+                    {/* Table Footer */}
                     <div className="p-4 bg-muted/30 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
                         <div className="flex items-center gap-3 text-xs text-muted-foreground font-mono flex-wrap">
                             <span>Buku: <strong className="text-foreground">{totalSystemQty}</strong></span>
@@ -429,7 +525,6 @@ export default function Index({ session: initialSession, items: initialItems }: 
             <CreateOpnameModal
                 isOpen={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}
-                onSubmitSuccess={() => toast.success('Tiket Sesi Opname Baru berhasil diterbitkan!')}
             />
 
             <VerificationModal
@@ -439,12 +534,14 @@ export default function Index({ session: initialSession, items: initialItems }: 
                 onSaveSuccess={handleItemSave}
             />
 
-            <PrintSheetModal
-                isOpen={isPrintModalOpen}
-                session={initialSession}
-                items={items}
-                onClose={() => setIsPrintModalOpen(false)}
-            />
+            {initialSession && (
+                <PrintSheetModal
+                    isOpen={isPrintModalOpen}
+                    session={initialSession}
+                    items={items}
+                    onClose={() => setIsPrintModalOpen(false)}
+                />
+            )}
         </>
     );
 }

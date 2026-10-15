@@ -4,6 +4,11 @@ namespace App\Http\Controllers\Tenant;
 
 use App\Contracts\StockOpnameContract;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StockOpnameRequest;
+use App\Jobs\ExportStockOpnameExcelJob;
+use App\Jobs\ExportStockOpnamePdfJob;
+use App\Models\ExportLog;
+use App\Models\Tenant;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -18,53 +23,75 @@ class StockOpnameController extends Controller
         $this->service = $service;
     }
 
-    public function index(string $tenant_slug): Response
+    public function index(Request $request, string $tenant_slug): Response
     {
         $data = $this->service->getActiveSessionData($tenant_slug);
 
         return Inertia::render('Tenant/WarehouseStocks/StockOpname/Index', [
-            'session' => $data['session'],
-            'items' => $data['items'],
+            'session' => $data['session'] ?? [],
+            'items'   => $data['items'] ?? [],
+            'filters' => $request->only(['search', 'status', 'per_page']),
         ]);
     }
 
-    public function storeSession(Request $request, string $tenant_slug): RedirectResponse
+    public function storeSession(StockOpnameRequest $request, string $tenant_slug): RedirectResponse
     {
-        $request->validate([
-            'warehouse_id' => 'required',
-            'zone' => 'required',
-            'audit_type' => 'required',
-            'cut_off_date' => 'required',
-        ]);
-
-        $this->service->createSession($tenant_slug, $request->all());
+        $this->service->createSession($tenant_slug, $request->validated());
 
         return to_route('tenant.stock-opname.index', ['tenant_slug' => $tenant_slug])
             ->with('success', 'Sesi Stock Opname Baru berhasil diterbitkan!');
     }
 
-    public function verifyCount(Request $request, string $tenant_slug): RedirectResponse
+    public function verifyCount(StockOpnameRequest $request, string $tenant_slug): RedirectResponse
     {
-        $request->validate([
-            'item_id' => 'required',
-            'physical_qty' => 'required|numeric|min:0',
-        ]);
-
-        $this->service->updateItemPhysicalQty($tenant_slug, $request->all());
+        $this->service->updateItemPhysicalQty($tenant_slug, $request->validated());
 
         return to_route('tenant.stock-opname.index', ['tenant_slug' => $tenant_slug])
             ->with('success', 'Hasil hitung fisik berhasil disimpan!');
     }
 
-    public function executeAdjustment(Request $request, string $tenant_slug): RedirectResponse
+    public function executeAdjustment(StockOpnameRequest $request, string $tenant_slug): RedirectResponse
     {
-        $request->validate([
-            'session_id' => 'required',
-        ]);
-
-        $this->service->executeAdjustment($tenant_slug, (int) $request->input('session_id'));
+        $validated = $request->validated();
+        $this->service->executeAdjustment($tenant_slug, (int) $validated['session_id']);
 
         return to_route('tenant.stock-opname.index', ['tenant_slug' => $tenant_slug])
             ->with('success', 'Adjustment stok berhasil dieksekusi ke database!');
+    }
+
+    public function exportPdf(Request $request, string $tenant_slug): RedirectResponse
+    {
+        $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
+        $data = $this->service->getActiveSessionData($tenant_slug);
+
+        $log = ExportLog::create([
+            'tenant_id' => $tenant->id,
+            'user_id'   => auth()->id(),
+            'type'      => 'pdf',
+            'filename'  => 'StockOpname_' . date('Ymd_His') . '.pdf',
+            'status'    => 'pending',
+        ]);
+
+        ExportStockOpnamePdfJob::dispatch($log->id, $data);
+
+        return back()->with('success', 'Added to export queue. Check the bell/download icon in navbar.');
+    }
+
+    public function exportExcel(Request $request, string $tenant_slug): RedirectResponse
+    {
+        $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
+        $data = $this->service->getActiveSessionData($tenant_slug);
+
+        $log = ExportLog::create([
+            'tenant_id' => $tenant->id,
+            'user_id'   => auth()->id(),
+            'type'      => 'excel',
+            'filename'  => 'StockOpname_' . date('Ymd_His') . '.xlsx',
+            'status'    => 'pending',
+        ]);
+
+        ExportStockOpnameExcelJob::dispatch($log->id, $data);
+
+        return back()->with('success', 'Added to export queue. Check the bell/download icon in navbar.');
     }
 }

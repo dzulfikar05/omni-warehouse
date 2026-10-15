@@ -1,0 +1,144 @@
+import React from 'react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { Button } from '@/components/ui/button';
+import { ArrowLeftCircleIcon, Edit3, Boxes, Tag, Calendar } from 'lucide-react';
+import { usePermission } from '@/utils/permission';
+import { SkuItem } from './Index';
+
+interface ShowProps {
+    sku: SkuItem;
+}
+
+export default function SkuShow({ sku }: ShowProps) {
+    const { current_tenant, auth } = usePage().props as any;
+    const { can } = usePermission();
+
+    const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
+    const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
+
+    const formatCurrency = (val: number) => {
+        return new Intl.NumberFormat('id-ID', {
+            style: 'currency',
+            currency: 'IDR',
+            maximumFractionDigits: 0,
+        }).format(val);
+    };
+
+    const canEdit = can('tenant.skus.edit') || can('skus.edit');
+
+    return (
+        <>
+            <Head title={`Detail SKU - ${sku.sku_code}`} />
+
+            <div className="space-y-6 p-4 sm:p-6 font-sans">
+                {/* Header Card */}
+                <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-6 shadow-sm text-card-foreground">
+                    <div>
+                        <h2 className="text-xl font-bold tracking-tight">
+                            Detail SKU: <span className="text-blue-600">{sku.sku_code}</span>
+                        </h2>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                            Rincian informasi varian barang dan status persediaan terkini.
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Button asChild variant="outline" className="rounded-xl border-border">
+                            <Link href={`/${tenantSlug}/inventory/skus`}>
+                                <ArrowLeftCircleIcon className="mr-2 h-4 w-4 text-blue-600" /> Back
+                            </Link>
+                        </Button>
+                        {canEdit && (
+                            <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-md gap-1.5">
+                                <Link href={`/${tenantSlug}/inventory/skus/${sku.id}/edit`}>
+                                    <Edit3 className="h-4 w-4" /> Edit SKU
+                                </Link>
+                            </Button>
+                        )}
+                    </div>
+                </div>
+
+                {/* Details Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Panel Kiri: Identitas SKU */}
+                    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4 text-xs text-card-foreground">
+                        <h3 className="font-bold text-sm text-foreground border-b border-border pb-3 flex items-center gap-2">
+                            <Tag className="w-4 h-4 text-blue-600" /> Identitas SKU & Produk
+                        </h3>
+
+                        <div className="grid grid-cols-2 gap-4 font-mono">
+                            <div>
+                                <span className="text-muted-foreground block text-[11px]">Kode SKU:</span>
+                                <strong className="text-blue-600 dark:text-blue-400 font-bold text-sm">{sku.sku_code}</strong>
+                            </div>
+                            <div>
+                                <span className="text-muted-foreground block text-[11px]">Barcode / EAN-13:</span>
+                                <strong className="text-foreground">{sku.barcode || '-'}</strong>
+                            </div>
+                        </div>
+
+                        <div>
+                            <span className="text-muted-foreground block text-[11px]">Nama Produk Induk:</span>
+                            <strong className="text-foreground font-sans text-sm">{sku.product?.name ?? '-'}</strong>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <span className="text-muted-foreground block text-[11px]">Kategori:</span>
+                                <span className="px-2 py-0.5 bg-muted border border-border rounded-lg font-medium">
+                                    {sku.product?.category?.name ?? '-'}
+                                </span>
+                            </div>
+                            <div>
+                                <span className="text-muted-foreground block text-[11px]">Satuan (Unit):</span>
+                                <strong className="text-foreground font-mono">{sku.unit?.name ?? sku.unit?.symbol ?? '-'}</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Panel Kanan: Stok & Nilai */}
+                    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4 text-xs text-card-foreground">
+                        <h3 className="font-bold text-sm text-foreground border-b border-border pb-3 flex items-center gap-2">
+                            <Boxes className="w-4 h-4 text-blue-600" /> Biaya & Persediaan Stok
+                        </h3>
+
+                        <div className="grid grid-cols-2 gap-4 font-mono">
+                            <div>
+                                <span className="text-muted-foreground block text-[11px]">Base Cost / HPP:</span>
+                                <strong className="text-foreground text-sm font-bold">{formatCurrency(sku.base_cost)}</strong>
+                            </div>
+                            <div>
+                                <span className="text-muted-foreground block text-[11px]">Stok Aktual Saat Ini:</span>
+                                <span className={`px-2.5 py-0.5 rounded-lg text-xs font-bold ${
+                                    sku.current_stock <= (sku.min_stock ?? 5)
+                                        ? 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-400'
+                                        : 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400'
+                                }`}>
+                                    {sku.current_stock} {sku.unit?.symbol ?? 'Unit'}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="p-4 bg-muted/40 border border-border rounded-xl space-y-2">
+                            <div className="flex items-center justify-between text-muted-foreground text-[11px]">
+                                <span className="flex items-center gap-1">
+                                    <Calendar className="w-3.5 h-3.5" /> Tanggal Dibuat:
+                                </span>
+                                <span className="font-mono text-foreground font-semibold">
+                                    {new Date(sku.created_at).toLocaleDateString('id-ID')}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </>
+    );
+}
+
+SkuShow.layout = {
+    breadcrumbs: [
+        { title: 'Inventory Management', href: '#' },
+        { title: 'Master SKU', href: '#' },
+        { title: 'Detail SKU', href: '#' },
+    ],
+};

@@ -4,8 +4,12 @@ namespace App\Http\Controllers\Tenant;
 
 use App\Contracts\LocationsContract;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\LocationRequest; // Gunakan single request
+use App\Jobs\ExportLocationExcelJob;
+use App\Jobs\ExportLocationPdfJob;
+use App\Models\ExportLog;
 use App\Models\Location;
-use Illuminate\Http\JsonResponse;
+use App\Models\Tenant;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -22,18 +26,61 @@ class LocationController extends Controller
 
     public function index(Request $request, string $tenant_slug): Response
     {
-        $locations  = $this->service->getPaginatedLocations(
+        $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
+
+        $locations = $this->service->getPaginatedLocations(
             $tenant_slug,
             $request->search,
             $request->warehouse_id ? (int) $request->warehouse_id : null
         );
         $warehouses = $this->service->getAllWarehouses($tenant_slug);
 
+        $totalLocations = Location::whereHas('warehouse', function ($q) use ($tenant) {
+            $q->where('tenant_id', $tenant->id);
+        })->count();
+
+        $activeLocations = Location::whereHas('warehouse', function ($q) use ($tenant) {
+            $q->where('tenant_id', $tenant->id);
+        })->where('is_active', true)->count();
+
+        $inactiveLocations = Location::whereHas('warehouse', function ($q) use ($tenant) {
+            $q->where('tenant_id', $tenant->id);
+        })->where('is_active', false)->count();
+
+        $summary = [
+            'total_locations'    => $totalLocations,
+            'active_locations'   => $activeLocations,
+            'inactive_locations' => $inactiveLocations,
+        ];
+
         return Inertia::render('Tenant/WarehouseStocks/Locations/Index', [
             'locations'  => $locations,
             'warehouses' => $warehouses,
-            'filters'    => $request->only(['search', 'warehouse_id']),
+            'summary'    => $summary,
+            'filters'    => $request->only(['search', 'warehouse_id', 'per_page']),
         ]);
+    }
+
+    public function create(string $tenant_slug): Response
+    {
+        $warehouses = $this->service->getAllWarehouses($tenant_slug);
+
+        return Inertia::render('Tenant/WarehouseStocks/Locations/Create', [
+            'warehouses' => $warehouses,
+        ]);
+    }
+
+    public function store(LocationRequest $request, string $tenant_slug): RedirectResponse
+    {
+        $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
+        $data = $request->validated();
+        $data['tenant_id'] = $tenant->id;
+        $data['created_by'] = auth()->id();
+
+        $this->service->createLocation($tenant_slug, $data);
+
+        return to_route('tenant.locations.index', ['tenant_slug' => $tenant_slug])
+            ->with('success', 'Lokasi rak berhasil ditambahkan!');
     }
 
     public function show(string $tenant_slug, Location $location): Response
@@ -47,29 +94,19 @@ class LocationController extends Controller
         ]);
     }
 
-    public function store(Request $request, string $tenant_slug): RedirectResponse
+    public function edit(string $tenant_slug, Location $location): Response
     {
-        $request->validate([
-            'warehouse_id' => 'required|integer|exists:warehouses,id',
-            'rack_code'    => 'required|string|max:100',
-            'zone'         => 'nullable|string|max:100',
+        $warehouses = $this->service->getAllWarehouses($tenant_slug);
+
+        return Inertia::render('Tenant/WarehouseStocks/Locations/Edit', [
+            'location'   => $location,
+            'warehouses' => $warehouses,
         ]);
-
-        $this->service->createLocation($tenant_slug, $request->only(['warehouse_id', 'rack_code', 'zone']));
-
-        return to_route('tenant.locations.index', ['tenant_slug' => $tenant_slug])
-            ->with('success', 'Lokasi rak berhasil ditambahkan!');
     }
 
-    public function update(Request $request, string $tenant_slug, Location $location): RedirectResponse
+    public function update(LocationRequest $request, string $tenant_slug, Location $location): RedirectResponse
     {
-        $request->validate([
-            'warehouse_id' => 'required|integer|exists:warehouses,id',
-            'rack_code'    => 'required|string|max:100',
-            'zone'         => 'nullable|string|max:100',
-        ]);
-
-        $this->service->updateLocation($tenant_slug, $location->id, $request->only(['warehouse_id', 'rack_code', 'zone']));
+        $this->service->updateLocation($tenant_slug, $location->id, $request->validated());
 
         return to_route('tenant.locations.index', ['tenant_slug' => $tenant_slug])
             ->with('success', 'Data lokasi rak berhasil diperbarui!');
@@ -83,9 +120,37 @@ class LocationController extends Controller
             ->with('success', 'Lokasi rak berhasil dihapus!');
     }
 
-    public function contents(string $tenant_slug, int $location_id): JsonResponse
+    public function exportPdf(Request $request, string $tenant_slug): RedirectResponse
     {
-        $data = $this->service->getLocationContents($tenant_slug, $location_id);
-        return response()->json($data);
+        $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
+
+        $log = ExportLog::create([
+            'tenant_id' => $tenant->id,
+            'user_id'   => auth()->id(),
+            'type'      => 'pdf',
+            'filename'  => 'Locations_' . date('Ymd_His') . '.pdf',
+            'status'    => 'pending',
+        ]);
+
+        ExportLocationPdfJob::dispatch($log->id, $request->all());
+
+        return back()->with('success', 'Added to export queue. Check the bell/download icon in navbar.');
+    }
+
+    public function exportExcel(Request $request, string $tenant_slug): RedirectResponse
+    {
+        $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
+
+        $log = ExportLog::create([
+            'tenant_id' => $tenant->id,
+            'user_id'   => auth()->id(),
+            'type'      => 'excel',
+            'filename'  => 'Locations_' . date('Ymd_His') . '.xlsx',
+            'status'    => 'pending',
+        ]);
+
+        ExportLocationExcelJob::dispatch($log->id, $request->all());
+
+        return back()->with('success', 'Added to export queue. Check the bell/download icon in navbar.');
     }
 }
