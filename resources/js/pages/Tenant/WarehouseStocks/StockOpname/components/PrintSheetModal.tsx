@@ -1,5 +1,6 @@
 import React from 'react';
 import { Printer, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { ReconciliationItem, OpnameSession } from '@/types/stock-opname';
 
 interface PrintSheetModalProps {
@@ -17,46 +18,44 @@ export function PrintSheetModal({ isOpen, session, items, onClose }: PrintSheetM
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-150 no-print">
-            <div className="bg-white border border-stone-200 rounded-2xl w-full max-w-4xl max-h-[92vh] shadow-2xl overflow-hidden flex flex-col">
-                {/* Header */}
-                <div className="px-6 py-3.5 border-b border-stone-200 flex items-center justify-between bg-stone-50">
-                    <div className="flex items-center gap-2 text-stone-900 font-bold text-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-150 no-print">
+            <div className="bg-card border border-border rounded-2xl w-full max-w-4xl max-h-[92vh] shadow-2xl overflow-hidden flex flex-col text-card-foreground">
+                <div className="px-6 py-3.5 border-b border-border flex items-center justify-between bg-muted/40">
+                    <div className="flex items-center gap-2 text-foreground font-bold text-sm">
                         <Printer className="w-4 h-4 text-blue-600" />
                         <span>Lembar Kerja Opname Fisik (Form Blind Count A4)</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <button
+                        <Button
                             type="button"
                             onClick={handlePrint}
-                            className="h-8 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                            className="h-8 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold gap-1.5 shadow-md"
                         >
                             <Printer className="w-3.5 h-3.5" />
                             <span>Cetak Dokumen</span>
-                        </button>
+                        </Button>
                         <button
                             type="button"
                             onClick={onClose}
-                            className="w-8 h-8 rounded-lg hover:bg-stone-200 text-stone-400 hover:text-stone-700 flex items-center justify-center cursor-pointer transition-colors"
+                            className="w-8 h-8 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center cursor-pointer transition-colors"
                         >
                             <X className="w-4 h-4" />
                         </button>
                     </div>
                 </div>
 
-                {/* Printable Document Sheet Container */}
-                <div className="flex-1 overflow-y-auto p-6 bg-stone-200/60 flex justify-center">
+                <div className="flex-1 overflow-y-auto p-6 bg-muted/30 flex justify-center">
                     <div id="printable-opname-sheet" className="bg-white w-full max-w-[780px] p-8 border border-stone-300 shadow-sm text-stone-900 font-sans text-xs">
                         <div className="flex justify-between items-start border-b-2 border-stone-900 pb-3">
                             <div>
                                 <h1 className="text-base font-bold tracking-tight text-stone-900 uppercase">OMNIWAREHOUSE WMS</h1>
-                                <p className="text-[11px] text-stone-600">Distribution Center Cakung Utama • Gudang {session.warehouse_code}</p>
+                                <p className="text-[11px] text-stone-600">Distribution Center • Gudang {session.warehouse_code || 'DC'}</p>
                                 <p className="text-[10px] text-stone-400">SOP-INV-04: Form Pemeriksaan Fisik Barang (Blind Count)</p>
                             </div>
                             <div className="text-right font-mono">
                                 <span className="text-[10px] uppercase text-stone-400 block font-bold">No. Sesi Opname</span>
                                 <span className="text-sm font-bold text-stone-900">{session.session_code}</span>
-                                <span className="text-[10px] text-stone-500 block mt-0.5">Tanggal: 17/09/2026</span>
+                                <span className="text-[10px] text-stone-500 block mt-0.5">Tanggal: {new Date().toLocaleDateString('id-ID')}</span>
                             </div>
                         </div>
 
@@ -69,7 +68,7 @@ export function PrintSheetModal({ isOpen, session, items, onClose }: PrintSheetM
                                     </td>
                                     <td className="p-2 border-r border-stone-300 w-1/3">
                                         <span className="text-stone-400 block text-[10px]">LEAD AUDITOR / SPV:</span>
-                                        <strong className="text-stone-800">{session.auditor_name}</strong>
+                                        <strong className="text-stone-800">{session.auditor_name || 'Supervisor WMS'}</strong>
                                     </td>
                                     <td className="p-2 w-1/3">
                                         <span className="text-stone-400 block text-[10px]">PETUGAS HITUNG LAPANGAN:</span>

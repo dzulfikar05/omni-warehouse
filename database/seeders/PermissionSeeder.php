@@ -82,6 +82,7 @@ class PermissionSeeder extends Seeder
             'tenant.stock_opname.create_session',
             'tenant.stock_opname.verify',
             'tenant.stock_opname.adjust',
+            'tenant.stock_opname.export',
 
             // Menu Group: Inventory Management
             // Submenu: SKUs

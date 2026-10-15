@@ -19,4 +19,12 @@ Route::prefix('{tenant_slug}')->middleware(['identify_tenant', 'auth', 'verified
     Route::post('/stock-opname/adjust', [StockOpnameController::class, 'executeAdjustment'])
         ->middleware('permission:tenant.stock_opname.adjust')
         ->name('tenant.stock-opname.adjust');
+
+    Route::post('/stock-opname/export/pdf', [StockOpnameController::class, 'exportPdf'])
+        ->middleware('permission:tenant.stock_opname.export')
+        ->name('tenant.stock-opname.export.pdf');
+
+    Route::post('/stock-opname/export/excel', [StockOpnameController::class, 'exportExcel'])
+        ->middleware('permission:tenant.stock_opname.export')
+        ->name('tenant.stock-opname.export.excel');
 });
