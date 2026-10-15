@@ -40,7 +40,9 @@ Route::middleware(['auth', 'verified', EnsureCentralUser::class])->group(functio
     require __DIR__ . '/web/roles.php';
     require __DIR__ . '/web/tenants.php';
     require __DIR__ . '/web/plans.php';
+    require __DIR__ . '/web/subscriptions.php';
     require __DIR__ . '/settings.php';
+    
 });
 
 
