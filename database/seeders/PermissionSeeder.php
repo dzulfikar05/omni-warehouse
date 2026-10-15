@@ -106,6 +106,8 @@ class PermissionSeeder extends Seeder
             'tenant.categories.create',
             'tenant.categories.edit',
             'tenant.categories.delete',
+            'tenant.categories.export',
+
             // Submenu: Units
             'tenant.units.view',
             'tenant.units.show',

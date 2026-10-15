@@ -15,12 +15,14 @@ use App\Contracts\RoleContract;
 use App\Contracts\StockTransferContract;
 use App\Contracts\LocationsContract;
 use App\Contracts\ProductContract;
+use App\Contracts\CategoryContract;
 use App\Contracts\WarehousesContract;
 use App\Contracts\StockOpnameContract;
 use App\Contracts\SupplierContract;
 use App\Contracts\TenantContract;
 use App\Contracts\TenantUserRoleContract;
 use App\Contracts\UserContract;
+use App\Services\CategoryService;
 use App\Services\CompanyProfileService;
 use App\Services\CustomerService;
 use App\Services\GeneralSettingsService;
@@ -72,6 +74,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(StockTransferContract::class, StockTransferService::class);
         $this->app->bind(GeneralSettingsContract::class, GeneralSettingsService::class);
         $this->app->bind(ProductContract::class, ProductService::class);
+        $this->app->bind(CategoryContract::class, CategoryService::class);
     }
 
     /**
