@@ -114,6 +114,8 @@ class PermissionSeeder extends Seeder
             'tenant.units.create',
             'tenant.units.edit',
             'tenant.units.delete',
+            'tenant.units.export',
+
 
             // Menu Group: Transaction
             // Submenu: Inbound Management

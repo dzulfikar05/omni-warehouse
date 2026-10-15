@@ -21,6 +21,7 @@ use App\Contracts\StockOpnameContract;
 use App\Contracts\SupplierContract;
 use App\Contracts\TenantContract;
 use App\Contracts\TenantUserRoleContract;
+use App\Contracts\UnitContract;
 use App\Contracts\UserContract;
 use App\Services\CategoryService;
 use App\Services\CompanyProfileService;
@@ -40,6 +41,7 @@ use App\Services\StockOpnameService;
 use App\Services\SupplierService;
 use App\Services\TenantService;
 use App\Services\TenantUserRoleService;
+use App\Services\UnitService;
 use App\Services\UserService;
 use App\Services\ValuationAssetReportService;
 use Carbon\CarbonImmutable;
@@ -75,6 +77,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(GeneralSettingsContract::class, GeneralSettingsService::class);
         $this->app->bind(ProductContract::class, ProductService::class);
         $this->app->bind(CategoryContract::class, CategoryService::class);
+        $this->app->bind(UnitContract::class, UnitService::class);
     }
 
     /**

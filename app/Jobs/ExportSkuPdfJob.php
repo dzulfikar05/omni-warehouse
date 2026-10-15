@@ -15,36 +15,30 @@ class ExportSkuPdfJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected int $logId;
-    protected array $skusData;
-
-    public function __construct(int $logId, array $skusData)
-    {
-        $this->logId = $logId;
-        $this->skusData = $skusData;
-    }
+    public function __construct(
+        protected int $exportLogId,
+        protected array $skus
+    ) {}
 
     public function handle(): void
     {
-        $log = ExportLog::find($this->logId);
-        if (!$log) return;
-
-        $log->update(['status' => 'processing']);
+        $log = ExportLog::find($this->exportLogId);
+        if (! $log) return;
 
         try {
             $pdf = Pdf::loadView('exports.pdf.skus', [
-                'skus'   => $this->skusData,
-                'tenant' => $log->tenant,
-            ]);
+                'skus' => $this->skus,
+                'generatedAt' => now()->format('d M Y H:i'),
+            ])->setPaper('a4', 'landscape');
 
-            $filePath = 'exports/' . $log->filename;
+            $filePath = 'exports/skus/' . $log->filename;
             Storage::disk('public')->put($filePath, $pdf->output());
 
             $log->update([
                 'status'    => 'completed',
                 'file_path' => $filePath,
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $log->update([
                 'status' => 'failed',
                 'error'  => $e->getMessage(),

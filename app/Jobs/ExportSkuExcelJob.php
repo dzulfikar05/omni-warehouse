@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Exports\SkuExport;
+use App\Exports\SkusExport;
 use App\Models\ExportLog;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -15,31 +15,25 @@ class ExportSkuExcelJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected int $logId;
-    protected array $skusData;
-
-    public function __construct(int $logId, array $skusData)
-    {
-        $this->logId = $logId;
-        $this->skusData = $skusData;
-    }
+    public function __construct(
+        protected int $exportLogId,
+        protected array $skus
+    ) {}
 
     public function handle(): void
     {
-        $log = ExportLog::find($this->logId);
-        if (!$log) return;
-
-        $log->update(['status' => 'processing']);
+        $log = ExportLog::find($this->exportLogId);
+        if (! $log) return;
 
         try {
-            $filePath = 'exports/' . $log->filename;
-            Excel::store(new SkuExport($this->skusData), $filePath, 'public');
+            $filePath = 'exports/skus/' . $log->filename;
+            Excel::store(new SkusExport($this->skus), $filePath, 'public');
 
             $log->update([
                 'status'    => 'completed',
                 'file_path' => $filePath,
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $log->update([
                 'status' => 'failed',
                 'error'  => $e->getMessage(),
