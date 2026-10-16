@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Tenant;
 
 use App\Contracts\CategoryContract;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\CategoryRequest;
+use App\Http\Requests\Tenant\CategoryRequest;
 use App\Models\Category;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

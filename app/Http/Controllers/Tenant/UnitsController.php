@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Tenant;
 
 use App\Contracts\UnitContract;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\UnitRequest;
+use App\Http\Requests\Tenant\UnitRequest;
 use App\Models\Unit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
