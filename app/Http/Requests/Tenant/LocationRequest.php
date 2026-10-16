@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Tenant;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -14,20 +14,21 @@ class LocationRequest extends FormRequest
 
     public function rules(): array
     {
-        // Ambil ID location jika dalam mode update/edit
-        $locationId = $this->route('location') ? $this->route('location')->id : null;
+        // Extract location parameter safely whether it's bound as an object or primitive
+        $location = $this->route('location');
+        $locationId = is_object($location) ? $location->id : $location;
 
         return [
-            'warehouse_id' => 'required|integer|exists:warehouses,id',
+            'warehouse_id' => ['required', 'integer', 'exists:warehouses,id'],
             'rack_code'    => [
                 'required',
                 'string',
                 'max:100',
                 Rule::unique('locations', 'rack_code')->ignore($locationId),
             ],
-            'zone'      => 'nullable|string|max:100',
-            'desc'      => 'nullable|string|max:255',
-            'is_active' => 'boolean',
+            'zone'      => ['nullable', 'string', 'max:100'],
+            'desc'      => ['nullable', 'string', 'max:255'],
+            'is_active' => ['nullable', 'boolean'],
         ];
     }
 

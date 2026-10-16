@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Tenant;
 
 use App\Contracts\StockOpnameContract;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StockOpnameRequest;
+use App\Http\Requests\Tenant\StockOpnameRequest;
 use App\Jobs\ExportStockOpnameExcelJob;
 use App\Jobs\ExportStockOpnamePdfJob;
 use App\Models\ExportLog;

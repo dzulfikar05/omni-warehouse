@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\SkuRequest;
+use App\Http\Requests\Tenant\SkuRequest;
 use App\Jobs\ExportSkuExcelJob;
 use App\Jobs\ExportSkuPdfJob;
 use App\Models\Category;

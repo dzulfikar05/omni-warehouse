@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Tenant;
 
 use App\Contracts\LocationsContract;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\LocationRequest; // Gunakan single request
+use App\Http\Requests\Tenant\LocationRequest;
 use App\Jobs\ExportLocationExcelJob;
 use App\Jobs\ExportLocationPdfJob;
 use App\Models\ExportLog;
