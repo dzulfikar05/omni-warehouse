@@ -116,6 +116,13 @@ class PermissionSeeder extends Seeder
             'tenant.units.delete',
             'tenant.units.export',
 
+            'tenant.dashboard.view',
+            'tenant.dashboard.stats_cards',
+            'tenant.dashboard.stock_trend_chart',
+            'tenant.dashboard.inbound_outbound_chart',
+            'tenant.dashboard.low_stock_table',
+            'tenant.dashboard.recent_movements_table',
+
 
             // Menu Group: Transaction
             // Submenu: Inbound Management
