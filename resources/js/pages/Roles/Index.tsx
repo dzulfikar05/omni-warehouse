@@ -1,9 +1,8 @@
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { Head, Link, usePage, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { TableCell } from '@/components/ui/table';
-import { useEffect, useState, useCallback, useMemo } from 'react';
-import { Plus } from 'lucide-react';
-import { Toaster } from '@/components/ui/sonner';
+import { Plus, FileText, FileSpreadsheet } from 'lucide-react';
 import { toast } from 'sonner';
 import { debounce } from 'lodash';
 import { usePermission } from '@/utils/permission';
@@ -11,19 +10,11 @@ import { TableFilter } from '@/components/table-filter';
 import { DataTable } from '@/components/data-table';
 import { ActionButton } from '@/components/action-button';
 import { PageHeader } from '@/components/page-header';
-import { FilterDropdown } from '@/components/table-dropdown';
-import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 
 interface Role {
     id: number;
     name: string;
+    permissions_count?: number;
 }
 
 interface RolesProps {
@@ -36,7 +27,7 @@ interface RolesProps {
         from: number;
         to: number;
     };
-    filters: { search?: string; per_page?: string; status?: any };
+    filters: { search?: string; per_page?: string };
 }
 
 export default function Index({ roles, filters }: RolesProps) {
@@ -46,24 +37,29 @@ export default function Index({ roles, filters }: RolesProps) {
     const [search, setSearch] = useState(filters.search || '');
     const [perPage, setPerPage] = useState(filters.per_page || '10');
 
+    const lastShownFlash = useRef<string | null>(null);
+
     useEffect(() => {
-        if (flash.success) toast.success(flash.success);
-    }, [flash.success]);
+        if (flash?.success && lastShownFlash.current !== flash.success) {
+            toast.success(flash.success);
+            lastShownFlash.current = flash.success;
+        }
+    }, [flash?.success]);
 
     const applyFilters = useCallback(
         (newSearch: string, newPerPage: string) => {
             router.get(
                 '/roles',
                 { search: newSearch, per_page: newPerPage },
-                { preserveState: true, replace: true, preserveScroll: true },
+                { preserveState: true, replace: true, preserveScroll: true }
             );
         },
-        [],
+        []
     );
 
     const debouncedSearch = useMemo(
         () => debounce((q: string, p: string) => applyFilters(q, p), 500),
-        [applyFilters],
+        [applyFilters]
     );
 
     useEffect(() => {
@@ -87,40 +83,58 @@ export default function Index({ roles, filters }: RolesProps) {
         });
     };
 
-    const [tempStatus, setTempStatus] = useState(filters.status || 'all');
-    const handleApplyFilter = () => {
-        router.get(
-            '/roles',
-            {
-                search,
-                per_page: perPage,
-                status: tempStatus,
-            },
-            { preserveState: true },
-        );
+    const handleExportPdf = () => {
+        router.post('/roles/export-pdf', { search });
     };
+
+    const handleExportExcel = () => {
+        router.post('/roles/export-excel', { search });
+    };
+
+    const canCreate = can('central.roles.create');
+    const canShow = can('central.roles.show');
+    const canEdit = can('central.roles.edit');
+    const canDelete = can('central.roles.delete');
+    const canExport = can('central.roles.export');
 
     return (
         <>
             <Head title="Roles Management" />
-            <Toaster position="top-right" richColors />
 
-            <div className="space-y-6 p-4">
+            <div className="space-y-6 p-4 sm:p-6">
                 <PageHeader
                     title="Role List"
-                    description="Manage system access levels and permissions."
+                    description="Manage central system access levels and permissions."
                     renderAction={
-                        /* Gunakan permission 'central.roles.create' */
-                        can('central.roles.create') && (
-                            <Button
-                                asChild
-                                className="shadow-md"
-                            >
-                                <Link href="/roles/create">
-                                    <Plus className="mr-2 h-4 w-4" /> Add Role
-                                </Link>
-                            </Button>
-                        )
+                        <div className="flex flex-wrap items-center gap-2">
+                            {canExport && (
+                                <>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleExportPdf}
+                                        className="h-9 gap-1.5 border-border text-xs"
+                                    >
+                                        <FileText className="h-4 w-4 text-rose-500" /> Export PDF
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleExportExcel}
+                                        className="h-9 gap-1.5 border-border text-xs"
+                                    >
+                                        <FileSpreadsheet className="h-4 w-4 text-emerald-500" /> Export Excel
+                                    </Button>
+                                </>
+                            )}
+                            {canCreate && (
+                                <Button asChild className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700">
+                                    <Link href="/roles/create">
+                                        <Plus className="mr-1.5 h-4 w-4" /> Add Role
+                                    </Link>
+                                </Button>
+                            )}
+                        </div>
                     }
                 >
                     <TableFilter
@@ -128,39 +142,11 @@ export default function Index({ roles, filters }: RolesProps) {
                         onSearchChange={onSearchChange}
                         perPage={perPage}
                         onPerPageChange={onPerPageChange}
-                    >
-                        <FilterDropdown
-                            onApply={handleApplyFilter}
-                            onReset={() => setTempStatus('all')}
-                        >
-                            <div className="space-y-2">
-                                <Label className="text-xs">Status</Label>
-                                <Select
-                                    value={tempStatus}
-                                    onValueChange={setTempStatus}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">
-                                            All Status
-                                        </SelectItem>
-                                        <SelectItem value="active">
-                                            Active
-                                        </SelectItem>
-                                        <SelectItem value="inactive">
-                                            Inactive
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </FilterDropdown>
-                    </TableFilter>
+                    />
                 </PageHeader>
 
                 <DataTable
-                    headers={['#', 'Role Name', 'Action']}
+                    headers={['ID', 'Role Name', 'Permissions Count', 'Action']}
                     data={roles.data}
                     pagination={roles}
                     renderRow={(role) => (
@@ -168,19 +154,21 @@ export default function Index({ roles, filters }: RolesProps) {
                             <TableCell className="font-mono text-xs text-muted-foreground">
                                 #{role.id}
                             </TableCell>
-                            <TableCell className="font-medium text-foreground capitalize">
+                            <TableCell className="font-semibold text-foreground capitalize">
                                 {role.name}
                             </TableCell>
+                            <TableCell className="text-muted-foreground font-mono text-xs">
+                                {role.permissions_count ?? 0} mapped
+                            </TableCell>
                             <TableCell className="text-right">
-                                {/* ActionButton untuk Detail (Show), Edit, dan Hapus (Delete) */}
                                 <ActionButton
                                     label={role.name}
                                     showUrl={`/roles/${role.id}`}
                                     editUrl={`/roles/${role.id}/edit`}
                                     onDelete={() => processDelete(role.id)}
-                                    canShow={can('central.roles.show')}
-                                    canEdit={can('central.roles.edit')}
-                                    canDelete={can('central.roles.delete')}
+                                    canShow={canShow}
+                                    canEdit={canEdit}
+                                    canDelete={canDelete}
                                 />
                             </TableCell>
                         </>
@@ -191,4 +179,4 @@ export default function Index({ roles, filters }: RolesProps) {
     );
 }
 
-Index.layout = { breadcrumbs: [{ title: 'Roles', href: '/roles' }] };
+Index.layout = { breadcrumbs: [{ title: 'Roles Management', href: '/roles' }] };

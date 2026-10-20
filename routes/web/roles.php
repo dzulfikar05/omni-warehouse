@@ -7,6 +7,11 @@ Route::middleware(['auth', 'verified'])->prefix('roles')->name('roles.')->group(
     Route::get('/', [RoleController::class, 'index'])->middleware('permission:central.roles.view')->name('index');
     Route::get('/create', [RoleController::class, 'create'])->middleware('permission:central.roles.create')->name('create');
     Route::post('/', [RoleController::class, 'store'])->middleware('permission:central.roles.create')->name('store');
+
+    // Async Export Queue Routes
+    Route::post('/export-pdf', [RoleController::class, 'exportPdf'])->middleware('permission:central.roles.export')->name('export_pdf');
+    Route::post('/export-excel', [RoleController::class, 'exportExcel'])->middleware('permission:central.roles.export')->name('export_excel');
+
     Route::get('/{role}', [RoleController::class, 'show'])->middleware('permission:central.roles.show')->name('show');
     Route::get('/{role}/edit', [RoleController::class, 'edit'])->middleware('permission:central.roles.edit')->name('edit');
     Route::put('/{role}', [RoleController::class, 'update'])->middleware('permission:central.roles.edit')->name('update');

@@ -104,7 +104,7 @@ export default function Index({ users, filters }: UsersProps) {
 
             <div className="space-y-6 p-4 sm:p-6">
                 <PageHeader
-                    title="Central Users List"
+                    title="Users List"
                     description="Manage central platform admin users, their credentials, and system roles."
                     renderAction={
                         <div className="flex flex-wrap items-center gap-2">
