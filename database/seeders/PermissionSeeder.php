@@ -40,6 +40,7 @@ class PermissionSeeder extends Seeder
             'central.users.create',
             'central.users.edit',
             'central.users.delete',
+            'central.users.export',
 
             // Submenu: Central Roles
             'central.roles.view',
@@ -47,6 +48,8 @@ class PermissionSeeder extends Seeder
             'central.roles.create',
             'central.roles.edit',
             'central.roles.delete',
+            'central.roles.export',
+
 
             // Submenu: Subscriptions Management
             'central.subscriptions.view',

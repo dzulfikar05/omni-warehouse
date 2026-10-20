@@ -10,13 +10,17 @@ use Illuminate\Support\Facades\Hash;
 class UserService implements UserContract
 {
     /**
-     * Get paginated users with optional search filter.
+     * Get paginated central users (tenant_id IS NULL) with optional search filter.
      */
     public function getPaginatedUsers(?string $search = null, int $perPage = 10): LengthAwarePaginator
     {
         return User::query()
+            ->whereNull('tenant_id') // Hanya ambil akun Central / System Admin
             ->when($search, function ($query, $search) {
-                $query->where('name', 'like', "%{$search}%");
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%");
+                });
             })
             ->with('roles')
             ->latest()
@@ -25,14 +29,15 @@ class UserService implements UserContract
     }
 
     /**
-     * Store a newly created user and assign role.
+     * Store a newly created central user and assign role.
      */
     public function storeUser(array $data): User
     {
         $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
+            'name'      => $data['name'],
+            'email'     => $data['email'],
+            'password'  => Hash::make($data['password']),
+            'tenant_id' => null, // Pastikan tersimpan sebagai central admin
         ]);
 
         if (isset($data['role'])) {
@@ -43,11 +48,13 @@ class UserService implements UserContract
     }
 
     /**
-     * Get user details with relationships.
+     * Get central user details with relationships.
      */
     public function getUserDetails(int|string $id): User
     {
-        return User::with(['roles', 'permissions'])->findOrFail($id);
+        return User::whereNull('tenant_id')
+            ->with(['roles', 'permissions'])
+            ->findOrFail($id);
     }
 
     /**
@@ -55,9 +62,9 @@ class UserService implements UserContract
      */
     public function updateUser(int|string $id, array $data): User
     {
-        $user = User::findOrFail($id);
+        $user = User::whereNull('tenant_id')->findOrFail($id);
 
-        $user->name = $data['name'];
+        $user->name  = $data['name'];
         $user->email = $data['email'];
 
         if (!empty($data['password'])) {
@@ -78,7 +85,7 @@ class UserService implements UserContract
      */
     public function deleteUser(int|string $id): bool
     {
-        $user = User::findOrFail($id);
+        $user = User::whereNull('tenant_id')->findOrFail($id);
 
         return $user->delete();
     }
