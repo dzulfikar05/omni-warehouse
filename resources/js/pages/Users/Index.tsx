@@ -1,9 +1,8 @@
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { Head, Link, usePage, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { TableCell } from '@/components/ui/table';
-import { useEffect, useState, useCallback, useMemo } from 'react';
-import { LucideEye, Pencil, Trash, Plus } from 'lucide-react';
-import { Toaster } from '@/components/ui/sonner';
+import { Plus, FileText, FileSpreadsheet } from 'lucide-react';
 import { toast } from 'sonner';
 import { debounce } from 'lodash';
 
@@ -15,7 +14,6 @@ import { DataTable } from '@/components/data-table';
 import { ActionButton } from '@/components/action-button';
 import { PageHeader } from '@/components/page-header';
 
-// Definisikan tipe User dengan relasi roles
 type UserWithRoles = User & {
     roles: Array<{ id: number; name: string }>;
 };
@@ -40,24 +38,29 @@ export default function Index({ users, filters }: UsersProps) {
     const [search, setSearch] = useState(filters.search || '');
     const [perPage, setPerPage] = useState(filters.per_page || '10');
 
+    const lastShownFlash = useRef<string | null>(null);
+
     useEffect(() => {
-        if (flash.success) toast.success(flash.success);
-    }, [flash.success]);
+        if (flash?.success && lastShownFlash.current !== flash.success) {
+            toast.success(flash.success);
+            lastShownFlash.current = flash.success;
+        }
+    }, [flash?.success]);
 
     const applyFilters = useCallback(
         (newSearch: string, newPerPage: string) => {
             router.get(
                 '/users',
                 { search: newSearch, per_page: newPerPage },
-                { preserveState: true, replace: true, preserveScroll: true },
+                { preserveState: true, replace: true, preserveScroll: true }
             );
         },
-        [],
+        []
     );
 
     const debouncedSearch = useMemo(
         () => debounce((q: string, p: string) => applyFilters(q, p), 500),
-        [applyFilters],
+        [applyFilters]
     );
 
     useEffect(() => {
@@ -81,21 +84,58 @@ export default function Index({ users, filters }: UsersProps) {
         });
     };
 
+    const handleExportPdf = () => {
+        router.post('/users/export-pdf', { search });
+    };
+
+    const handleExportExcel = () => {
+        router.post('/users/export-excel', { search });
+    };
+
+    const canCreate = can('central.users.create');
+    const canShow = can('central.users.show');
+    const canEdit = can('central.users.edit');
+    const canDelete = can('central.users.delete');
+    const canExport = can('central.users.export');
+
     return (
         <>
-            <Head title="Users Management" />
-            <Toaster position="top-right" richColors />
+            <Head title="Central Users Management" />
 
-            <div className="space-y-6 p-4">
+            <div className="space-y-6 p-4 sm:p-6">
                 <PageHeader
-                    title="User List"
-                    description="Manage registered users, their account details, and assigned roles."
+                    title="Users List"
+                    description="Manage central platform admin users, their credentials, and system roles."
                     renderAction={
-                        <Button asChild className="shadow-md">
-                            <Link href="/users/create">
-                                <Plus className="mr-2 h-4 w-4" /> Add User
-                            </Link>
-                        </Button>
+                        <div className="flex flex-wrap items-center gap-2">
+                            {canExport && (
+                                <>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleExportPdf}
+                                        className="h-9 gap-1.5 border-border text-xs"
+                                    >
+                                        <FileText className="h-4 w-4 text-rose-500" /> Export PDF
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleExportExcel}
+                                        className="h-9 gap-1.5 border-border text-xs"
+                                    >
+                                        <FileSpreadsheet className="h-4 w-4 text-emerald-500" /> Export Excel
+                                    </Button>
+                                </>
+                            )}
+                            {canCreate && (
+                                <Button asChild className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700">
+                                    <Link href="/users/create">
+                                        <Plus className="mr-1.5 h-4 w-4" /> Add User
+                                    </Link>
+                                </Button>
+                            )}
+                        </div>
                     }
                 >
                     <TableFilter
@@ -123,12 +163,12 @@ export default function Index({ users, filters }: UsersProps) {
                             </TableCell>
                             <TableCell>
                                 <div className="flex flex-wrap gap-1">
-                                    {user.roles.length > 0 ? (
+                                    {user.roles && user.roles.length > 0 ? (
                                         user.roles.map((role) => (
                                             <Badge
                                                 key={role.id}
                                                 variant="outline"
-                                                className="border-primary/20 bg-primary/10 font-medium text-primary capitalize"
+                                                className="border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-300 font-medium capitalize"
                                             >
                                                 {role.name}
                                             </Badge>
@@ -146,9 +186,9 @@ export default function Index({ users, filters }: UsersProps) {
                                     showUrl={`/users/${user.id}`}
                                     editUrl={`/users/${user.id}/edit`}
                                     onDelete={() => processDelete(user.id)}
-                                    canShow={can('users.show')}
-                                    canEdit={can('users.edit')}
-                                    canDelete={can('users.delete')}
+                                    canShow={canShow}
+                                    canEdit={canEdit}
+                                    canDelete={canDelete}
                                 />
                             </TableCell>
                         </>

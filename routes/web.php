@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Tenant\AuthController as TenantAuthController;
 use App\Http\Middleware\EnsureCentralUser;
 use App\Models\Plan;
@@ -12,6 +13,7 @@ use Laravel\Fortify\Features;
 | Public / Guest Routes
 |--------------------------------------------------------------------------
 */
+
 Route::get('/', function () {
     $plans = Plan::with('features')->where('is_active', true)->orderBy('price', 'asc')->get();
     return inertia('welcome', [
@@ -33,7 +35,9 @@ Route::post('/register-tenant', [TenantAuthController::class, 'register']);
 */
 Route::middleware(['auth', 'verified', EnsureCentralUser::class])->group(function () {
     // Central Dashboard
-    Route::inertia('dashboard', 'dashboard')->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->middleware('permission:central.dashboard.view')
+        ->name('dashboard');
 
     // Central Admin Modules
     require __DIR__ . '/web/users.php';
@@ -42,7 +46,6 @@ Route::middleware(['auth', 'verified', EnsureCentralUser::class])->group(functio
     require __DIR__ . '/web/plans.php';
     require __DIR__ . '/web/subscriptions.php';
     require __DIR__ . '/settings.php';
-    
 });
 
 
@@ -93,6 +96,5 @@ Route::prefix('{tenant_slug}')->middleware(['identify_tenant'])->group(function 
         })->name('tenant.dashboard');
 
         require __DIR__ . '/web/tenant/settings.php';
-
     });
 });

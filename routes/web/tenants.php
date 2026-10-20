@@ -4,7 +4,7 @@ use App\Http\Controllers\Admin\TenantController;
 use App\Http\Controllers\Tenant\DashboardController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'verified'])->prefix('admin/tenants')->name('admin.tenants.')->group(function () {
+Route::middleware(['auth', 'verified'])->prefix('tenants')->name('admin.tenants.')->group(function () {
 
     Route::get('/', [TenantController::class, 'index'])->middleware('permission:central.tenants.view')->name('index');
     Route::get('/create', [TenantController::class, 'create'])->middleware('permission:central.tenants.create')->name('create');
@@ -14,6 +14,13 @@ Route::middleware(['auth', 'verified'])->prefix('admin/tenants')->name('admin.te
     Route::put('/{tenant}', [TenantController::class, 'update'])->middleware('permission:central.tenants.edit')->name('update');
     Route::delete('/{tenant}', [TenantController::class, 'destroy'])->middleware('permission:central.tenants.delete')->name('destroy');
 
+    Route::get('tenants/export/excel', [TenantController::class, 'exportExcel'])
+        ->middleware('permission:central.tenants.export')
+        ->name('tenants.export.excel');
+
+    Route::get('tenants/export/pdf', [TenantController::class, 'exportPdf'])
+        ->middleware('permission:central.tenants.export')
+        ->name('tenants.export.pdf');
 });
 
 Route::prefix('{tenant_slug}')->middleware(['identify_tenant', 'auth', 'verified'])->group(function () {

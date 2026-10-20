@@ -328,7 +328,7 @@ export function AppSidebar() {
         if (can('central.tenants.view') || hasRole('superadmin')) {
             mainNavItems.push({
                 title: 'Tenants',
-                href: '/admin/tenants',
+                href: '/tenants',
                 icon: Building2,
             });
         }
@@ -352,7 +352,7 @@ export function AppSidebar() {
         if (can('central.plans.view') || hasRole('superadmin')) {
             mainNavItems.push({
                 title: 'Plans & Features',
-                href: '/admin/plans',
+                href: '/plans',
                 icon: LayoutGrid,
             });
         }
@@ -360,7 +360,7 @@ export function AppSidebar() {
         if (can('central.subscriptions.view') || hasRole('superadmin')) {
             mainNavItems.push({
                 title: 'Subscriptions',
-                href: '/admin/subscriptions',
+                href: '/subscriptions',
                 icon: CreditCard,
             });
         }

@@ -19,16 +19,43 @@ interface ExportLog {
 
 export function ExportNotificationDropdown() {
     const { current_tenant, auth } = usePage().props as any;
-    const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
-    const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
+    const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+
+    // Ambil segmen pertama dari path URL (misal: "dashboard" atau "nama-tenant")
+    const pathSegments = currentPath.split('/').filter(Boolean);
+    const firstSegment = pathSegments[0] || '';
+
+    // Deteksi apakah sedang di Central Admin:
+    // Path berada di /dashboard (tanpa slug tenant) DAN user tidak memiliki tenant_id
+    const isCentralAdmin = firstSegment === 'dashboard' || (!current_tenant && !auth?.user?.tenant_id);
+
+    // Ambil tenant slug dari properti Inertia atau dari segmen URL pertama jika bukan 'dashboard'
+    const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || (firstSegment !== 'dashboard' ? firstSegment : '');
 
     const [exports, setExports] = useState<ExportLog[]>([]);
     const [hasActive, setHasActive] = useState(false);
 
     const fetchExports = async () => {
-        if (!tenantSlug) return;
+        let endpoint = '';
+
+        if (isCentralAdmin) {
+            // Endpoint khusus Central Admin (http://localhost/admin/export-logs)
+            endpoint = '/subscriptions/export-logs';
+        } else if (tenantSlug) {
+            // Endpoint khusus Tenant (http://localhost/{tenantSlug}/contacts/customers/export-logs)
+            endpoint = `/${tenantSlug}/contacts/customers/export-logs`;
+        } else {
+            return;
+        }
+
         try {
-            const res = await fetch(`/${tenantSlug}/contacts/customers/export-logs`);
+            const res = await fetch(endpoint, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+
             if (res.ok) {
                 const data = await res.json();
                 setExports(data);
@@ -43,9 +70,8 @@ export function ExportNotificationDropdown() {
         fetchExports();
         const interval = setInterval(fetchExports, 4000);
         return () => clearInterval(interval);
-    }, [tenantSlug]);
+    }, [tenantSlug, isCentralAdmin, currentPath]);
 
-    // Helper untuk menentukan ikon dan warna sesuai tipe file
     const renderFileIcon = (item: ExportLog) => {
         const isExcel = item.type === 'excel' || item.filename.endsWith('.xlsx') || item.filename.endsWith('.xls');
 
@@ -82,7 +108,6 @@ export function ExportNotificationDropdown() {
                     exports.map((item) => (
                         <div key={item.id} className="p-2 text-xs rounded-lg hover:bg-muted flex items-center justify-between gap-2 border border-border/50">
                             <div className="flex items-center gap-2 overflow-hidden">
-                                {/* Panggil helper fungsi ikon di sini */}
                                 {renderFileIcon(item)}
                                 <div className="truncate">
                                     <p className="font-medium truncate">{item.filename}</p>

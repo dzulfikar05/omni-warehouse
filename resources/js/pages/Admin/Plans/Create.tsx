@@ -1,18 +1,11 @@
 import React from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-    ArrowLeftCircleIcon,
-    Plus,
-    Trash2,
-    Save,
-} from 'lucide-react';
-import AppLayout from '@/layouts/app-layout';
+import { PageHeader } from '@/components/page-header';
+import { ArrowLeft, Plus, Trash2, Save, RotateCcw } from 'lucide-react';
 
 export default function PlanCreate() {
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         price: '',
         desc: '',
@@ -43,151 +36,122 @@ export default function PlanCreate() {
         <>
             <Head title="Add New Plan" />
 
-            <div className="space-y-6 p-4">
-                {/* Header Card */}
-                <div className="mx-auto rounded-lg bg-card text-card-foreground border border-border p-6 shadow-md">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h2 className="text-xl font-bold text-foreground">
-                                Add New Plan
-                            </h2>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                                Buat tier paket langganan baru beserta daftar fiturnya.
-                            </p>
-                        </div>
-
-                        <Button asChild variant="outline">
+            <div className="space-y-6 p-4 sm:p-6">
+                <PageHeader
+                    title="Add New Plan"
+                    description="Create a new subscription tier along with feature limits."
+                    renderAction={
+                        <Button asChild variant="outline" size="sm" className="h-9 gap-1.5 border-border text-xs">
                             <Link href="/admin/plans">
-                                <ArrowLeftCircleIcon className="mr-2 h-4 w-4" />
-                                Back
+                                <ArrowLeft className="h-4 w-4" /> Back
                             </Link>
                         </Button>
-                    </div>
-                </div>
+                    }
+                />
 
-                {/* Form Card */}
-                <div className="mx-auto rounded-lg bg-card text-card-foreground border border-border p-6 shadow-md">
-                    <form onSubmit={handleSubmit} className="max-w-xl space-y-4">
-                        {/* Nama Paket */}
-                        <div className="space-y-1">
-                            <Label htmlFor="name">Nama Paket</Label>
-                            <Input
-                                id="name"
-                                value={data.name}
-                                onChange={(e) =>
-                                    setData('name', e.target.value)
-                                }
-                                placeholder="Contoh: Ultra Warehouse"
-                            />
-                            {errors.name && (
-                                <span className="text-sm text-red-500">
-                                    {errors.name}
-                                </span>
-                            )}
-                        </div>
+                <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                    <form onSubmit={handleSubmit}>
+                        <div className="space-y-6 p-6 border-b border-border">
+                            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-foreground">
+                                        Plan Name <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={data.name}
+                                        onChange={(e) => setData('name', e.target.value)}
+                                        placeholder="e.g. Enterprise Warehouse"
+                                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-600"
+                                    />
+                                    {errors.name && <span className="text-[11px] text-red-500">{errors.name}</span>}
+                                </div>
 
-                        {/* Harga per Bulan */}
-                        <div className="space-y-1">
-                            <Label htmlFor="price">
-                                Harga per Bulan (IDR)
-                            </Label>
-                            <Input
-                                id="price"
-                                type="number"
-                                value={data.price}
-                                onChange={(e) =>
-                                    setData('price', e.target.value)
-                                }
-                                placeholder="750000"
-                            />
-                            {errors.price && (
-                                <span className="text-sm text-red-500">
-                                    {errors.price}
-                                </span>
-                            )}
-                        </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-foreground">
+                                        Price Monthly (IDR) <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={data.price}
+                                        onChange={(e) => setData('price', e.target.value)}
+                                        placeholder="750000"
+                                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-600"
+                                    />
+                                    {errors.price && <span className="text-[11px] text-red-500">{errors.price}</span>}
+                                </div>
 
-                        {/* Deskripsi Singkat */}
-                        <div className="space-y-1">
-                            <Label htmlFor="desc">Deskripsi Singkat</Label>
-                            <textarea
-                                id="desc"
-                                value={data.desc}
-                                onChange={(e) =>
-                                    setData('desc', e.target.value)
-                                }
-                                placeholder="Penjelasan singkat mengenai paket..."
-                                rows={3}
-                                className="w-full p-3 bg-background border border-input rounded-md text-xs focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
-                            />
-                            {errors.desc && (
-                                <span className="text-sm text-red-500">
-                                    {errors.desc}
-                                </span>
-                            )}
-                        </div>
-
-                        {/* Daftar Fitur */}
-                        <div className="space-y-3 pt-4 border-t border-border">
-                            <div className="flex items-center justify-between gap-3">
-                                <Label>Daftar Fitur (Features)</Label>
-
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={addFeatureField}
-                                    className="h-8 px-3 text-xs"
-                                >
-                                    <Plus className="w-3.5 h-3.5 mr-1" />
-                                    Tambah Fitur
-                                </Button>
+                                <div className="space-y-1.5 md:col-span-2">
+                                    <label className="text-xs font-semibold text-foreground">Short Description</label>
+                                    <textarea
+                                        value={data.desc}
+                                        onChange={(e) => setData('desc', e.target.value)}
+                                        rows={3}
+                                        placeholder="Brief description of plan tier capabilities..."
+                                        className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-600"
+                                    />
+                                    {errors.desc && <span className="text-[11px] text-red-500">{errors.desc}</span>}
+                                </div>
                             </div>
 
-                            {data.features.map((feat, index) => (
-                                <div
-                                    key={index}
-                                    className="flex items-center gap-2"
-                                >
-                                    <Input
-                                        type="text"
-                                        value={feat}
-                                        onChange={(e) =>
-                                            handleFeatureChange(
-                                                index,
-                                                e.target.value
-                                            )
-                                        }
-                                        placeholder="Contoh: Multi-warehouse (up to 5 facilities)"
-                                    />
-
+                            {/* Features Input Section */}
+                            <div className="space-y-3 pt-4 border-t border-border">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                                        Feature List
+                                    </label>
                                     <Button
                                         type="button"
-                                        variant="destructive"
-                                        size="icon"
-                                        onClick={() =>
-                                            removeFeatureField(index)
-                                        }
-                                        className="h-9 w-9 shrink-0"
-                                        aria-label={`Hapus fitur ${index + 1}`}
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={addFeatureField}
+                                        className="h-8 gap-1 border-border text-xs"
                                     >
-                                        <Trash2 className="w-4 h-4" />
+                                        <Plus className="h-3.5 w-3.5" /> Add Feature
                                     </Button>
                                 </div>
-                            ))}
+
+                                {data.features.map((feat, index) => (
+                                    <div key={index} className="flex items-center gap-2">
+                                        <input
+                                            type="text"
+                                            value={feat}
+                                            onChange={(e) => handleFeatureChange(index, e.target.value)}
+                                            placeholder="e.g. Multi-warehouse (up to 5 facilities)"
+                                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-600"
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() => removeFeatureField(index)}
+                                            className="h-9 w-9 shrink-0 border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900/50 dark:text-red-400"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
 
-                        {/* Submit Button */}
-                        <div className="pt-4">
+                        <div className="flex items-center justify-end gap-3 bg-muted/30 p-4">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                disabled={processing}
+                                onClick={() => reset()}
+                                className="h-9 gap-1.5 border-border text-xs"
+                            >
+                                <RotateCcw className="h-3.5 w-3.5" /> Reset
+                            </Button>
                             <Button
                                 type="submit"
-                                className="w-full sm:w-auto flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
+                                size="sm"
                                 disabled={processing}
+                                className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700"
                             >
-                                <Save className="h-4 w-4" />
-                                {processing
-                                    ? 'Menyimpan...'
-                                    : 'Simpan Paket'}
+                                <Save className="mr-1.5 h-4 w-4" /> {processing ? 'Saving...' : 'Save Plan Tier'}
                             </Button>
                         </div>
                     </form>
@@ -197,18 +161,10 @@ export default function PlanCreate() {
     );
 }
 
-PlanCreate.layout = (page: React.ReactNode) => (
-    <AppLayout
-        children={page}
-        breadcrumbs={[
-            {
-                title: 'Plans Management',
-                href: '/admin/plans',
-            },
-            {
-                title: 'Create Plan',
-                href: '/admin/plans/create',
-            },
-        ]}
-    />
-);
+PlanCreate.layout = {
+    breadcrumbs: [
+        { title: 'Admin', href: '#' },
+        { title: 'Plans Management', href: '/admin/plans' },
+        { title: 'Add Plan Tier', href: '#' },
+    ],
+};

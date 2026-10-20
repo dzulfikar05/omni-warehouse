@@ -1,14 +1,30 @@
 import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowLeft, Pencil, Trash2, AlertTriangle, X } from 'lucide-react';
-import AppLayout from '@/layouts/app-layout';
+import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/page-header';
+import {
+    ArrowLeft,
+    Pencil,
+    Trash2,
+    AlertTriangle,
+    X,
+    Building2,
+    Globe,
+    Mail,
+    Phone,
+    FileText,
+} from 'lucide-react';
 
 interface Tenant {
     id: number;
     name: string;
     slug: string;
     phone?: string;
+    email?: string;
+    website?: string;
+    tax_number?: string;
     address?: string;
+    logo_url?: string;
     users_count?: number;
     created_at?: string;
     updated_at?: string;
@@ -29,10 +45,8 @@ export default function TenantShow({ tenant }: Props) {
     const [isDeleting, setIsDeleting] = useState(false);
 
     const formattedId = `TNT-${String(tenant.id).padStart(3, '0')}`;
-    const usageCount = tenant.users_count || 0;
-    const usagePercent = Math.min(Math.round((usageCount / 25) * 100), 100);
     const planName = tenant.subscription?.plan?.name || 'Standard Plan';
-    const subStatus = tenant.subscription?.status ? ` (${tenant.subscription.status.toUpperCase()})` : '';
+    const subStatus = tenant.subscription?.status ? tenant.subscription.status.toUpperCase() : 'INACTIVE';
 
     const confirmDelete = () => {
         setIsDeleting(true);
@@ -41,7 +55,7 @@ export default function TenantShow({ tenant }: Props) {
                 setIsDeleting(false);
                 router.visit('/admin/tenants');
             },
-            onError: () => setIsDeleting(false)
+            onError: () => setIsDeleting(false),
         });
     };
 
@@ -49,193 +63,154 @@ export default function TenantShow({ tenant }: Props) {
         <>
             <Head title={`Tenant Details - ${tenant.name}`} />
 
-            <div className="p-6 flex flex-col gap-6 text-foreground min-h-screen bg-background">
-                {/* PAGE HEADER */}
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-xl font-bold tracking-tight">Tenant Details</h1>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                            Viewing detailed information and system status for {tenant.name}.
-                        </p>
+            <div className="space-y-6 p-4 sm:p-6">
+                <PageHeader
+                    title="Tenant Details"
+                    description={`View profile, compliance, and active subscription details for ${tenant.name}.`}
+                    renderAction={
+                        <Button asChild variant="outline" size="sm" className="h-9 gap-1.5 border-border text-xs">
+                            <Link href="/admin/tenants">
+                                <ArrowLeft className="h-4 w-4" /> Back
+                            </Link>
+                        </Button>
+                    }
+                />
+
+                <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm divide-y divide-border">
+                    {/* Header Summary */}
+                    <div className="flex items-center gap-5 p-6">
+                        <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-border bg-muted">
+                            {tenant.logo_url ? (
+                                <img src={tenant.logo_url} alt="Logo" className="h-full w-full object-cover" />
+                            ) : (
+                                <Building2 className="h-8 w-8 text-muted-foreground" />
+                            )}
+                        </div>
+                        <div className="space-y-1">
+                            <h2 className="text-lg font-bold text-foreground">{tenant.name}</h2>
+                            <p className="font-mono text-xs text-muted-foreground">/{tenant.slug} • ID: {formattedId}</p>
+                        </div>
                     </div>
 
-                    <Link
-                        href="/admin/tenants"
-                        className="h-9 px-4 bg-muted hover:bg-muted/80 border border-border text-foreground rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        <span>Back</span>
-                    </Link>
-                </div>
-
-                {/* DETAILS CARD */}
-                <div className="bg-card rounded-2xl border border-border shadow-xl overflow-hidden flex flex-col">
-                    <div className="p-6 border-b border-border space-y-6">
-                        <div className="mb-2">
-                            <h2 className="text-base font-bold text-foreground">Tenant Profile</h2>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                                General company details and unique identifier.
-                            </p>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-semibold text-muted-foreground">Tenant ID</label>
-                                <div className="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg text-xs font-mono text-foreground">
-                                    {formattedId}
-                                </div>
+                    {/* General Information */}
+                    <div className="space-y-4 p-6">
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                            Company Contact & Legal
+                        </h3>
+                        <div className="grid grid-cols-1 gap-4 text-xs md:grid-cols-2">
+                            <div className="flex items-center gap-2">
+                                <Mail className="h-4 w-4 text-muted-foreground" />
+                                <span className="font-semibold text-foreground">Email:</span> {tenant.email || '-'}
                             </div>
-
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-semibold text-muted-foreground">Company Name</label>
-                                <div className="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg text-xs font-semibold text-foreground">
-                                    {tenant.name}
-                                </div>
+                            <div className="flex items-center gap-2">
+                                <Phone className="h-4 w-4 text-muted-foreground" />
+                                <span className="font-semibold text-foreground">Phone:</span> {tenant.phone || '-'}
                             </div>
-
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-semibold text-muted-foreground">Company Slug</label>
-                                <div className="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg text-xs font-mono text-muted-foreground">
-                                    {tenant.slug}
-                                </div>
+                            <div className="flex items-center gap-2">
+                                <Globe className="h-4 w-4 text-muted-foreground" />
+                                <span className="font-semibold text-foreground">Website:</span>{' '}
+                                {tenant.website ? (
+                                    <a href={tenant.website} target="_blank" rel="noreferrer" className="text-blue-600 underline">
+                                        {tenant.website}
+                                    </a>
+                                ) : (
+                                    '-'
+                                )}
                             </div>
-
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-semibold text-muted-foreground">Phone Number</label>
-                                <div className="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg text-xs text-foreground">
-                                    {tenant.phone || '-'}
-                                </div>
+                            <div className="flex items-center gap-2">
+                                <FileText className="h-4 w-4 text-muted-foreground" />
+                                <span className="font-semibold text-foreground">Tax NPWP:</span>{' '}
+                                <span className="font-mono text-muted-foreground">{tenant.tax_number || '-'}</span>
                             </div>
-
-                            <div className="md:col-span-2 flex flex-col gap-1.5">
-                                <label className="text-xs font-semibold text-muted-foreground">Address</label>
-                                <div className="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg text-xs text-foreground">
+                            <div className="md:col-span-2">
+                                <span className="mb-1 block font-semibold text-foreground">Physical Address:</span>
+                                <div className="rounded-lg border border-border bg-muted/30 p-3 text-muted-foreground">
                                     {tenant.address || '-'}
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* SUBSCRIPTION & USAGE STATUS */}
-                    <div className="p-6 border-b border-border space-y-6">
-                        <div className="mb-2">
-                            <h2 className="text-base font-bold text-foreground">Subscription & Usage Status</h2>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                                Current active subscription tier and resource allocation.
-                            </p>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-semibold text-muted-foreground">Current Plan Tier</label>
-                                <div className="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg text-xs font-medium text-foreground">
-                                    {planName}{subStatus}
-                                </div>
+                    {/* Subscription Metadata */}
+                    <div className="space-y-4 p-6">
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                            Subscription & Resource Limits
+                        </h3>
+                        <div className="grid grid-cols-1 gap-4 text-xs md:grid-cols-2">
+                            <div>
+                                <span className="mb-1 block font-semibold text-foreground">Active Plan Tier:</span>
+                                <span className="rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-600 dark:border-blue-900/50 dark:bg-blue-950/50 dark:text-blue-400">
+                                    {planName} ({subStatus})
+                                </span>
                             </div>
-
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-semibold text-muted-foreground">Total Registered Users</label>
-                                <div className="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg text-xs text-foreground flex items-center justify-between">
-                                    <span className="font-mono">{usageCount} / 25 Users</span>
-                                    <div className="w-32 bg-muted rounded-full h-2 overflow-hidden flex items-center">
-                                        <div className="bg-primary h-2 rounded-full" style={{ width: `${usagePercent}%` }}></div>
-                                    </div>
-                                    <span className="text-[11px] font-mono text-muted-foreground">{usagePercent}%</span>
-                                </div>
+                            <div>
+                                <span className="mb-1 block font-semibold text-foreground">Total Users Registered:</span>
+                                <span className="font-mono font-bold text-foreground">{tenant.users_count || 0} Users</span>
                             </div>
                         </div>
                     </div>
 
-                    {/* AUDIT TIMESTAMPS */}
-                    <div className="p-6 border-b border-border space-y-6">
-                        <div className="mb-2">
-                            <h2 className="text-base font-bold text-foreground">Audit Timestamps</h2>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                                Historical records of record creation and updates.
-                            </p>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-semibold text-muted-foreground">Registered Date</label>
-                                <div className="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg text-xs font-mono text-foreground">
-                                    {tenant.created_at || '-'}
-                                </div>
-                            </div>
-
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-semibold text-muted-foreground">Last Updated Date</label>
-                                <div className="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg text-xs font-mono text-foreground">
-                                    {tenant.updated_at || '-'}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* FOOTER ACTIONS */}
-                    <div className="p-4 bg-muted/30 flex items-center justify-between">
-                        <button
+                    {/* Footer Actions */}
+                    <div className="flex items-center justify-between bg-muted/30 p-4">
+                        <Button
                             type="button"
+                            variant="outline"
+                            size="sm"
                             onClick={() => setIsDeleteModalOpen(true)}
-                            className="h-9 px-4 bg-destructive/10 hover:bg-destructive/20 text-destructive border border-destructive/20 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+                            className="h-9 gap-1.5 border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900/50 dark:text-red-400"
                         >
-                            <Trash2 className="w-4 h-4" />
-                            <span>Delete Tenant</span>
-                        </button>
+                            <Trash2 className="h-4 w-4" /> Delete Tenant
+                        </Button>
 
-                        <Link
-                            href={`/admin/tenants/${tenant.id}/edit`}
-                            className="h-9 px-4 bg-primary hover:bg-primary/95 text-primary-foreground rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
-                        >
-                            <Pencil className="w-4 h-4" />
-                            <span>Edit Tenant Data</span>
-                        </Link>
+                        <Button asChild size="sm" className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700">
+                            <Link href={`/admin/tenants/${tenant.id}/edit`}>
+                                <Pencil className="mr-1.5 h-4 w-4" /> Edit Tenant Data
+                            </Link>
+                        </Button>
                     </div>
                 </div>
             </div>
 
-            {/* MODAL KONFIRMASI HAPUS (Ditempatkan di luar container utama, tepat sebelum penutup fragmen </>) */}
+            {/* Delete Modal */}
             {isDeleteModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
-                    <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-md w-full overflow-hidden p-6 flex flex-col gap-5">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
+                    <div className="flex w-full max-w-md flex-col gap-5 rounded-2xl border border-border bg-card p-6 shadow-2xl">
                         <div className="flex items-start justify-between">
-                            <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center text-destructive shrink-0">
-                                <AlertTriangle className="w-5 h-5" />
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10 text-red-600">
+                                <AlertTriangle className="h-5 w-5" />
                             </div>
-                            <button
-                                onClick={() => setIsDeleteModalOpen(false)}
-                                className="text-muted-foreground hover:text-foreground transition-colors p-1"
-                            >
-                                <X className="w-4 h-4" />
+                            <button onClick={() => setIsDeleteModalOpen(false)} className="text-muted-foreground hover:text-foreground">
+                                <X className="h-4 w-4" />
                             </button>
                         </div>
 
                         <div className="flex flex-col gap-1.5">
-                            <h3 className="text-base font-bold text-foreground">
-                                Hapus Tenant "{tenant.name}"?
-                            </h3>
-                            <p className="text-xs text-muted-foreground leading-relaxed">
-                                Tindakan ini bersifat permanen. Seluruh data dan informasi terkait tenant ini akan dihapus dari sistem.
+                            <h3 className="text-base font-bold text-foreground">Delete Tenant "{tenant.name}"?</h3>
+                            <p className="text-xs leading-relaxed text-muted-foreground">
+                                Permanent operation. All databases, active user accounts, and uploaded logos will be wiped from the system.
                             </p>
                         </div>
 
                         <div className="flex items-center justify-end gap-3 pt-2">
-                            <button
+                            <Button
                                 type="button"
+                                variant="outline"
+                                size="sm"
                                 disabled={isDeleting}
                                 onClick={() => setIsDeleteModalOpen(false)}
-                                className="h-9 px-4 bg-muted hover:bg-muted/80 border border-border text-foreground rounded-lg text-xs font-medium transition-all cursor-pointer"
+                                className="h-9 border-border text-xs"
                             >
-                                Batal
-                            </button>
-                            <button
+                                Cancel
+                            </Button>
+                            <Button
                                 type="button"
+                                size="sm"
                                 disabled={isDeleting}
                                 onClick={confirmDelete}
-                                className="h-9 px-4 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer disabled:opacity-50"
+                                className="h-9 bg-red-600 text-white hover:bg-red-700"
                             >
-                                <span>{isDeleting ? 'Menghapus...' : 'Ya, Hapus Tenant'}</span>
-                            </button>
+                                {isDeleting ? 'Deleting...' : 'Yes, Delete Tenant'}
+                            </Button>
                         </div>
                     </div>
                 </div>
@@ -244,12 +219,10 @@ export default function TenantShow({ tenant }: Props) {
     );
 }
 
-TenantShow.layout = (page: React.ReactNode) => (
-    <AppLayout
-        children={page}
-        breadcrumbs={[
-            { title: 'Tenants Management', href: '/admin/tenants' },
-            { title: 'Tenant Details', href: '#' },
-        ]}
-    />
-);
+TenantShow.layout = {
+    breadcrumbs: [
+        { title: 'Admin', href: '#' },
+        { title: 'Tenants Management', href: '/admin/tenants' },
+        { title: 'Tenant Details', href: '#' },
+    ],
+};

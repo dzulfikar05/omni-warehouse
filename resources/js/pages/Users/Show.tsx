@@ -1,99 +1,161 @@
-import { Head, Link } from '@inertiajs/react';
+import React from 'react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { ArrowLeftCircleIcon, PencilIcon, ShieldCheck } from 'lucide-react';
+import { PageHeader } from '@/components/page-header';
+import { ArrowLeft, Save, RotateCcw } from 'lucide-react';
 import { User } from '@/types';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface UserWithRoles extends User {
-    roles: string[];
+    roles: Array<{ id: number; name: string }>;
 }
 
-export default function Show({ user }: { user: UserWithRoles }) {
+interface Role {
+    id: number;
+    name: string;
+}
+
+export default function Edit({ user, roles }: { user: UserWithRoles; roles: Role[] }) {
+    const { data, setData, put, processing, errors, reset } = useForm({
+        name: user.name || '',
+        email: user.email || '',
+        role: user.roles?.[0]?.name || '',
+        password: '',
+        password_confirmation: '',
+    });
+
+    const submit = (e: React.FormEvent) => {
+        e.preventDefault();
+        put(`/users/${user.id}`);
+    };
+
     return (
         <>
-            <Head title={`User Profile - ${user.name}`} />
+            <Head title={`Edit User - ${user.name}`} />
 
-            <div className="space-y-6 p-4">
-                {/* Header Section */}
-                <div className="mx-auto rounded-lg bg-card text-card-foreground p-6 shadow-md border border-border">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <h2 className="text-xl font-bold text-foreground">
-                                User Details
-                            </h2>
-                        </div>
-                        <div className="flex gap-2">
-                            <Button asChild variant="outline">
-                                <Link href="/users">
-                                    <ArrowLeftCircleIcon className="mr-2 h-4 w-4" />
-                                    Back
-                                </Link>
-                            </Button>
-                        </div>
-                    </div>
-                </div>
+            <div className="space-y-6 p-4 sm:p-6">
+                <PageHeader
+                    title={`Edit User: ${user.name}`}
+                    description="Update account details, change email, or reassign system roles."
+                    renderAction={
+                        <Button asChild variant="outline" size="sm" className="h-9 gap-1.5 border-border text-xs">
+                            <Link href="/users">
+                                <ArrowLeft className="h-4 w-4" /> Back
+                            </Link>
+                        </Button>
+                    }
+                />
 
-                {/* Info Section */}
-                <div className="mx-auto rounded-lg bg-card text-card-foreground p-6 shadow-md border border-border">
-                    <div className="max-w-xl space-y-6">
-                        {/* Display Name */}
-                        <div className="grid gap-1">
-                            <Label className="text-muted-foreground text-xs uppercase tracking-wider">Full Name</Label>
-                            <p className="text-lg font-semibold text-foreground">{user.name}</p>
-                        </div>
+                <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                    <form onSubmit={submit}>
+                        <div className="space-y-6 p-6 border-b border-border">
+                            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="name" className="text-xs font-semibold">Name</Label>
+                                    <Input
+                                        id="name"
+                                        value={data.name}
+                                        onChange={(e) => setData('name', e.target.value)}
+                                        className="h-9 text-xs"
+                                    />
+                                    {errors.name && <span className="text-[11px] text-red-500">{errors.name}</span>}
+                                </div>
 
-                        {/* Display Email */}
-                        <div className="grid gap-1">
-                            <Label className="text-muted-foreground text-xs uppercase tracking-wider">Email Address</Label>
-                            <p className="text-lg font-medium text-foreground">{user.email}</p>
-                        </div>
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="email" className="text-xs font-semibold">Email Address</Label>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        value={data.email}
+                                        onChange={(e) => setData('email', e.target.value)}
+                                        className="h-9 text-xs"
+                                    />
+                                    {errors.email && <span className="text-[11px] text-red-500">{errors.email}</span>}
+                                </div>
 
-                        {/* Display Roles (Baru) */}
-                        <div className="grid gap-2">
-                            <Label className="text-muted-foreground text-xs uppercase tracking-wider">Assigned Roles</Label>
-                            <div className="flex flex-wrap gap-2">
-                                {user.roles && user.roles.length > 0 ? (
-                                    user.roles.map((role, index) => (
-                                        <Badge key={index} variant="outline" className="px-3 py-1 bg-primary/10 text-primary border-primary/20 capitalize">
-                                            {role}
-                                        </Badge>
-                                    ))
-                                ) : (
-                                    <span className="text-sm italic text-muted-foreground">No role assigned</span>
-                                )}
+                                <div className="space-y-1.5 md:col-span-2">
+                                    <Label htmlFor="role" className="text-xs font-semibold">Assigned System Role</Label>
+                                    <Select
+                                        defaultValue={data.role}
+                                        onValueChange={(value) => setData('role', value)}
+                                    >
+                                        <SelectTrigger className="h-9 w-full text-xs">
+                                            <SelectValue placeholder="Select a role" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {roles.map((role) => (
+                                                <SelectItem key={role.id} value={role.name} className="text-xs">
+                                                    {role.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    {errors.role && <span className="text-[11px] text-red-500">{errors.role}</span>}
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="password" className="text-xs font-semibold">
+                                        New Password (Leave blank to keep current)
+                                    </Label>
+                                    <Input
+                                        id="password"
+                                        type="password"
+                                        value={data.password}
+                                        onChange={(e) => setData('password', e.target.value)}
+                                        placeholder="••••••••"
+                                        className="h-9 text-xs"
+                                    />
+                                    {errors.password && <span className="text-[11px] text-red-500">{errors.password}</span>}
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="password_confirmation" className="text-xs font-semibold">
+                                        Confirm New Password
+                                    </Label>
+                                    <Input
+                                        id="password_confirmation"
+                                        type="password"
+                                        value={data.password_confirmation}
+                                        onChange={(e) => setData('password_confirmation', e.target.value)}
+                                        placeholder="••••••••"
+                                        className="h-9 text-xs"
+                                    />
+                                </div>
                             </div>
                         </div>
 
-                        {/* Display Status/Other Info */}
-                        <div className="grid gap-1 border-t border-border pt-4">
-                            <Label className="text-muted-foreground text-xs uppercase tracking-wider">Account Created</Label>
-                            <p className="text-sm text-muted-foreground">
-                                {new Date(user.created_at).toLocaleDateString('id-ID', {
-                                    day: 'numeric',
-                                    month: 'long',
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                })}
-                            </p>
+                        <div className="flex items-center justify-end gap-3 bg-muted/30 p-4">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                disabled={processing}
+                                onClick={() => reset()}
+                                className="h-9 gap-1.5 border-border text-xs"
+                            >
+                                <RotateCcw className="h-3.5 w-3.5" /> Reset
+                            </Button>
+                            <Button
+                                type="submit"
+                                size="sm"
+                                disabled={processing}
+                                className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700"
+                            >
+                                <Save className="mr-1.5 h-4 w-4" /> {processing ? 'Updating...' : 'Update User'}
+                            </Button>
                         </div>
-                    </div>
+                    </form>
                 </div>
             </div>
         </>
     );
 }
 
-Show.layout = {
+Edit.layout = {
     breadcrumbs: [
-        {
-            title: 'Users',
-            href: '/users',
-        },
-        {
-            title: 'View Details',
-            href: '#',
-        },
+        { title: 'Users Management', href: '/users' },
+        { title: 'Edit User', href: '#' },
     ],
 };
