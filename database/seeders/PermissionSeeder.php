@@ -26,6 +26,7 @@ class PermissionSeeder extends Seeder
             'central.tenants.create',
             'central.tenants.edit',
             'central.tenants.delete',
+            'central.tenants.export',
 
             // Submenu: Plans Management
             'central.plans.view',

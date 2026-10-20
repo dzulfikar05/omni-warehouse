@@ -10,6 +10,8 @@ interface TenantContract
 {
     public function getPaginatedTenants(Request $request, int $perPage = 10): LengthAwarePaginator;
 
+    public function getSummaryStats();
+
     public function createTenant(array $data): Tenant;
 
     public function updateTenant(Tenant $tenant, array $data): Tenant;
@@ -17,4 +19,5 @@ interface TenantContract
     public function deleteTenant(Tenant $tenant): bool;
 
     public function registerTenant(array $data): array;
+
 }

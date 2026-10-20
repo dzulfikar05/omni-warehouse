@@ -14,6 +14,13 @@ Route::middleware(['auth', 'verified'])->prefix('admin/tenants')->name('admin.te
     Route::put('/{tenant}', [TenantController::class, 'update'])->middleware('permission:central.tenants.edit')->name('update');
     Route::delete('/{tenant}', [TenantController::class, 'destroy'])->middleware('permission:central.tenants.delete')->name('destroy');
 
+    Route::get('tenants/export/excel', [TenantController::class, 'exportExcel'])
+        ->middleware('permission:central.tenants.export')
+        ->name('tenants.export.excel');
+
+    Route::get('tenants/export/pdf', [TenantController::class, 'exportPdf'])
+        ->middleware('permission:central.tenants.export')
+        ->name('tenants.export.pdf');
 });
 
 Route::prefix('{tenant_slug}')->middleware(['identify_tenant', 'auth', 'verified'])->group(function () {

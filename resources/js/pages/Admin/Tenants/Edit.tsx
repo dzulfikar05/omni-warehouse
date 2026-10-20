@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
-import { Head, useForm, Link } from '@inertiajs/react';
-import { ArrowLeft, Save, RotateCcw } from 'lucide-react';
-import AppLayout from '@/layouts/app-layout';
+import React, { useState } from 'react';
+import { Head, useForm, Link, router } from '@inertiajs/react';
+import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/page-header';
+import { ArrowLeft, Save, RotateCcw, Upload, Building2 } from 'lucide-react';
 
 interface Plan {
     id: number;
@@ -13,7 +14,11 @@ interface Tenant {
     name: string;
     slug: string;
     phone?: string;
+    email?: string;
+    website?: string;
+    tax_number?: string;
     address?: string;
+    logo_url?: string;
     subscription?: {
         plan_id?: number;
     };
@@ -25,167 +30,208 @@ interface Props {
 }
 
 export default function TenantEdit({ tenant, plans }: Props) {
-    const { data, setData, put, processing, errors, reset } = useForm({
+    const [logoPreview, setLogoPreview] = useState<string | null>(tenant.logo_url || null);
+
+    const { data, setData, processing, errors, reset } = useForm({
         name: tenant.name || '',
         slug: tenant.slug || '',
         phone: tenant.phone || '',
+        email: tenant.email || '',
+        website: tenant.website || '',
+        tax_number: tenant.tax_number || '',
         address: tenant.address || '',
         plan_id: tenant.subscription?.plan_id || plans[0]?.id || '',
+        logo: null as File | null,
     });
 
-    // Otomatis generate slug jika nama diubah
-    useEffect(() => {
-        const generatedSlug = data.name
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/(^-|-$)+/g, '');
-        setData('slug', generatedSlug);
-    }, [data.name]);
+    const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setData('logo', file);
+            setLogoPreview(URL.createObjectURL(file));
+        }
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        put(`/admin/tenants/${tenant.id}`);
+        router.post(`/admin/tenants/${tenant.id}`, {
+            _method: 'PUT',
+            ...data,
+        });
     };
 
     return (
         <>
             <Head title={`Edit Tenant - ${tenant.name}`} />
 
-            <div className="p-6 flex flex-col gap-6 text-foreground min-h-screen bg-background">
-                {/* PAGE HEADER */}
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-xl font-bold tracking-tight">Edit Tenant Data</h1>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                            Update company information and subscription plan.
-                        </p>
-                    </div>
+            <div className="space-y-6 p-4 sm:p-6">
+                <PageHeader
+                    title="Edit Tenant Data"
+                    description={`Modify organization records and active subscription plan for ${tenant.name}.`}
+                    renderAction={
+                        <Button asChild variant="outline" size="sm" className="h-9 gap-1.5 border-border text-xs">
+                            <Link href="/admin/tenants">
+                                <ArrowLeft className="h-4 w-4" /> Back
+                            </Link>
+                        </Button>
+                    }
+                />
 
-                    <Link
-                        href="/admin/tenants"
-                        className="h-9 px-4 bg-muted hover:bg-muted/80 border border-border text-foreground rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        <span>Back</span>
-                    </Link>
-                </div>
-
-                {/* FORM CARD */}
-                <div className="bg-card rounded-2xl border border-border shadow-xl overflow-hidden">
+                <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                     <form onSubmit={handleSubmit}>
-                        <div className="p-6 border-b border-border space-y-6">
-                            <div className="mb-2">
-                                <h2 className="text-base font-bold text-foreground">Tenant Information</h2>
-                                <p className="text-xs text-muted-foreground mt-0.5">
-                                    Modify company details and active subscription tier.
-                                </p>
+                        <div className="space-y-6 p-6 border-b border-border">
+                            {/* Logo Upload */}
+                            <div className="flex items-center gap-5">
+                                <div className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-border bg-muted">
+                                    {logoPreview ? (
+                                        <img src={logoPreview} alt="Logo Preview" className="h-full w-full object-cover" />
+                                    ) : (
+                                        <Building2 className="h-8 w-8 text-muted-foreground" />
+                                    )}
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="block text-xs font-semibold text-foreground">Company Logo</label>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        id="logo-upload"
+                                        onChange={handleLogoChange}
+                                        className="hidden"
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8 gap-1.5 border-border text-xs"
+                                        onClick={() => document.getElementById('logo-upload')?.click()}
+                                    >
+                                        <Upload className="h-3.5 w-3.5" /> Change Logo
+                                    </Button>
+                                    <p className="text-[11px] text-muted-foreground">Allowed formats: PNG, JPG, WEBP. Max size: 2MB.</p>
+                                </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                {/* COMPANY NAME */}
-                                <div className="flex flex-col gap-1.5">
+                            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                                <div className="space-y-1.5">
                                     <label className="text-xs font-semibold text-foreground">
-                                        Company / Tenant Name <span className="text-destructive">*</span>
+                                        Company Name <span className="text-red-500">*</span>
                                     </label>
                                     <input
                                         type="text"
                                         value={data.name}
                                         onChange={(e) => setData('name', e.target.value)}
-                                        placeholder="Enter company name"
-                                        className="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring transition-all"
+                                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-600"
                                     />
-                                    {errors.name && <span className="text-[11px] text-destructive">{errors.name}</span>}
+                                    {errors.name && <span className="text-[11px] text-red-500">{errors.name}</span>}
                                 </div>
 
-                                {/* SLUG */}
-                                <div className="flex flex-col gap-1.5">
+                                <div className="space-y-1.5">
                                     <label className="text-xs font-semibold text-foreground">
-                                        Slug <span className="text-destructive">*</span>
+                                        Slug Identifier <span className="text-red-500">*</span>
                                     </label>
                                     <input
                                         type="text"
                                         value={data.slug}
                                         onChange={(e) => setData('slug', e.target.value)}
-                                        placeholder="company-slug"
-                                        className="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg text-xs font-mono text-muted-foreground focus:outline-none focus:border-ring transition-all"
+                                        className="w-full rounded-lg border border-border bg-background px-3 py-2 font-mono text-xs text-muted-foreground focus:outline-none focus:ring-1 focus:ring-blue-600"
                                     />
-                                    {errors.slug && <span className="text-[11px] text-destructive">{errors.slug}</span>}
+                                    {errors.slug && <span className="text-[11px] text-red-500">{errors.slug}</span>}
                                 </div>
 
-                                {/* PHONE */}
-                                <div className="flex flex-col gap-1.5">
+                                <div className="space-y-1.5">
                                     <label className="text-xs font-semibold text-foreground">Phone Number</label>
                                     <input
                                         type="text"
                                         value={data.phone}
                                         onChange={(e) => setData('phone', e.target.value)}
-                                        placeholder="Enter phone number"
-                                        className="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring transition-all"
+                                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-600"
                                     />
-                                    {errors.phone && <span className="text-[11px] text-destructive">{errors.phone}</span>}
+                                    {errors.phone && <span className="text-[11px] text-red-500">{errors.phone}</span>}
                                 </div>
 
-                                {/* PLAN */}
-                                <div className="flex flex-col gap-1.5">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-foreground">Email Address</label>
+                                    <input
+                                        type="email"
+                                        value={data.email}
+                                        onChange={(e) => setData('email', e.target.value)}
+                                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-600"
+                                    />
+                                    {errors.email && <span className="text-[11px] text-red-500">{errors.email}</span>}
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-foreground">Website URL</label>
+                                    <input
+                                        type="url"
+                                        value={data.website}
+                                        onChange={(e) => setData('website', e.target.value)}
+                                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-600"
+                                    />
+                                    {errors.website && <span className="text-[11px] text-red-500">{errors.website}</span>}
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-foreground">Tax Number (NPWP)</label>
+                                    <input
+                                        type="text"
+                                        value={data.tax_number}
+                                        onChange={(e) => setData('tax_number', e.target.value)}
+                                        className="w-full rounded-lg border border-border bg-background px-3 py-2 font-mono text-xs focus:outline-none focus:ring-1 focus:ring-blue-600"
+                                    />
+                                    {errors.tax_number && <span className="text-[11px] text-red-500">{errors.tax_number}</span>}
+                                </div>
+
+                                <div className="space-y-1.5">
                                     <label className="text-xs font-semibold text-foreground">
-                                        Subscription Plan <span className="text-destructive">*</span>
+                                        Subscription Plan <span className="text-red-500">*</span>
                                     </label>
                                     <select
                                         value={data.plan_id}
                                         onChange={(e) => setData('plan_id', Number(e.target.value))}
-                                        className="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg text-xs text-foreground focus:outline-none focus:border-ring transition-all"
+                                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-600"
                                     >
-                                        {plans.map((plan) => (
-                                            <option key={plan.id} value={plan.id}>
-                                                {plan.name}
+                                        {plans.map((p) => (
+                                            <option key={p.id} value={p.id}>
+                                                {p.name}
                                             </option>
                                         ))}
                                     </select>
-                                    {errors.plan_id && <span className="text-[11px] text-destructive">{errors.plan_id}</span>}
+                                    {errors.plan_id && <span className="text-[11px] text-red-500">{errors.plan_id}</span>}
                                 </div>
 
-                                {/* ADDRESS */}
-                                <div className="md:col-span-2 flex flex-col gap-1.5">
-                                    <label className="text-xs font-semibold text-foreground">Address</label>
+                                <div className="space-y-1.5 md:col-span-2">
+                                    <label className="text-xs font-semibold text-foreground">Physical Address</label>
                                     <textarea
                                         value={data.address}
                                         onChange={(e) => setData('address', e.target.value)}
                                         rows={3}
-                                        placeholder="Enter company full address"
-                                        className="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring transition-all resize-none"
+                                        className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-600"
                                     />
-                                    {errors.address && <span className="text-[11px] text-destructive">{errors.address}</span>}
+                                    {errors.address && <span className="text-[11px] text-red-500">{errors.address}</span>}
                                 </div>
                             </div>
                         </div>
 
-                        {/* FOOTER ACTION */}
-                        <div className="p-4 bg-muted/30 flex items-center justify-end gap-3">
-                            <button
+                        <div className="flex items-center justify-end gap-3 bg-muted/30 p-4">
+                            <Button
                                 type="button"
+                                variant="outline"
+                                size="sm"
+                                disabled={processing}
                                 onClick={() => reset()}
-                                disabled={processing}
-                                className="h-9 px-4 bg-muted hover:bg-muted/80 border border-border text-foreground rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all"
+                                className="h-9 gap-1.5 border-border text-xs"
                             >
-                                <RotateCcw className="w-3.5 h-3.5" />
-                                <span>Reset</span>
-                            </button>
-
-                            <Link
-                                href="/admin/tenants"
-                                className="h-9 px-4 bg-muted hover:bg-muted/80 border border-border text-foreground rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all"
-                            >
-                                Cancel
-                            </Link>
-
-                            <button
+                                <RotateCcw className="h-3.5 w-3.5" /> Reset
+                            </Button>
+                            <Button
                                 type="submit"
+                                size="sm"
                                 disabled={processing}
-                                className="h-9 px-4 bg-primary hover:bg-primary/95 text-primary-foreground rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer disabled:opacity-50"
+                                className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700"
                             >
-                                <Save className="w-4 h-4" />
-                                <span>{processing ? 'Updating...' : 'Update Changes'}</span>
-                            </button>
+                                <Save className="mr-1.5 h-4 w-4" /> {processing ? 'Updating...' : 'Update Changes'}
+                            </Button>
                         </div>
                     </form>
                 </div>
@@ -194,12 +240,10 @@ export default function TenantEdit({ tenant, plans }: Props) {
     );
 }
 
-TenantEdit.layout = (page: React.ReactNode) => (
-    <AppLayout
-        children={page}
-        breadcrumbs={[
-            { title: 'Tenants Management', href: '/admin/tenants' },
-            { title: 'Edit Tenant', href: '#' },
-        ]}
-    />
-);
+TenantEdit.layout = {
+    breadcrumbs: [
+        { title: 'Admin', href: '#' },
+        { title: 'Tenants Management', href: '/admin/tenants' },
+        { title: 'Edit Tenant', href: '#' },
+    ],
+};

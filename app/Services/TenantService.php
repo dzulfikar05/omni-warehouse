@@ -5,14 +5,10 @@ namespace App\Services;
 use App\Contracts\TenantContract;
 use App\Models\Subscription;
 use App\Models\Tenant;
-use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 
 class TenantService implements TenantContract
 {
@@ -25,20 +21,18 @@ class TenantService implements TenantContract
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'ILIKE', "%{$search}%")
                     ->orWhere('slug', 'ILIKE', "%{$search}%")
-                    ->orWhere('phone', 'ILIKE', "%{$search}%");
+                    ->orWhere('phone', 'ILIKE', "%{$search}%")
+                    ->orWhere('email', 'ILIKE', "%{$search}%")
+                    ->orWhere('tax_number', 'ILIKE', "%{$search}%");
             });
         }
 
-        if ($request->filled('plan_id')) {
-            $query->whereHas('subscription', function ($q) use ($request) {
-                $q->where('plan_id', $request->plan_id);
-            });
+        if ($request->filled('plan_id') && $request->plan_id !== 'all') {
+            $query->whereHas('subscription', fn($q) => $q->where('plan_id', $request->plan_id));
         }
 
-        if ($request->filled('status')) {
-            $query->whereHas('subscription', function ($q) use ($request) {
-                $q->where('status', $request->status);
-            });
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->whereHas('subscription', fn($q) => $q->where('status', $request->status));
         }
 
         $sortBy = $request->input('sort_by', 'created_at');
@@ -47,24 +41,41 @@ class TenantService implements TenantContract
         return $query->orderBy($sortBy, $sortOrder)->paginate($perPage)->withQueryString();
     }
 
+    public function getSummaryStats(): array
+    {
+        return [
+            'total_tenants'    => Tenant::count(),
+            'active_tenants'   => Subscription::where('status', 'active')->count(),
+            'inactive_tenants' => Subscription::where('status', 'inactive')->count(),
+            'new_this_month'   => Tenant::whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count(),
+        ];
+    }
+
     public function createTenant(array $data): Tenant
     {
         return DB::transaction(function () use ($data) {
-            $slug = ! empty($data['slug']) ? Str::slug($data['slug']) : Str::slug($data['name']);
+            $slug = !empty($data['slug']) ? Str::slug($data['slug']) : Str::slug($data['name']);
 
             $tenant = Tenant::create([
-                'name' => $data['name'],
-                'slug' => $slug,
-                'phone' => $data['phone'] ?? null,
-                'address' => $data['address'] ?? null,
+                'name'       => $data['name'],
+                'slug'       => $slug,
+                'phone'      => $data['phone'] ?? null,
+                'email'      => $data['email'] ?? null,
+                'website'    => $data['website'] ?? null,
+                'tax_number' => $data['tax_number'] ?? null,
+                'address'    => $data['address'] ?? null,
                 'created_by' => auth()->id(),
             ]);
 
+            if (isset($data['logo']) && $data['logo'] instanceof \Illuminate\Http\UploadedFile) {
+                $tenant->addMedia($data['logo'])->toMediaCollection('logo');
+            }
+
             Subscription::create([
-                'tenant_id' => $tenant->id,
-                'plan_id' => $data['plan_id'],
-                'status' => 'active',
-                'ends_at' => now()->addYear(),
+                'tenant_id'  => $tenant->id,
+                'plan_id'    => $data['plan_id'],
+                'status'     => 'active',
+                'ends_at'    => now()->addYear(),
                 'created_by' => auth()->id(),
             ]);
 
@@ -76,16 +87,23 @@ class TenantService implements TenantContract
     {
         return DB::transaction(function () use ($tenant, $data) {
             $tenant->update([
-                'name' => $data['name'],
-                'slug' => Str::slug($data['slug']),
-                'phone' => $data['phone'] ?? null,
-                'address' => $data['address'] ?? null,
+                'name'       => $data['name'],
+                'slug'       => !empty($data['slug']) ? Str::slug($data['slug']) : Str::slug($data['name']),
+                'phone'      => $data['phone'] ?? null,
+                'email'      => $data['email'] ?? null,
+                'website'    => $data['website'] ?? null,
+                'tax_number' => $data['tax_number'] ?? null,
+                'address'    => $data['address'] ?? null,
             ]);
+
+            if (isset($data['logo']) && $data['logo'] instanceof \Illuminate\Http\UploadedFile) {
+                $tenant->clearMediaCollection('logo');
+                $tenant->addMedia($data['logo'])->toMediaCollection('logo');
+            }
 
             if ($tenant->subscription) {
                 $tenant->subscription->update([
                     'plan_id' => $data['plan_id'],
-                    'status' => $data['status'] ?? 'active',
                 ]);
             }
 
@@ -95,54 +113,40 @@ class TenantService implements TenantContract
 
     public function deleteTenant(Tenant $tenant): bool
     {
-        return DB::transaction(function () use ($tenant) {
-            return $tenant->delete();
-        });
+        return DB::transaction(fn() => $tenant->delete());
     }
 
     public function registerTenant(array $data): array
     {
         return DB::transaction(function () use ($data) {
-            $slug = Str::slug($data['company_name']);
+            $slug = !empty($data['slug']) ? Str::slug($data['slug']) : Str::slug($data['name']);
 
             $tenant = Tenant::create([
-                'name' => $data['company_name'],
-                'slug' => $slug,
-                'phone' => $data['phone'] ?? null,
-                'address' => $data['address'] ?? null,
+                'name'       => $data['name'],
+                'slug'       => $slug,
+                'phone'      => $data['phone'] ?? null,
+                'email'      => $data['email'] ?? null,
+                'website'    => $data['website'] ?? null,
+                'tax_number' => $data['tax_number'] ?? null,
+                'address'    => $data['address'] ?? null,
+                'created_by' => auth()->id(),
             ]);
+
+            if (isset($data['logo']) && $data['logo'] instanceof \Illuminate\Http\UploadedFile) {
+                $tenant->addMedia($data['logo'])->toMediaCollection('logo');
+            }
 
             Subscription::create([
-                'tenant_id' => $tenant->id,
-                'plan_id' => $data['plan_id'] ?? 1,
-                'status' => 'active',
-                'ends_at' => now()->addYear(),
+                'tenant_id'  => $tenant->id,
+                'plan_id'    => $data['plan_id'],
+                'status'     => 'active',
+                'ends_at'    => now()->addYear(),
+                'created_by' => auth()->id(),
             ]);
-
-            $adminRole = Role::firstOrCreate([
-                'name' => 'Admin Warehouse - ' . $tenant->name,
-                'guard_name' => 'web',
-            ], [
-                'tenant_id' => $tenant->id,
-                'desc' => 'Admin role for ' . $tenant->name . ' tenant, with full permissions for this tenant.',
-            ]);
-
-            $tenantPermissions = Permission::where('name', 'LIKE', 'tenant.%')->get();
-            $adminRole->syncPermissions($tenantPermissions);
-
-            $user = User::create([
-                'tenant_id' => $tenant->id,
-                'name' => $data['name'],
-                'email' => $data['email'],
-                'username' => Str::slug($data['name']) . rand(100, 999),
-                'password' => Hash::make($data['password']),
-            ]);
-
-            $user->assignRole($adminRole);
 
             return [
-                'tenant' => $tenant,
-                'user' => $user,
+                'tenant_id'   => $tenant->id,
+                'tenant_slug' => $tenant->slug,
             ];
         });
     }
