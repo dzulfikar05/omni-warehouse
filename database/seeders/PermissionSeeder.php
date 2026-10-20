@@ -47,6 +47,11 @@ class PermissionSeeder extends Seeder
             'central.roles.create',
             'central.roles.edit',
             'central.roles.delete',
+
+            // Submenu: Subscriptions Management
+            'central.subscriptions.view',
+            'central.subscriptions.create_invoice',
+            'central.subscriptions.export',
         ];
 
         // ----------------------------------------------------

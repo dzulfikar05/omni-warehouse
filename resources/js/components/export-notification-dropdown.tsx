@@ -19,6 +19,9 @@ interface ExportLog {
 
 export function ExportNotificationDropdown() {
     const { current_tenant, auth } = usePage().props as any;
+    const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+    const isCentralAdmin = currentPath.startsWith('/admin');
+
     const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
 
@@ -26,9 +29,25 @@ export function ExportNotificationDropdown() {
     const [hasActive, setHasActive] = useState(false);
 
     const fetchExports = async () => {
-        if (!tenantSlug) return;
+        // Tentukan endpoint berdasarkan lokasi panel (Central Admin vs Tenant)
+        let endpoint = '';
+
+        if (isCentralAdmin) {
+            endpoint = '/admin/subscriptions/export-logs';
+        } else if (tenantSlug) {
+            endpoint = `/${tenantSlug}/contacts/customers/export-logs`;
+        } else {
+            return;
+        }
+
         try {
-            const res = await fetch(`/${tenantSlug}/contacts/customers/export-logs`);
+            const res = await fetch(endpoint, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+
             if (res.ok) {
                 const data = await res.json();
                 setExports(data);
@@ -43,9 +62,8 @@ export function ExportNotificationDropdown() {
         fetchExports();
         const interval = setInterval(fetchExports, 4000);
         return () => clearInterval(interval);
-    }, [tenantSlug]);
+    }, [tenantSlug, isCentralAdmin]);
 
-    // Helper untuk menentukan ikon dan warna sesuai tipe file
     const renderFileIcon = (item: ExportLog) => {
         const isExcel = item.type === 'excel' || item.filename.endsWith('.xlsx') || item.filename.endsWith('.xls');
 
@@ -82,7 +100,6 @@ export function ExportNotificationDropdown() {
                     exports.map((item) => (
                         <div key={item.id} className="p-2 text-xs rounded-lg hover:bg-muted flex items-center justify-between gap-2 border border-border/50">
                             <div className="flex items-center gap-2 overflow-hidden">
-                                {/* Panggil helper fungsi ikon di sini */}
                                 {renderFileIcon(item)}
                                 <div className="truncate">
                                     <p className="font-medium truncate">{item.filename}</p>
