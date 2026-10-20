@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { Head, useForm, Link, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { PageHeader } from '@/components/page-header';
+import { usePermission } from '@/utils/permission';
 import {
+    ArrowLeft,
     Plus,
     Trash2,
-    ArrowLeftCircleIcon,
+    Save,
+    RotateCcw,
     AlertTriangle,
     X,
-    Save,
 } from 'lucide-react';
-import AppLayout from '@/layouts/app-layout';
 
 interface Feature {
     id?: number;
@@ -31,7 +31,8 @@ interface Props {
 }
 
 export default function PlanEdit({ plan }: Props) {
-    const { data, setData, put, processing, errors } = useForm({
+    const { can } = usePermission();
+    const { data, setData, put, processing, errors, reset } = useForm({
         name: plan.name || '',
         price: plan.price || '',
         desc: plan.desc || '',
@@ -66,241 +67,188 @@ export default function PlanEdit({ plan }: Props) {
 
     const handleDelete = () => {
         setIsDeleting(true);
-
         router.delete(`/admin/plans/${plan.id}`, {
             onFinish: () => setIsDeleting(false),
         });
     };
 
+    const canDelete = can('central.plans.delete');
+
     return (
         <>
             <Head title={`Edit Plan - ${plan.name}`} />
 
-            <div className="space-y-6 p-4">
-                {/* Header Card */}
-                <div className="mx-auto rounded-lg bg-card text-card-foreground border border-border p-6 shadow-md">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                            <Button asChild variant="outline" size="icon">
+            <div className="space-y-6 p-4 sm:p-6">
+                <PageHeader
+                    title={`Edit Plan: ${plan.name}`}
+                    description="Update plan tier pricing, features, and active settings."
+                    renderAction={
+                        <div className="flex items-center gap-2">
+                            <Button asChild variant="outline" size="sm" className="h-9 gap-1.5 border-border text-xs">
                                 <Link href="/admin/plans">
-                                    <ArrowLeftCircleIcon className="h-4 w-4" />
+                                    <ArrowLeft className="h-4 w-4" /> Back
                                 </Link>
                             </Button>
 
-                            <div>
-                                <h2 className="text-xl font-bold text-foreground">
-                                    Edit Plan: {plan.name}
-                                </h2>
-                                <p className="text-xs text-muted-foreground mt-0.5">
-                                    Perbarui informasi detail paket dan fiturnya.
-                                </p>
-                            </div>
-                        </div>
-
-                        <Button
-                            type="button"
-                            variant="destructive"
-                            onClick={() => setShowDeleteModal(true)}
-                            className="flex items-center gap-1.5"
-                        >
-                            <Trash2 className="h-4 w-4" />
-                            Delete Plan
-                        </Button>
-                    </div>
-                </div>
-
-                {/* Form Card */}
-                <div className="mx-auto rounded-lg bg-card text-card-foreground border border-border p-6 shadow-md">
-                    <form
-                        onSubmit={handleUpdate}
-                        className="max-w-xl space-y-4"
-                    >
-                        {/* Nama Paket */}
-                        <div className="space-y-1">
-                            <Label htmlFor="name">Nama Paket</Label>
-                            <Input
-                                id="name"
-                                type="text"
-                                value={data.name}
-                                onChange={(e) =>
-                                    setData('name', e.target.value)
-                                }
-                                placeholder="Contoh: Ultra Warehouse"
-                            />
-                            {errors.name && (
-                                <span className="text-sm text-red-500">
-                                    {errors.name}
-                                </span>
-                            )}
-                        </div>
-
-                        {/* Harga per Bulan */}
-                        <div className="space-y-1">
-                            <Label htmlFor="price">
-                                Harga per Bulan (IDR)
-                            </Label>
-                            <Input
-                                id="price"
-                                type="number"
-                                value={data.price}
-                                onChange={(e) =>
-                                    setData('price', e.target.value)
-                                }
-                                placeholder="750000"
-                            />
-                            {errors.price && (
-                                <span className="text-sm text-red-500">
-                                    {errors.price}
-                                </span>
-                            )}
-                        </div>
-
-                        {/* Deskripsi Singkat */}
-                        <div className="space-y-1">
-                            <Label htmlFor="desc">Deskripsi Singkat</Label>
-                            <textarea
-                                id="desc"
-                                value={data.desc}
-                                onChange={(e) =>
-                                    setData('desc', e.target.value)
-                                }
-                                placeholder="Penjelasan singkat mengenai paket..."
-                                rows={3}
-                                className="w-full p-3 bg-background border border-input rounded-md text-xs focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
-                            />
-                            {errors.desc && (
-                                <span className="text-sm text-red-500">
-                                    {errors.desc}
-                                </span>
-                            )}
-                        </div>
-
-                        {/* Daftar Fitur */}
-                        <div className="space-y-3 pt-4 border-t border-border">
-                            <div className="flex items-center justify-between gap-3">
-                                <Label>Daftar Fitur (Features)</Label>
-
+                            {canDelete && (
                                 <Button
                                     type="button"
                                     variant="outline"
                                     size="sm"
-                                    onClick={addFeatureField}
-                                    className="h-8 px-3 text-xs"
+                                    onClick={() => setShowDeleteModal(true)}
+                                    className="h-9 gap-1.5 border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900/50 dark:text-red-400"
                                 >
-                                    <Plus className="h-3.5 w-3.5 mr-1" />
-                                    Tambah Fitur
+                                    <Trash2 className="h-4 w-4" /> Delete Plan
                                 </Button>
+                            )}
+                        </div>
+                    }
+                />
+
+                <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                    <form onSubmit={handleUpdate}>
+                        <div className="space-y-6 p-6 border-b border-border">
+                            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-foreground">
+                                        Plan Name <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={data.name}
+                                        onChange={(e) => setData('name', e.target.value)}
+                                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-600"
+                                    />
+                                    {errors.name && <span className="text-[11px] text-red-500">{errors.name}</span>}
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-foreground">
+                                        Price Monthly (IDR) <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={data.price}
+                                        onChange={(e) => setData('price', e.target.value)}
+                                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-600"
+                                    />
+                                    {errors.price && <span className="text-[11px] text-red-500">{errors.price}</span>}
+                                </div>
+
+                                <div className="space-y-1.5 md:col-span-2">
+                                    <label className="text-xs font-semibold text-foreground">Short Description</label>
+                                    <textarea
+                                        value={data.desc}
+                                        onChange={(e) => setData('desc', e.target.value)}
+                                        rows={3}
+                                        className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-600"
+                                    />
+                                    {errors.desc && <span className="text-[11px] text-red-500">{errors.desc}</span>}
+                                </div>
                             </div>
 
-                            {data.features.map((feat, index) => (
-                                <div
-                                    key={index}
-                                    className="flex items-center gap-2"
-                                >
-                                    <Input
-                                        type="text"
-                                        value={feat}
-                                        onChange={(e) =>
-                                            handleFeatureChange(
-                                                index,
-                                                e.target.value
-                                            )
-                                        }
-                                        placeholder="Contoh: Multi-warehouse (up to 5 facilities)"
-                                    />
-
+                            {/* Features Input Section */}
+                            <div className="space-y-3 pt-4 border-t border-border">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                                        Feature List
+                                    </label>
                                     <Button
                                         type="button"
-                                        variant="destructive"
-                                        size="icon"
-                                        onClick={() =>
-                                            removeFeatureField(index)
-                                        }
-                                        className="h-9 w-9 shrink-0"
-                                        aria-label={`Hapus fitur ${index + 1}`}
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={addFeatureField}
+                                        className="h-8 gap-1 border-border text-xs"
                                     >
-                                        <Trash2 className="h-4 w-4" />
+                                        <Plus className="h-3.5 w-3.5" /> Add Feature
                                     </Button>
                                 </div>
-                            ))}
+
+                                {data.features.map((feat, index) => (
+                                    <div key={index} className="flex items-center gap-2">
+                                        <input
+                                            type="text"
+                                            value={feat}
+                                            onChange={(e) => handleFeatureChange(index, e.target.value)}
+                                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-600"
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() => removeFeatureField(index)}
+                                            className="h-9 w-9 shrink-0 border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900/50 dark:text-red-400"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
 
-                        {/* Submit Buttons */}
-                        <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                        <div className="flex items-center justify-end gap-3 bg-muted/30 p-4">
                             <Button
-                                type="submit"
-                                className="w-full sm:w-auto flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
-                                disabled={processing}
-                            >
-                                <Save className="h-4 w-4" />
-                                {processing
-                                    ? 'Menyimpan...'
-                                    : 'Perbarui Paket'}
-                            </Button>
-
-                            <Button
-                                asChild
                                 type="button"
                                 variant="outline"
-                                className="w-full sm:w-auto"
+                                size="sm"
+                                disabled={processing}
+                                onClick={() => reset()}
+                                className="h-9 gap-1.5 border-border text-xs"
                             >
-                                <Link href="/admin/plans">Batal</Link>
+                                <RotateCcw className="h-3.5 w-3.5" /> Reset
+                            </Button>
+                            <Button
+                                type="submit"
+                                size="sm"
+                                disabled={processing}
+                                className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700"
+                            >
+                                <Save className="mr-1.5 h-4 w-4" /> {processing ? 'Updating...' : 'Update Plan Tier'}
                             </Button>
                         </div>
                     </form>
                 </div>
             </div>
 
-            {/* Modal Konfirmasi Hapus */}
+            {/* Delete Modal */}
             {showDeleteModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
-                    <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-md w-full p-6 flex flex-col gap-5">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
+                    <div className="flex w-full max-w-md flex-col gap-5 rounded-2xl border border-border bg-card p-6 shadow-2xl">
                         <div className="flex items-start justify-between">
-                            <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center text-destructive shrink-0">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10 text-red-600">
                                 <AlertTriangle className="h-5 w-5" />
                             </div>
-
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setShowDeleteModal(false)}
-                                aria-label="Tutup dialog"
-                            >
+                            <button onClick={() => setShowDeleteModal(false)} className="text-muted-foreground hover:text-foreground">
                                 <X className="h-4 w-4" />
-                            </Button>
+                            </button>
                         </div>
 
                         <div className="flex flex-col gap-1.5">
-                            <h3 className="text-base font-bold text-foreground">
-                                Hapus Paket "{plan.name}"?
-                            </h3>
-
-                            <p className="text-xs text-muted-foreground leading-relaxed">
-                                Tindakan ini bersifat permanen. Paket
-                                langganan beserta seluruh fitur di dalamnya
-                                akan dihapus dari sistem.
+                            <h3 className="text-base font-bold text-foreground">Delete Plan Tier "{plan.name}"?</h3>
+                            <p className="text-xs leading-relaxed text-muted-foreground">
+                                Permanent action. The subscription tier and all embedded feature definitions will be removed from the system catalog.
                             </p>
                         </div>
 
-                        <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 pt-2">
+                        <div className="flex items-center justify-end gap-3 pt-2">
                             <Button
                                 type="button"
                                 variant="outline"
-                                className="w-full sm:w-auto"
+                                size="sm"
+                                disabled={isDeleting}
                                 onClick={() => setShowDeleteModal(false)}
+                                className="h-9 border-border text-xs"
                             >
-                                Batal
+                                Cancel
                             </Button>
-
                             <Button
                                 type="button"
-                                variant="destructive"
-                                className="w-full sm:w-auto"
+                                size="sm"
                                 disabled={isDeleting}
                                 onClick={handleDelete}
+                                className="h-9 bg-red-600 text-white hover:bg-red-700"
                             >
-                                {isDeleting ? 'Menghapus...' : 'Ya, Hapus'}
+                                {isDeleting ? 'Deleting...' : 'Yes, Delete Plan'}
                             </Button>
                         </div>
                     </div>
@@ -310,18 +258,10 @@ export default function PlanEdit({ plan }: Props) {
     );
 }
 
-PlanEdit.layout = (page: React.ReactNode) => (
-    <AppLayout
-        children={page}
-        breadcrumbs={[
-            {
-                title: 'Plans Management',
-                href: '/admin/plans',
-            },
-            {
-                title: 'Edit Plan',
-                href: '/admin/plans',
-            },
-        ]}
-    />
-);
+PlanEdit.layout = {
+    breadcrumbs: [
+        { title: 'Admin', href: '#' },
+        { title: 'Plans Management', href: '/admin/plans' },
+        { title: 'Edit Plan Tier', href: '#' },
+    ],
+};
