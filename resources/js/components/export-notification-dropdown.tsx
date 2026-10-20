@@ -20,21 +20,29 @@ interface ExportLog {
 export function ExportNotificationDropdown() {
     const { current_tenant, auth } = usePage().props as any;
     const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
-    const isCentralAdmin = currentPath.startsWith('/admin');
 
-    const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
-    const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
+    // Ambil segmen pertama dari path URL (misal: "dashboard" atau "nama-tenant")
+    const pathSegments = currentPath.split('/').filter(Boolean);
+    const firstSegment = pathSegments[0] || '';
+
+    // Deteksi apakah sedang di Central Admin:
+    // Path berada di /dashboard (tanpa slug tenant) DAN user tidak memiliki tenant_id
+    const isCentralAdmin = firstSegment === 'dashboard' || (!current_tenant && !auth?.user?.tenant_id);
+
+    // Ambil tenant slug dari properti Inertia atau dari segmen URL pertama jika bukan 'dashboard'
+    const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || (firstSegment !== 'dashboard' ? firstSegment : '');
 
     const [exports, setExports] = useState<ExportLog[]>([]);
     const [hasActive, setHasActive] = useState(false);
 
     const fetchExports = async () => {
-        // Tentukan endpoint berdasarkan lokasi panel (Central Admin vs Tenant)
         let endpoint = '';
 
         if (isCentralAdmin) {
-            endpoint = '/admin/subscriptions/export-logs';
+            // Endpoint khusus Central Admin (http://localhost/admin/export-logs)
+            endpoint = '/subscriptions/export-logs';
         } else if (tenantSlug) {
+            // Endpoint khusus Tenant (http://localhost/{tenantSlug}/contacts/customers/export-logs)
             endpoint = `/${tenantSlug}/contacts/customers/export-logs`;
         } else {
             return;
@@ -62,7 +70,7 @@ export function ExportNotificationDropdown() {
         fetchExports();
         const interval = setInterval(fetchExports, 4000);
         return () => clearInterval(interval);
-    }, [tenantSlug, isCentralAdmin]);
+    }, [tenantSlug, isCentralAdmin, currentPath]);
 
     const renderFileIcon = (item: ExportLog) => {
         const isExcel = item.type === 'excel' || item.filename.endsWith('.xlsx') || item.filename.endsWith('.xls');

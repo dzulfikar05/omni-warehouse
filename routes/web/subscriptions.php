@@ -3,7 +3,7 @@
 use App\Http\Controllers\Admin\SubscriptionController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth'])->name('admin.')->group(function () {
 
     // Submenu: Subscriptions Management
     Route::prefix('subscriptions')->name('subscriptions.')->group(function () {

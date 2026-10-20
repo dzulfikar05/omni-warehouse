@@ -4,7 +4,7 @@ use App\Http\Controllers\Admin\TenantController;
 use App\Http\Controllers\Tenant\DashboardController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'verified'])->prefix('admin/tenants')->name('admin.tenants.')->group(function () {
+Route::middleware(['auth', 'verified'])->prefix('tenants')->name('admin.tenants.')->group(function () {
 
     Route::get('/', [TenantController::class, 'index'])->middleware('permission:central.tenants.view')->name('index');
     Route::get('/create', [TenantController::class, 'create'])->middleware('permission:central.tenants.create')->name('create');

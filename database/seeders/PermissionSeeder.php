@@ -20,6 +20,11 @@ class PermissionSeeder extends Seeder
         // ----------------------------------------------------
         $centralPermissions = [
             'central.dashboard.view',
+            'central.dashboard.stats_cards',
+            'central.dashboard.revenue_chart',
+            'central.dashboard.tenant_growth_chart',
+            'central.dashboard.recent_tenants_table',
+            'central.dashboard.recent_subscriptions_table',
 
             // Submenu: Tenants Management
             'central.tenants.view',

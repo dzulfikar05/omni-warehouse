@@ -3,7 +3,7 @@
 use App\Http\Controllers\Admin\PlanController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth'])->name('admin.')->group(function () {
 
     // Submenu: Plans Management
     Route::prefix('plans')->name('plans.')->group(function () {
