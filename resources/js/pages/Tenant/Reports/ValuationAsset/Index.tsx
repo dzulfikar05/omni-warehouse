@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Head, router, usePage } from '@inertiajs/react';
 import { debounce } from 'lodash';
 import { PageHeader } from '@/components/page-header';
-import { DataTable } from '@/components/data-table';
+import { DataTable, HeaderConfig } from '@/components/data-table';
 import { TableCell } from '@/components/ui/table';
 import { TableFilter } from '@/components/table-filter';
 import { FilterDropdown } from '@/components/table-dropdown';
@@ -55,6 +55,8 @@ interface ValuationAssetProps {
         category_id?: string;
         date_from?: string;
         date_to?: string;
+        sort_by?: string;
+        sort_order?: 'asc' | 'desc';
     };
 }
 
@@ -68,6 +70,10 @@ export default function Index({ reports, summary, warehouses, categories, filter
     const [tempCategory, setTempCategory] = useState(filters.category_id || 'all');
     const [tempDateFrom, setTempDateFrom] = useState(filters.date_from || '');
     const [tempDateTo, setTempDateTo] = useState(filters.date_to || '');
+    const [sortBy, setSortBy] = useState(filters.sort_by || 'updated_at');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(
+        (filters.sort_order as 'asc' | 'desc') || 'desc'
+    );
 
     const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
@@ -99,7 +105,9 @@ export default function Index({ reports, summary, warehouses, categories, filter
             warehouse: string,
             category: string,
             dateFrom: string,
-            dateTo: string
+            dateTo: string,
+            newSortBy: string = sortBy,
+            newSortOrder: 'asc' | 'desc' = sortOrder
         ) => {
             router.get(
                 window.location.pathname,
@@ -110,11 +118,13 @@ export default function Index({ reports, summary, warehouses, categories, filter
                     category_id: category !== 'all' ? category : undefined,
                     date_from: dateFrom || undefined,
                     date_to: dateTo || undefined,
+                    sort_by: newSortBy,
+                    sort_order: newSortOrder,
                 },
                 { preserveState: true, replace: true, preserveScroll: true }
             );
         },
-        []
+        [sortBy, sortOrder]
     );
 
     const debouncedSearch = useMemo(
@@ -142,6 +152,21 @@ export default function Index({ reports, summary, warehouses, categories, filter
         applyFilters(search, value, tempWarehouse, tempCategory, tempDateFrom, tempDateTo);
     };
 
+    const handleSortChange = (field: string, direction: 'asc' | 'desc') => {
+        setSortBy(field);
+        setSortOrder(direction);
+        applyFilters(
+            search,
+            perPage,
+            tempWarehouse,
+            tempCategory,
+            tempDateFrom,
+            tempDateTo,
+            field,
+            direction
+        );
+    };
+
     const handleApplyFilter = () => {
         applyFilters(search, perPage, tempWarehouse, tempCategory, tempDateFrom, tempDateTo);
     };
@@ -151,7 +176,9 @@ export default function Index({ reports, summary, warehouses, categories, filter
         setTempCategory('all');
         setTempDateFrom('');
         setTempDateTo('');
-        applyFilters(search, perPage, 'all', 'all', '', '');
+        setSortBy('updated_at');
+        setSortOrder('desc');
+        applyFilters(search, perPage, 'all', 'all', '', '', 'updated_at', 'desc');
     };
 
     const getFilterPayload = () => ({
@@ -160,6 +187,8 @@ export default function Index({ reports, summary, warehouses, categories, filter
         category_id: tempCategory !== 'all' ? tempCategory : undefined,
         date_from: tempDateFrom || undefined,
         date_to: tempDateTo || undefined,
+        sort_by: sortBy,
+        sort_order: sortOrder,
     });
 
     const handleExportPdf = () => {
@@ -171,6 +200,16 @@ export default function Index({ reports, summary, warehouses, categories, filter
     };
 
     const canExport = can('tenant.valuation_asset.export') || can('valuation_asset.export');
+
+    const tableHeaders: Array<string | HeaderConfig> = [
+        { label: 'SKU CODE', sortField: 'sku_id' },
+        { label: 'PRODUCT NAME', sortField: 'product_name' },
+        'LOCATION',
+        'CATEGORY',
+        { label: 'QTY ON HAND', sortField: 'quantity' },
+        { label: 'BASE COST / UNIT', sortField: 'base_cost' },
+        { label: 'TOTAL ASSET VALUE', sortField: 'total_value' },
+    ];
 
     return (
         <>
@@ -206,7 +245,7 @@ export default function Index({ reports, summary, warehouses, categories, filter
                     }
                 />
 
-                {/* 4 Stat Cards - Desain seragam */}
+                {/* 4 Stat Cards */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
@@ -316,9 +355,12 @@ export default function Index({ reports, summary, warehouses, categories, filter
                 </TableFilter>
 
                 <DataTable
-                    headers={['SKU CODE', 'PRODUCT NAME', 'LOCATION', 'CATEGORY', 'QTY ON HAND', 'BASE COST / UNIT', 'TOTAL ASSET VALUE']}
+                    headers={tableHeaders}
                     data={reports.data}
                     pagination={reports}
+                    sortBy={sortBy}
+                    sortDirection={sortOrder}
+                    onSortChange={handleSortChange}
                     renderRow={(item: any) => {
                         const cost = Number(item.sku?.base_cost || 0);
                         const qty = Number(item.quantity || 0);
@@ -333,8 +375,8 @@ export default function Index({ reports, summary, warehouses, categories, filter
                                 <TableCell className="text-xs font-bold text-foreground">
                                     {qty.toLocaleString()} <span className="font-normal text-muted-foreground">{item.sku?.unit?.symbol || ''}</span>
                                 </TableCell>
-                                <TableCell className="text-xs font-mono text-muted-foreground">{formatRp(cost)}</TableCell>
-                                <TableCell className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                                <TableCell className="font-mono text-xs text-muted-foreground">{formatRp(cost)}</TableCell>
+                                <TableCell className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">
                                     {formatRp(totalValue)}
                                 </TableCell>
                             </>

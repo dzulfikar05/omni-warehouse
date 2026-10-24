@@ -26,14 +26,16 @@ class UserController extends Controller
 
     public function index(Request $request): Response
     {
-        $search  = $request->input('search');
-        $perPage = (int) $request->input('per_page', 10);
+        $search    = $request->input('search');
+        $perPage   = (int) $request->input('per_page', 10);
+        $sortBy    = $request->input('sort_by', 'created_at');
+        $sortOrder = $request->input('sort_order', 'desc');
 
-        $users = $this->userService->getPaginatedUsers($search, $perPage);
+        $users = $this->userService->getPaginatedUsers($search, $perPage, $sortBy, $sortOrder);
 
         return Inertia::render('Users/Index', [
             'users'   => $users,
-            'filters' => $request->only(['search', 'per_page']),
+            'filters' => $request->only(['search', 'per_page', 'sort_by', 'sort_order']),
         ]);
     }
 

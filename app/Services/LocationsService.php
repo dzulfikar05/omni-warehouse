@@ -8,17 +8,25 @@ use App\Models\Tenant;
 use App\Models\Warehouse;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 class LocationsService implements LocationsContract
 {
-    public function getPaginatedLocations(string $tenantSlug, ?string $search, ?int $warehouseId): LengthAwarePaginator
-    {
+    public function getPaginatedLocations(
+        string $tenantSlug,
+        ?string $search,
+        ?int $warehouseId,
+        int $perPage = 15,
+        string $sortBy = 'created_at',
+        string $sortOrder = 'desc'
+    ): LengthAwarePaginator {
         $tenant = Tenant::where('slug', $tenantSlug)->firstOrFail();
 
         // Get all warehouse IDs for this tenant
         $tenantWarehouseIds = Warehouse::where('tenant_id', $tenant->id)->pluck('id');
 
-        return Location::whereIn('warehouse_id', $tenantWarehouseIds)
+        $query = Location::whereIn('locations.warehouse_id', $tenantWarehouseIds)
+            ->join('warehouses', 'locations.warehouse_id', '=', 'warehouses.id')
             ->with(['warehouse'])
             ->select('locations.*')
             ->selectSub(function ($query) {
@@ -36,14 +44,27 @@ class LocationsService implements LocationsContract
                 )');
             }, 'total_qty')
             ->when($search, function ($query, $searchQuery) {
-                $query->where('rack_code', 'like', "%{$searchQuery}%")
-                      ->orWhere('zone', 'like', "%{$searchQuery}%");
+                $query->where(function ($q) use ($searchQuery) {
+                    $q->where('locations.rack_code', 'like', "%{$searchQuery}%")
+                      ->orWhere('locations.zone', 'like', "%{$searchQuery}%")
+                      ->orWhere('warehouses.name', 'like', "%{$searchQuery}%");
+                });
             })
             ->when($warehouseId, function ($query, $wid) {
-                $query->where('warehouse_id', $wid);
-            })
-            ->latest()
-            ->paginate(15)
+                $query->where('locations.warehouse_id', $wid);
+            });
+
+        // Apply Sorting
+        match ($sortBy) {
+            'rack_code' => $query->orderBy('locations.rack_code', $sortOrder),
+            'warehouse_name' => $query->orderBy('warehouses.name', $sortOrder),
+            'zone' => $query->orderBy('locations.zone', $sortOrder),
+            'is_active' => $query->orderBy('locations.is_active', $sortOrder),
+            default => $query->orderBy('locations.created_at', $sortOrder),
+        };
+
+        return $query
+            ->paginate($perPage)
             ->withQueryString();
     }
 
@@ -55,7 +76,7 @@ class LocationsService implements LocationsContract
 
     public function createLocation(string $tenantSlug, array $data): bool
     {
-        $tenant  = Tenant::where('slug', $tenantSlug)->firstOrFail();
+        $tenant = Tenant::where('slug', $tenantSlug)->firstOrFail();
 
         // Ensure warehouse belongs to this tenant
         Warehouse::where('tenant_id', $tenant->id)->findOrFail($data['warehouse_id']);
@@ -94,7 +115,7 @@ class LocationsService implements LocationsContract
             ->findOrFail($locationId);
 
         // Aggregate stock per SKU at this location from transaction_items
-        $items = \DB::table('transaction_items')
+        $items = DB::table('transaction_items')
             ->join('transactions', 'transaction_items.transaction_id', '=', 'transactions.id')
             ->join('skus', 'transaction_items.sku_id', '=', 'skus.id')
             ->leftJoin('products', 'skus.product_id', '=', 'products.id')
@@ -104,8 +125,8 @@ class LocationsService implements LocationsContract
                 'skus.id as sku_id',
                 'skus.sku_code',
                 'products.name as product_name',
-                \DB::raw('SUM(transaction_items.quantity) as total_qty'),
-                \DB::raw('MAX(transactions.created_at) as last_received_at')
+                DB::raw('SUM(transaction_items.quantity) as total_qty'),
+                DB::raw('MAX(transactions.created_at) as last_received_at')
             )
             ->groupBy('skus.id', 'skus.sku_code', 'products.name')
             ->orderByDesc('total_qty')
@@ -132,7 +153,7 @@ class LocationsService implements LocationsContract
             ->findOrFail($locationId);
 
         // Fetch current active inventory stocks at this location
-        $stocks = \DB::table('inventory_stocks')
+        $stocks = DB::table('inventory_stocks')
             ->join('skus', 'inventory_stocks.sku_id', '=', 'skus.id')
             ->leftJoin('products', 'skus.product_id', '=', 'products.id')
             ->leftJoin('categories', 'products.category_id', '=', 'categories.id')
@@ -154,7 +175,7 @@ class LocationsService implements LocationsContract
 
         // Fallback: If inventory_stocks table is empty for this rack, fetch from transaction_items completed
         if ($stocks->isEmpty()) {
-            $stocks = \DB::table('transaction_items')
+            $stocks = DB::table('transaction_items')
                 ->join('transactions', 'transaction_items.transaction_id', '=', 'transactions.id')
                 ->join('skus', 'transaction_items.sku_id', '=', 'skus.id')
                 ->leftJoin('products', 'skus.product_id', '=', 'products.id')
@@ -162,10 +183,10 @@ class LocationsService implements LocationsContract
                 ->where('transactions.status', 'completed')
                 ->where('transaction_items.quantity', '>', 0)
                 ->select(
-                    \DB::raw('MIN(transaction_items.id) as id'),
-                    \DB::raw('SUM(transaction_items.quantity) as quantity'),
-                    \DB::raw('MAX(transaction_items.serial_number) as batch_number'),
-                    \DB::raw('MAX(transaction_items.created_at) as created_at'),
+                    DB::raw('MIN(transaction_items.id) as id'),
+                    DB::raw('SUM(transaction_items.quantity) as quantity'),
+                    DB::raw('MAX(transaction_items.serial_number) as batch_number'),
+                    DB::raw('MAX(transaction_items.created_at) as created_at'),
                     'skus.id as sku_id',
                     'skus.sku_code',
                     'skus.barcode',
@@ -178,7 +199,7 @@ class LocationsService implements LocationsContract
         }
 
         // Fetch recent movement logs into/out of this location
-        $recentMovements = \DB::table('transaction_items')
+        $recentMovements = DB::table('transaction_items')
             ->join('transactions', 'transaction_items.transaction_id', '=', 'transactions.id')
             ->join('skus', 'transaction_items.sku_id', '=', 'skus.id')
             ->leftJoin('products', 'skus.product_id', '=', 'products.id')

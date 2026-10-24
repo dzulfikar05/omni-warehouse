@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Tenant;
 
+use App\Contracts\WarehousesContract;
 use App\Http\Controllers\Controller;
 use App\Jobs\ExportWarehouseExcelJob;
 use App\Jobs\ExportWarehousePdfJob;
@@ -15,30 +16,32 @@ use Inertia\Response;
 
 class WarehouseController extends Controller
 {
+    protected WarehousesContract $service;
+
+    public function __construct(WarehousesContract $service)
+    {
+        $this->service = $service;
+    }
+
     public function index(Request $request, string $tenant_slug): Response
     {
         $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
 
-        $query = Warehouse::where('tenant_id', $tenant->id);
+        $perPage   = (int) $request->input('per_page', 10);
+        $sortBy    = $request->input('sort_by', 'created_at');
+        $sortOrder = strtolower($request->input('sort_order', 'desc')) === 'asc' ? 'asc' : 'desc';
 
-        if ($search = $request->input('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('code', 'like', "%{$search}%")
-                    ->orWhere('desc', 'like', "%{$search}%");
-            });
-        }
+        $warehouses = $this->service->getPaginatedWarehouses(
+            $tenant_slug,
+            $request->input('search'),
+            $request->input('is_active'),
+            $perPage,
+            $sortBy,
+            $sortOrder
+        );
 
-        if ($request->has('is_active') && $request->input('is_active') !== 'all') {
-            $isActive = $request->input('is_active') === '1' || $request->input('is_active') === 'true';
-            $query->where('is_active', $isActive);
-        }
-
-        $perPage = (int) $request->input('per_page', 10);
-        $warehouses = $query->latest('created_at')->paginate($perPage)->withQueryString();
-
-        $totalWarehouses = Warehouse::where('tenant_id', $tenant->id)->count();
-        $activeWarehouses = Warehouse::where('tenant_id', $tenant->id)->where('is_active', true)->count();
+        $totalWarehouses    = Warehouse::where('tenant_id', $tenant->id)->count();
+        $activeWarehouses   = Warehouse::where('tenant_id', $tenant->id)->where('is_active', true)->count();
         $inactiveWarehouses = Warehouse::where('tenant_id', $tenant->id)->where('is_active', false)->count();
 
         $summary = [
@@ -50,7 +53,10 @@ class WarehouseController extends Controller
         return Inertia::render('Tenant/WarehouseStocks/Warehouses/Index', [
             'warehouses' => $warehouses,
             'summary'    => $summary,
-            'filters'    => $request->only(['search', 'per_page', 'is_active']),
+            'filters'    => array_merge(
+                $request->only(['search', 'per_page', 'is_active']),
+                ['sort_by' => $sortBy, 'sort_order' => $sortOrder]
+            ),
         ]);
     }
 
@@ -70,10 +76,7 @@ class WarehouseController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $validated['tenant_id'] = $tenant->id;
-        $validated['created_by'] = auth()->id();
-
-        Warehouse::create($validated);
+        $this->service->createWarehouse($tenant_slug, $validated);
 
         return to_route('tenant.warehouses.index', ['tenant_slug' => $tenant_slug])
             ->with('success', 'Gudang berhasil ditambahkan!');
@@ -119,7 +122,7 @@ class WarehouseController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $warehouse->update($validated);
+        $this->service->updateWarehouse($tenant_slug, $warehouse->id, $validated);
 
         return to_route('tenant.warehouses.index', ['tenant_slug' => $tenant_slug])
             ->with('success', 'Data gudang berhasil diperbarui!');
@@ -127,7 +130,7 @@ class WarehouseController extends Controller
 
     public function destroy(string $tenant_slug, Warehouse $warehouse): RedirectResponse
     {
-        $warehouse->delete();
+        $this->service->deleteWarehouse($tenant_slug, $warehouse->id);
 
         return to_route('tenant.warehouses.index', ['tenant_slug' => $tenant_slug])
             ->with('success', 'Gudang berhasil dihapus!');
@@ -149,8 +152,6 @@ class WarehouseController extends Controller
 
         return back()->with('success', 'Added to export queue. Check the bell/download icon in navbar.');
     }
-
-
 
     public function exportExcel(Request $request, string $tenant_slug): RedirectResponse
     {

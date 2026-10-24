@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Head, Link, usePage, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { TableCell } from '@/components/ui/table';
-import { DataTable } from '@/components/data-table';
+import { DataTable, HeaderConfig } from '@/components/data-table';
 import { TableFilter } from '@/components/table-filter';
 import { ActionButton } from '@/components/action-button';
 import { PageHeader } from '@/components/page-header';
@@ -20,7 +20,6 @@ import { debounce } from 'lodash';
 import { usePermission } from '@/utils/permission';
 import {
     Plus,
-    Building2,
     CheckCircle2,
     XCircle,
     CalendarCheck,
@@ -78,7 +77,7 @@ interface PageProps {
         status?: string;
         plan_id?: string;
         sort_by?: string;
-        sort_order?: string;
+        sort_order?: 'asc' | 'desc';
     };
 }
 
@@ -89,11 +88,13 @@ export default function TenantIndex({ tenants, stats, plans, filters }: PageProp
     const [search, setSearch] = useState(filters?.search || '');
     const [perPage, setPerPage] = useState(filters?.per_page || '10');
 
-    // Filter Dropdown States
+    // Filter States
     const [tempStatus, setTempStatus] = useState(filters?.status || 'all');
     const [tempPlan, setTempPlan] = useState(filters?.plan_id || 'all');
-    const [tempSortBy, setTempSortBy] = useState(filters?.sort_by || 'created_at');
-    const [tempSortOrder, setTempSortOrder] = useState(filters?.sort_order || 'desc');
+    const [sortBy, setSortBy] = useState(filters?.sort_by || 'created_at');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(
+        (filters?.sort_order as 'asc' | 'desc') || 'desc'
+    );
 
     const lastShownFlash = useRef<string | null>(null);
 
@@ -110,60 +111,80 @@ export default function TenantIndex({ tenants, stats, plans, filters }: PageProp
             newPerPage: string,
             status: string = tempStatus,
             plan: string = tempPlan,
-            sortBy: string = tempSortBy,
-            sortOrder: string = tempSortOrder,
+            newSortBy: string = sortBy,
+            newSortOrder: 'asc' | 'desc' = sortOrder
         ) => {
+            // PERBAIKAN: Menyesuaikan URL dengan route /tenants
             router.get(
-                '/admin/tenants',
+                '/tenants',
                 {
-                    search: newSearch,
+                    search: newSearch || undefined,
                     per_page: newPerPage,
                     status: status !== 'all' ? status : undefined,
                     plan_id: plan !== 'all' ? plan : undefined,
-                    sort_by: sortBy,
-                    sort_order: sortOrder,
+                    sort_by: newSortBy,
+                    sort_order: newSortOrder,
                 },
-                { preserveState: true, replace: true, preserveScroll: true },
+                { preserveState: true, replace: true, preserveScroll: true }
             );
         },
-        [tempStatus, tempPlan, tempSortBy, tempSortOrder],
+        [tempStatus, tempPlan, sortBy, sortOrder]
     );
 
     const debouncedSearch = useMemo(
         () => debounce((q: string, p: string) => applyFilters(q, p), 500),
-        [applyFilters],
+        [applyFilters]
     );
 
     useEffect(() => {
         return () => debouncedSearch.cancel();
     }, [debouncedSearch]);
 
+    const handleSortChange = (field: string, direction: 'asc' | 'desc') => {
+        setSortBy(field);
+        setSortOrder(direction);
+        applyFilters(search, perPage, tempStatus, tempPlan, field, direction);
+    };
+
     const handleDelete = (id: number) => {
-        router.delete(`/admin/tenants/${id}`);
+        // PERBAIKAN: Menyesuaikan URL delete ke /tenants/{id}
+        router.delete(`/tenants/${id}`);
     };
 
     const handleExportPdf = () => {
-        router.get('/admin/tenants/export/pdf');
+        // PERBAIKAN: Menyesuaikan URL export PDF sesuai route /tenants/tenants/export/pdf
+        router.get('/tenants/tenants/export/pdf');
     };
 
     const handleExportExcel = () => {
-        router.get('/admin/tenants/export/excel');
+        // PERBAIKAN: Menyesuaikan URL export Excel sesuai route /tenants/tenants/export/excel
+        router.get('/tenants/tenants/export/excel');
     };
 
     const handleApplyDropdownFilter = () => {
-        applyFilters(search, perPage, tempStatus, tempPlan, tempSortBy, tempSortOrder);
+        applyFilters(search, perPage, tempStatus, tempPlan, sortBy, sortOrder);
     };
 
     const handleResetDropdownFilter = () => {
         setTempStatus('all');
         setTempPlan('all');
-        setTempSortBy('created_at');
-        setTempSortOrder('desc');
+        setSortBy('created_at');
+        setSortOrder('desc');
         applyFilters(search, perPage, 'all', 'all', 'created_at', 'desc');
     };
 
     const canView = can('central.tenants.view');
     const canCreate = can('central.tenants.create');
+
+    const tableHeaders: Array<string | HeaderConfig> = [
+        { label: '#', sortField: 'id' },
+        { label: 'TENANT NAME', sortField: 'name' },
+        'PLAN TIER',
+        'PHONE / EMAIL',
+        { label: 'TAX ID / NPWP', sortField: 'tax_number' },
+        { label: 'STATUS', sortField: 'status' },
+        'ACTIONS',
+    ];
 
     return (
         <>
@@ -198,7 +219,8 @@ export default function TenantIndex({ tenants, stats, plans, filters }: PageProp
 
                             {canCreate && (
                                 <Button asChild className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700">
-                                    <Link href="/admin/tenants/create">
+                                    {/* PERBAIKAN: URL Create ke /tenants/create */}
+                                    <Link href="/tenants/create">
                                         <Plus className="mr-1.5 h-4 w-4" /> Add Tenant
                                     </Link>
                                 </Button>
@@ -258,6 +280,7 @@ export default function TenantIndex({ tenants, stats, plans, filters }: PageProp
                     </div>
                 </div>
 
+                {/* Table Filters */}
                 <TableFilter
                     search={search}
                     onSearchChange={(e) => {
@@ -302,41 +325,18 @@ export default function TenantIndex({ tenants, stats, plans, filters }: PageProp
                                     </SelectContent>
                                 </Select>
                             </div>
-
-                            <div className="grid grid-cols-2 gap-2">
-                                <div className="space-y-1">
-                                    <Label className="text-xs font-bold uppercase tracking-wider">Sort By</Label>
-                                    <Select value={tempSortBy} onValueChange={setTempSortBy}>
-                                        <SelectTrigger className="text-xs">
-                                            <SelectValue placeholder="Field" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="created_at">Date</SelectItem>
-                                            <SelectItem value="name">Tenant Name</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-1">
-                                    <Label className="text-xs font-bold uppercase tracking-wider">Order</Label>
-                                    <Select value={tempSortOrder} onValueChange={setTempSortOrder}>
-                                        <SelectTrigger className="text-xs">
-                                            <SelectValue placeholder="Order" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="desc">Descending</SelectItem>
-                                            <SelectItem value="asc">Ascending</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
                         </div>
                     </FilterDropdown>
                 </TableFilter>
 
+                {/* Data Table */}
                 <DataTable
-                    headers={['#', 'TENANT NAME', 'PLAN TIER', 'PHONE / EMAIL', 'TAX ID / NPWP', 'STATUS', 'ACTIONS']}
+                    headers={tableHeaders}
                     data={tenants.data}
                     pagination={tenants}
+                    sortBy={sortBy}
+                    sortDirection={sortOrder}
+                    onSortChange={handleSortChange}
                     renderRow={(tenant: Tenant) => {
                         const isActive = tenant.subscription?.status === 'active';
                         return (
@@ -372,10 +372,11 @@ export default function TenantIndex({ tenants, stats, plans, filters }: PageProp
                                     </span>
                                 </TableCell>
                                 <TableCell className="text-right">
+                                    {/* PERBAIKAN: URL Show & Edit ke /tenants/... */}
                                     <ActionButton
                                         label={tenant.name}
-                                        showUrl={`/admin/tenants/${tenant.id}`}
-                                        editUrl={`/admin/tenants/${tenant.id}/edit`}
+                                        showUrl={`/tenants/${tenant.id}`}
+                                        editUrl={`/tenants/${tenant.id}/edit`}
                                         onDelete={() => handleDelete(tenant.id)}
                                         canShow={can('central.tenants.view')}
                                         canEdit={can('central.tenants.edit')}
@@ -394,6 +395,6 @@ export default function TenantIndex({ tenants, stats, plans, filters }: PageProp
 TenantIndex.layout = {
     breadcrumbs: [
         { title: 'Admin', href: '#' },
-        { title: 'Tenants Management', href: '/admin/tenants' },
+        { title: 'Tenants Management', href: '/tenants' },
     ],
 };

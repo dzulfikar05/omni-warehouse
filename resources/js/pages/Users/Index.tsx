@@ -10,7 +10,7 @@ import { User } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { usePermission } from '@/utils/permission';
 import { TableFilter } from '@/components/table-filter';
-import { DataTable } from '@/components/data-table';
+import { DataTable, HeaderConfig } from '@/components/data-table';
 import { ActionButton } from '@/components/action-button';
 import { PageHeader } from '@/components/page-header';
 
@@ -28,7 +28,12 @@ interface UsersProps {
         from: number;
         to: number;
     };
-    filters: { search?: string; per_page?: string };
+    filters: {
+        search?: string;
+        per_page?: string;
+        sort_by?: string;
+        sort_order?: 'asc' | 'desc';
+    };
 }
 
 export default function Index({ users, filters }: UsersProps) {
@@ -37,6 +42,10 @@ export default function Index({ users, filters }: UsersProps) {
 
     const [search, setSearch] = useState(filters.search || '');
     const [perPage, setPerPage] = useState(filters.per_page || '10');
+    const [sortBy, setSortBy] = useState(filters.sort_by || 'created_at');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(
+        (filters.sort_order as 'asc' | 'desc') || 'desc'
+    );
 
     const lastShownFlash = useRef<string | null>(null);
 
@@ -48,14 +57,24 @@ export default function Index({ users, filters }: UsersProps) {
     }, [flash?.success]);
 
     const applyFilters = useCallback(
-        (newSearch: string, newPerPage: string) => {
+        (
+            newSearch: string,
+            newPerPage: string,
+            newSortBy: string = sortBy,
+            newSortOrder: 'asc' | 'desc' = sortOrder
+        ) => {
             router.get(
                 '/users',
-                { search: newSearch, per_page: newPerPage },
+                {
+                    search: newSearch || undefined,
+                    per_page: newPerPage,
+                    sort_by: newSortBy,
+                    sort_order: newSortOrder,
+                },
                 { preserveState: true, replace: true, preserveScroll: true }
             );
         },
-        []
+        [sortBy, sortOrder]
     );
 
     const debouncedSearch = useMemo(
@@ -78,6 +97,12 @@ export default function Index({ users, filters }: UsersProps) {
         applyFilters(search, value);
     };
 
+    const handleSortChange = (field: string, direction: 'asc' | 'desc') => {
+        setSortBy(field);
+        setSortOrder(direction);
+        applyFilters(search, perPage, field, direction);
+    };
+
     const processDelete = (id: number) => {
         router.delete(`/users/${id}`, {
             onSuccess: () => toast.success('User deleted successfully'),
@@ -97,6 +122,14 @@ export default function Index({ users, filters }: UsersProps) {
     const canEdit = can('central.users.edit');
     const canDelete = can('central.users.delete');
     const canExport = can('central.users.export');
+
+    const tableHeaders: Array<string | HeaderConfig> = [
+        { label: 'ID', sortField: 'id' },
+        { label: 'Name', sortField: 'name' },
+        { label: 'Email', sortField: 'email' },
+        'Roles',
+        'Action',
+    ];
 
     return (
         <>
@@ -147,9 +180,12 @@ export default function Index({ users, filters }: UsersProps) {
                 </PageHeader>
 
                 <DataTable
-                    headers={['ID', 'Name', 'Email', 'Roles', 'Action']}
+                    headers={tableHeaders}
                     data={users.data}
                     pagination={users}
+                    sortBy={sortBy}
+                    sortDirection={sortOrder}
+                    onSortChange={handleSortChange}
                     renderRow={(user) => (
                         <>
                             <TableCell className="font-mono text-xs text-muted-foreground">
@@ -168,13 +204,13 @@ export default function Index({ users, filters }: UsersProps) {
                                             <Badge
                                                 key={role.id}
                                                 variant="outline"
-                                                className="border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-300 font-medium capitalize"
+                                                className="border-blue-200 bg-blue-50 font-medium text-blue-700 capitalize dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-300"
                                             >
                                                 {role.name}
                                             </Badge>
                                         ))
                                     ) : (
-                                        <span className="text-xs text-muted-foreground italic">
+                                        <span className="text-xs italic text-muted-foreground">
                                             No Role
                                         </span>
                                     )}

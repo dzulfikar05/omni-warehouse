@@ -10,10 +10,16 @@ use Illuminate\Support\Facades\Hash;
 class UserService implements UserContract
 {
     /**
-     * Get paginated central users (tenant_id IS NULL) with optional search filter.
+     * Get paginated central users (tenant_id IS NULL) with optional search filter and dynamic sorting.
      */
-    public function getPaginatedUsers(?string $search = null, int $perPage = 10): LengthAwarePaginator
-    {
+    public function getPaginatedUsers(
+        ?string $search = null,
+        int $perPage = 10,
+        string $sortBy = 'created_at',
+        string $sortOrder = 'desc'
+    ): LengthAwarePaginator {
+        $sortOrder = strtolower($sortOrder) === 'asc' ? 'asc' : 'desc';
+
         return User::query()
             ->whereNull('tenant_id') // Hanya ambil akun Central / System Admin
             ->when($search, function ($query, $search) {
@@ -23,7 +29,14 @@ class UserService implements UserContract
                 });
             })
             ->with('roles')
-            ->latest()
+            ->when($sortBy, function ($q) use ($sortBy, $sortOrder) {
+                match ($sortBy) {
+                    'id', 'name', 'email', 'created_at' => $q->orderBy($sortBy, $sortOrder),
+                    default                             => $q->orderBy('created_at', $sortOrder),
+                };
+            }, function ($q) use ($sortOrder) {
+                $q->orderBy('created_at', $sortOrder);
+            })
             ->paginate($perPage)
             ->withQueryString();
     }

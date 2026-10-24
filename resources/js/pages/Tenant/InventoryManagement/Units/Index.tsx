@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Head, Link, usePage, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { TableCell } from '@/components/ui/table';
-import { DataTable } from '@/components/data-table';
+import { DataTable, HeaderConfig } from '@/components/data-table';
 import { TableFilter } from '@/components/table-filter';
 import { FilterDropdown } from '@/components/table-dropdown';
 import { ActionButton } from '@/components/action-button';
@@ -52,6 +52,7 @@ interface IndexProps {
     filters: {
         search?: string;
         sort_by?: string;
+        sort_order?: 'asc' | 'desc';
         per_page?: string;
     };
 }
@@ -61,7 +62,10 @@ export default function UnitIndex({ units, stats, filters }: IndexProps) {
     const { can } = usePermission();
 
     const [search, setSearch] = useState(filters?.search || '');
-    const [sortBy, setSortBy] = useState(filters?.sort_by || 'latest');
+    const [sortBy, setSortBy] = useState(filters?.sort_by || 'created_at');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(
+        (filters?.sort_order as 'asc' | 'desc') || 'desc'
+    );
     const [perPage, setPerPage] = useState(filters?.per_page || '10');
 
     const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
@@ -80,19 +84,21 @@ export default function UnitIndex({ units, stats, filters }: IndexProps) {
         (
             newSearch: string,
             newPerPage: string,
-            newSort = sortBy
+            newSortBy: string = sortBy,
+            newSortOrder: 'asc' | 'desc' = sortOrder
         ) => {
             router.get(
                 `/${tenantSlug}/inventory/units`,
                 {
                     search: newSearch || undefined,
-                    sort_by: newSort !== 'latest' ? newSort : undefined,
+                    sort_by: newSortBy,
+                    sort_order: newSortOrder,
                     per_page: newPerPage,
                 },
                 { preserveState: true, replace: true, preserveScroll: true }
             );
         },
-        [tenantSlug, sortBy]
+        [tenantSlug, sortBy, sortOrder]
     );
 
     const debouncedSearch = useMemo(
@@ -103,6 +109,12 @@ export default function UnitIndex({ units, stats, filters }: IndexProps) {
     useEffect(() => {
         return () => debouncedSearch.cancel();
     }, [debouncedSearch]);
+
+    const handleSortChange = (field: string, direction: 'asc' | 'desc') => {
+        setSortBy(field);
+        setSortOrder(direction);
+        applyFilters(search, perPage, field, direction);
+    };
 
     const handleDelete = (id: number) => {
         router.delete(`/${tenantSlug}/inventory/units/${id}`);
@@ -123,11 +135,19 @@ export default function UnitIndex({ units, stats, filters }: IndexProps) {
     const canExport = can('tenant.units.export') || can('units.export');
     const canCreate = can('tenant.units.create') || can('units.create');
 
+    const tableHeaders: Array<string | HeaderConfig> = [
+        { label: 'UNIT ID', sortField: 'id' },
+        { label: 'UNIT NAME', sortField: 'name' },
+        { label: 'SYMBOL', sortField: 'symbol' },
+        { label: 'DATE ADDED', sortField: 'created_at' },
+        'ACTIONS',
+    ];
+
     return (
         <>
             <Head title="Units of Measurement" />
 
-            <div className="space-y-6 p-4 sm:p-6 font-sans">
+            <div className="space-y-6 p-4 font-sans sm:p-6">
                 <PageHeader
                     title="Measurement Units"
                     description="Manage standard inventory quantities and measurement notation."
@@ -182,7 +202,7 @@ export default function UnitIndex({ units, stats, filters }: IndexProps) {
                         <div>
                             <p className="text-xs font-medium text-muted-foreground">Standard Notation</p>
                             <h3 className="mt-1 text-2xl font-bold text-foreground">{shortSymbols}</h3>
-                            <p className="mt-0.5 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">≤ 3 Characters</p>
+                            <p className="mt-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">≤ 3 Characters</p>
                         </div>
                         <div className="rounded-xl bg-emerald-50 p-3 text-emerald-600 dark:bg-emerald-950/50">
                             <Tag size={22} />
@@ -213,45 +233,16 @@ export default function UnitIndex({ units, stats, filters }: IndexProps) {
                         setPerPage(val);
                         applyFilters(search, val);
                     }}
-                >
-                    <FilterDropdown
-                        onApply={() => applyFilters(search, perPage)}
-                        onReset={() => {
-                            setSearch('');
-                            setSortBy('latest');
-                            router.get(`/${tenantSlug}/inventory/units`);
-                        }}
-                    >
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <Label className="text-xs font-semibold">Sort Options</Label>
-                                <Select value={sortBy} onValueChange={setSortBy}>
-                                    <SelectTrigger className="h-9 text-xs">
-                                        <SelectValue placeholder="Sort Order" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="latest">Newest Added</SelectItem>
-                                        <SelectItem value="oldest">Oldest Added</SelectItem>
-                                        <SelectItem value="name_asc">Name (A-Z)</SelectItem>
-                                        <SelectItem value="name_desc">Name (Z-A)</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                    </FilterDropdown>
-                </TableFilter>
+                />
 
                 {/* Data Table Component */}
                 <DataTable
-                    headers={[
-                        'UNIT ID',
-                        'UNIT NAME',
-                        'SYMBOL',
-                        'DATE ADDED',
-                        'ACTIONS',
-                    ]}
+                    headers={tableHeaders}
                     data={units.data}
                     pagination={units}
+                    sortBy={sortBy}
+                    sortDirection={sortOrder}
+                    onSortChange={handleSortChange}
                     renderRow={(unit: UnitItem) => (
                         <>
                             <TableCell className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400">
@@ -262,7 +253,7 @@ export default function UnitIndex({ units, stats, filters }: IndexProps) {
                                 {unit.name}
                             </TableCell>
 
-                            <TableCell className="text-xs font-mono">
+                            <TableCell className="font-mono text-xs">
                                 <span className="rounded-lg bg-muted px-2.5 py-0.5 font-bold text-foreground">
                                     {unit.symbol}
                                 </span>

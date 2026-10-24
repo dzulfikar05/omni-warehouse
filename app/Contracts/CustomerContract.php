@@ -7,7 +7,13 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 interface CustomerContract
 {
-    public function getPaginatedCustomers(string $tenantSlug, ?string $search = null, int $perPage = 10): LengthAwarePaginator;
+    public function getPaginatedCustomers(
+        string $tenantSlug,
+        ?string $search = null,
+        int $perPage = 10,
+        string $sortBy = 'created_at',
+        string $sortOrder = 'desc'
+    ): LengthAwarePaginator;
 
     public function storeCustomer(string $tenantSlug, array $data): Customer;
 

@@ -26,10 +26,11 @@ class SkusController extends Controller
         $search     = $request->input('search');
         $categoryId = $request->input('category_id');
         $unitId     = $request->input('unit_id');
-        $sortBy     = $request->input('sort_by', 'latest');
+        $sortBy     = $request->input('sort_by', 'created_at');
+        $sortDir    = strtolower($request->input('sort_dir', 'desc')) === 'asc' ? 'asc' : 'desc';
         $perPage    = (int) $request->input('per_page', 10);
 
-        if (! in_array($perPage, [10, 25, 50])) {
+        if (! in_array($perPage, [10, 25, 50, 100])) {
             $perPage = 10;
         }
 
@@ -44,36 +45,42 @@ class SkusController extends Controller
                         });
                 });
             })
-            ->when($categoryId, function ($q, $categoryId) {
+            ->when($categoryId && $categoryId !== 'all', function ($q) use ($categoryId) {
                 $q->whereHas('product', function ($p) use ($categoryId) {
                     $p->where('category_id', $categoryId);
                 });
             })
-            ->when($unitId, function ($q, $unitId) {
+            ->when($unitId && $unitId !== 'all', function ($q) use ($unitId) {
                 $q->where('unit_id', $unitId);
             });
 
-        // Hitung Ringkasan Statistik untuk seluruh data (bukan cuma halaman aktif)
+        // Hitung Ringkasan Statistik untuk seluruh data terfilter
         $stats = [
             'total_skus'      => (clone $query)->count(),
             'total_stock'     => (int) (clone $query)->sum('current_stock'),
             'low_stock_count' => (clone $query)->whereRaw('current_stock <= COALESCE(min_stock, 5)')->count(),
-            'total_valuation' => (float) (clone $query)->select(DB::raw('SUM(base_cost * current_stock) as total'))->value('total') ?? 0,
+            'total_valuation' => (float) ((clone $query)->select(DB::raw('SUM(base_cost * current_stock) as total'))->value('total') ?? 0),
         ];
 
-        // Apply Sorting & Pagination
+        // Apply Sorting Dinamis & Pagination
         $skus = (clone $query)
-            ->when($sortBy, function ($q, $sortBy) {
+            ->when($sortBy, function ($q) use ($sortBy, $sortDir) {
+                // Pemetaan nilai sort_by legacy/dropdown atau klik header DataTable
                 match ($sortBy) {
                     'oldest'     => $q->oldest(),
+                    'latest'     => $q->latest(),
                     'code_asc'   => $q->orderBy('sku_code', 'asc'),
                     'code_desc'  => $q->orderBy('sku_code', 'desc'),
                     'stock_low'  => $q->orderBy('current_stock', 'asc'),
                     'stock_high' => $q->orderBy('current_stock', 'desc'),
-                    default      => $q->latest(),
+                    'product_id' => $q->join('products', 'skus.product_id', '=', 'products.id')
+                                      ->orderBy('products.name', $sortDir)
+                                      ->select('skus.*'),
+                    'sku_code', 'base_cost', 'current_stock', 'created_at', 'id' => $q->orderBy($sortBy, $sortDir),
+                    default      => $q->orderBy('created_at', $sortDir),
                 };
-            }, function ($q) {
-                $q->latest();
+            }, function ($q) use ($sortDir) {
+                $q->orderBy('created_at', $sortDir);
             })
             ->paginate($perPage)
             ->withQueryString();
@@ -92,6 +99,7 @@ class SkusController extends Controller
                 'category_id' => $categoryId,
                 'unit_id'     => $unitId,
                 'sort_by'     => $sortBy,
+                'sort_dir'    => $sortDir,
                 'per_page'    => (string) $perPage,
             ],
         ]);

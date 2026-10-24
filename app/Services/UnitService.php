@@ -14,6 +14,9 @@ class UnitService implements UnitContract
 {
     public function getPaginatedUnits(array $filters, int $perPage = 10): LengthAwarePaginator
     {
+        $sortBy    = $filters['sort_by'] ?? 'created_at';
+        $sortOrder = strtolower($filters['sort_order'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
+
         return Unit::query()
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -22,13 +25,13 @@ class UnitService implements UnitContract
                         ->orWhere('symbol', 'like', "%{$search}%");
                 });
             })
-            ->when($filters['sort_by'] ?? 'latest', function ($query, $sortBy) {
+            ->when($sortBy, function ($q) use ($sortBy, $sortOrder) {
                 match ($sortBy) {
-                    'oldest'    => $query->oldest(),
-                    'name_asc'  => $query->orderBy('name', 'asc'),
-                    'name_desc' => $query->orderBy('name', 'desc'),
-                    default     => $query->latest(),
+                    'id', 'name', 'symbol', 'created_at' => $q->orderBy($sortBy, $sortOrder),
+                    default                              => $q->orderBy('created_at', $sortOrder),
                 };
+            }, function ($q) use ($sortOrder) {
+                $q->orderBy('created_at', $sortOrder);
             })
             ->paginate($perPage)
             ->withQueryString();

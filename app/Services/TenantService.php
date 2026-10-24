@@ -14,31 +14,54 @@ class TenantService implements TenantContract
 {
     public function getPaginatedTenants(Request $request, int $perPage = 10): LengthAwarePaginator
     {
+        // 1. Ambil per_page langsung dari request jika ada
+        $perPageInput = (int) $request->input('per_page', $perPage);
+        if (! in_array($perPageInput, [10, 25, 50, 100])) {
+            $perPageInput = 10;
+        }
+
         $query = Tenant::with(['subscription.plan', 'users']);
 
+        // Filter Search
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'ILIKE', "%{$search}%")
-                    ->orWhere('slug', 'ILIKE', "%{$search}%")
-                    ->orWhere('phone', 'ILIKE', "%{$search}%")
-                    ->orWhere('email', 'ILIKE', "%{$search}%")
-                    ->orWhere('tax_number', 'ILIKE', "%{$search}%");
+                $q->where('tenants.name', 'ILIKE', "%{$search}%")
+                    ->orWhere('tenants.slug', 'ILIKE', "%{$search}%")
+                    ->orWhere('tenants.phone', 'ILIKE', "%{$search}%")
+                    ->orWhere('tenants.email', 'ILIKE', "%{$search}%")
+                    ->orWhere('tenants.tax_number', 'ILIKE', "%{$search}%");
             });
         }
 
+        // Filter Plan ID
         if ($request->filled('plan_id') && $request->plan_id !== 'all') {
             $query->whereHas('subscription', fn($q) => $q->where('plan_id', $request->plan_id));
         }
 
+        // Filter Status
         if ($request->filled('status') && $request->status !== 'all') {
             $query->whereHas('subscription', fn($q) => $q->where('status', $request->status));
         }
 
-        $sortBy = $request->input('sort_by', 'created_at');
-        $sortOrder = $request->input('sort_order', 'desc');
+        // Sorting Parameter
+        $sortBy    = $request->input('sort_by', 'created_at');
+        $sortOrder = strtolower($request->input('sort_order', 'desc')) === 'asc' ? 'asc' : 'desc';
 
-        return $query->orderBy($sortBy, $sortOrder)->paginate($perPage)->withQueryString();
+        // 2. Terapkan Sorting Dinamis & Cegah Ambiguity Kolom saat Join
+        $query->when($sortBy, function ($q) use ($sortBy, $sortOrder) {
+            match ($sortBy) {
+                'status' => $q->leftJoin('subscriptions', 'tenants.id', '=', 'subscriptions.tenant_id')
+                              ->orderBy('subscriptions.status', $sortOrder)
+                              ->select('tenants.*'),
+                'id', 'name', 'tax_number', 'created_at' => $q->orderBy("tenants.{$sortBy}", $sortOrder),
+                default => $q->orderBy('tenants.created_at', $sortOrder),
+            };
+        }, function ($q) use ($sortOrder) {
+            $q->orderBy('tenants.created_at', $sortOrder);
+        });
+
+        return $query->paginate($perPageInput)->withQueryString();
     }
 
     public function getSummaryStats(): array
@@ -47,7 +70,9 @@ class TenantService implements TenantContract
             'total_tenants'    => Tenant::count(),
             'active_tenants'   => Subscription::where('status', 'active')->count(),
             'inactive_tenants' => Subscription::where('status', 'inactive')->count(),
-            'new_this_month'   => Tenant::whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count(),
+            'new_this_month'   => Tenant::whereMonth('created_at', now()->month)
+                                        ->whereYear('created_at', now()->year)
+                                        ->count(),
         ];
     }
 

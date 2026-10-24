@@ -11,11 +11,11 @@ use Spatie\Permission\Models\Role;
 
 class TenantUserRoleService implements TenantUserRoleContract
 {
-    public function getPaginatedTenantUsers(string $tenantSlug, ?string $search = null, ?string $roleFilter = null, int $perPage = 10): LengthAwarePaginator
+    public function getPaginatedTenantUsers(string $tenantSlug, ?string $search = null, ?string $roleFilter = null, int $perPage = 10, string $sortBy = 'id', string $sortOrder = 'desc'): LengthAwarePaginator
     {
         $tenant = Tenant::where('slug', $tenantSlug)->firstOrFail();
 
-        return User::query()
+        $query = User::query()
             ->where('tenant_id', $tenant->id)
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -26,35 +26,51 @@ class TenantUserRoleService implements TenantUserRoleContract
             ->when($roleFilter && $roleFilter !== 'all', function ($query) use ($roleFilter) {
                 $query->whereHas('roles', fn($q) => $q->where('name', $roleFilter));
             })
-            ->with('roles')
-            ->latest()
+            ->with('roles');
+
+        // Apply Sorting
+        match ($sortBy) {
+            'name' => $query->orderBy('name', $sortOrder),
+            'last_login_at' => $query->orderBy('updated_at', $sortOrder),
+            default => $query->orderBy('id', $sortOrder),
+        };
+
+        return $query
             ->paginate($perPage)
             ->through(function ($user) {
                 return [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'initials' => strtoupper(substr($user->name, 0, 2)),
-                    'role' => $user->roles->first()?->name ?? 'Member',
-                    'status' => 'Active',
+                    'id'            => $user->id,
+                    'name'          => $user->name,
+                    'email'         => $user->email,
+                    'initials'      => strtoupper(substr($user->name, 0, 2)),
+                    'role'          => $user->roles->first()?->name ?? 'Member',
+                    'status'        => 'Active',
                     'last_login_at' => $user->updated_at ? $user->updated_at->format('d M Y, H:i \W\I\B') : 'Never logged in',
-                    'ip_address' => 'IP: 127.0.0.1 (Localhost)',
+                    'ip_address'    => 'IP: 127.0.0.1 (Localhost)',
                 ];
             })
             ->withQueryString();
     }
 
-    public function getPaginatedTenantRoles(string $tenantSlug, ?string $search = null, int $perPage = 10): LengthAwarePaginator
+    public function getPaginatedTenantRoles(string $tenantSlug, ?string $search = null, int $perPage = 10, string $sortBy = 'id', string $sortOrder = 'desc'): LengthAwarePaginator
     {
         $tenant = Tenant::where('slug', $tenantSlug)->firstOrFail();
 
-        return Role::query()
+        $query = Role::query()
             ->where('tenant_id', $tenant->id)
             ->when($search, function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%");
             })
-            ->withCount(['permissions'])
-            ->latest()
+            ->withCount(['permissions']);
+
+        // Apply Sorting
+        match ($sortBy) {
+            'name' => $query->orderBy('name', $sortOrder),
+            'permissions_count' => $query->orderBy('permissions_count', $sortOrder),
+            default => $query->orderBy('id', $sortOrder),
+        };
+
+        return $query
             ->paginate($perPage)
             ->withQueryString();
     }
@@ -65,9 +81,9 @@ class TenantUserRoleService implements TenantUserRoleContract
 
         $user = User::create([
             'tenant_id' => $tenant->id,
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
+            'name'      => $data['name'],
+            'email'     => $data['email'],
+            'password'  => Hash::make($data['password']),
         ]);
 
         if (isset($data['role'])) {
@@ -82,7 +98,7 @@ class TenantUserRoleService implements TenantUserRoleContract
         $user = User::findOrFail($userId);
 
         $updateData = [
-            'name' => $data['name'],
+            'name'  => $data['name'],
             'email' => $data['email'],
         ];
 
@@ -110,8 +126,8 @@ class TenantUserRoleService implements TenantUserRoleContract
         $tenant = Tenant::where('slug', $tenantSlug)->firstOrFail();
 
         $role = Role::create([
-            'name' => $data['name'],
-            'tenant_id' => $tenant->id,
+            'name'       => $data['name'],
+            'tenant_id'  => $tenant->id,
             'guard_name' => 'web',
         ]);
 

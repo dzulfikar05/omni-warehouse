@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Head, Link, usePage, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { TableCell } from '@/components/ui/table';
-import { DataTable } from '@/components/data-table';
+import { DataTable, HeaderConfig } from '@/components/data-table';
 import { TableFilter } from '@/components/table-filter';
 import { FilterDropdown } from '@/components/table-dropdown';
 import { ActionButton } from '@/components/action-button';
@@ -82,6 +82,7 @@ interface IndexProps {
         category_id?: string;
         unit_id?: string;
         sort_by?: string;
+        sort_dir?: 'asc' | 'desc';
         per_page?: string;
     };
 }
@@ -93,7 +94,8 @@ export default function SkuIndex({ skus, stats, categories, units, filters }: In
     const [search, setSearch] = useState(filters?.search || '');
     const [categoryId, setCategoryId] = useState(filters?.category_id || 'all');
     const [unitId, setUnitId] = useState(filters?.unit_id || 'all');
-    const [sortBy, setSortBy] = useState(filters?.sort_by || 'latest');
+    const [sortBy, setSortBy] = useState(filters?.sort_by || 'created_at');
+    const [sortDir, setSortDir] = useState<'asc' | 'desc'>(filters?.sort_dir || 'desc');
     const [perPage, setPerPage] = useState(filters?.per_page || '10');
 
     const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
@@ -114,7 +116,8 @@ export default function SkuIndex({ skus, stats, categories, units, filters }: In
             newPerPage: string,
             newCategory = categoryId,
             newUnit = unitId,
-            newSort = sortBy
+            newSortBy = sortBy,
+            newSortDir = sortDir
         ) => {
             router.get(
                 `/${tenantSlug}/inventory/skus`,
@@ -122,13 +125,14 @@ export default function SkuIndex({ skus, stats, categories, units, filters }: In
                     search: newSearch || undefined,
                     category_id: newCategory !== 'all' ? newCategory : undefined,
                     unit_id: newUnit !== 'all' ? newUnit : undefined,
-                    sort_by: newSort !== 'latest' ? newSort : undefined,
+                    sort_by: newSortBy,
+                    sort_dir: newSortDir,
                     per_page: newPerPage,
                 },
                 { preserveState: true, replace: true, preserveScroll: true }
             );
         },
-        [tenantSlug, categoryId, unitId, sortBy]
+        [tenantSlug, categoryId, unitId, sortBy, sortDir]
     );
 
     const debouncedSearch = useMemo(
@@ -139,6 +143,12 @@ export default function SkuIndex({ skus, stats, categories, units, filters }: In
     useEffect(() => {
         return () => debouncedSearch.cancel();
     }, [debouncedSearch]);
+
+    const handleSortChange = (field: string, direction: 'asc' | 'desc') => {
+        setSortBy(field);
+        setSortDir(direction);
+        applyFilters(search, perPage, categoryId, unitId, field, direction);
+    };
 
     const handleDelete = (id: number) => {
         router.delete(`/${tenantSlug}/inventory/skus/${id}`);
@@ -160,7 +170,6 @@ export default function SkuIndex({ skus, stats, categories, units, filters }: In
         }).format(val);
     };
 
-    // Gunakan statistik dari Server (Agregat seluruh database)
     const totalSkus = stats?.total_skus ?? skus.total ?? 0;
     const totalStock = stats?.total_stock ?? skus.data.reduce((acc, curr) => acc + Number(curr.current_stock || 0), 0);
     const lowStockCount = stats?.low_stock_count ?? skus.data.filter((item) => item.current_stock <= (item.min_stock ?? 5)).length;
@@ -168,6 +177,17 @@ export default function SkuIndex({ skus, stats, categories, units, filters }: In
 
     const canExport = can('tenant.skus.export') || can('skus.export');
     const canCreate = can('tenant.skus.create') || can('skus.create');
+
+    const tableHeaders: Array<string | HeaderConfig> = [
+        { label: 'KODE SKU / BARCODE', sortField: 'sku_code' },
+        { label: 'NAMA PRODUK', sortField: 'product_id' },
+        'KATEGORI',
+        'SATUAN',
+        { label: 'BASE COST (HPP)', sortField: 'base_cost' },
+        { label: 'STOK AKTUAL', sortField: 'current_stock' },
+        { label: 'TANGGAL DIBUAT', sortField: 'created_at' },
+        'ACTIONS',
+    ];
 
     return (
         <>
@@ -258,7 +278,7 @@ export default function SkuIndex({ skus, stats, categories, units, filters }: In
                     </div>
                 </div>
 
-                {/* Table Filter with Dropdown */}
+                {/* Table Filter dengan Dropdown */}
                 <TableFilter
                     search={search}
                     onSearchChange={(e) => {
@@ -277,7 +297,8 @@ export default function SkuIndex({ skus, stats, categories, units, filters }: In
                             setSearch('');
                             setCategoryId('all');
                             setUnitId('all');
-                            setSortBy('latest');
+                            setSortBy('created_at');
+                            setSortDir('desc');
                             router.get(`/${tenantSlug}/inventory/skus`);
                         }}
                     >
@@ -315,41 +336,18 @@ export default function SkuIndex({ skus, stats, categories, units, filters }: In
                                     </SelectContent>
                                 </Select>
                             </div>
-
-                            <div className="space-y-2">
-                                <Label className="text-xs font-semibold">Urutkan Berdasarkan</Label>
-                                <Select value={sortBy} onValueChange={setSortBy}>
-                                    <SelectTrigger className="h-9 text-xs">
-                                        <SelectValue placeholder="Urutan" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="latest">Terbaru Ditambahkan</SelectItem>
-                                        <SelectItem value="oldest">Terlama</SelectItem>
-                                        <SelectItem value="code_asc">Kode SKU (A-Z)</SelectItem>
-                                        <SelectItem value="code_desc">Kode SKU (Z-A)</SelectItem>
-                                        <SelectItem value="stock_low">Stok Terendah</SelectItem>
-                                        <SelectItem value="stock_high">Stok Tertinggi</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
                         </div>
                     </FilterDropdown>
                 </TableFilter>
 
                 {/* Reusable Data Table Component */}
                 <DataTable
-                    headers={[
-                        'KODE SKU / BARCODE',
-                        'NAMA PRODUK',
-                        'KATEGORI',
-                        'SATUAN',
-                        'BASE COST (HPP)',
-                        'STOK AKTUAL',
-                        'TANGGAL DIBUAT',
-                        'ACTIONS',
-                    ]}
+                    headers={tableHeaders}
                     data={skus.data}
                     pagination={skus}
+                    sortBy={sortBy}
+                    sortDirection={sortDir}
+                    onSortChange={handleSortChange}
                     renderRow={(sku: SkuItem) => (
                         <>
                             <TableCell className="font-mono text-xs">

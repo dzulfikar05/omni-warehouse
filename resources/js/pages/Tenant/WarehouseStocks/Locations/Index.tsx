@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Head, router, usePage, Link } from '@inertiajs/react';
 import { debounce } from 'lodash';
 import { PageHeader } from '@/components/page-header';
-import { DataTable } from '@/components/data-table';
+import { DataTable, HeaderConfig } from '@/components/data-table';
 import { TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { TableFilter } from '@/components/table-filter';
@@ -18,7 +18,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Layers, Plus, FileText, FileSpreadsheet, CheckCircle2, XCircle, Warehouse as WarehouseIcon } from 'lucide-react';
+import { Layers, Plus, FileText, FileSpreadsheet, CheckCircle2, XCircle } from 'lucide-react';
 import { usePermission } from '@/utils/permission';
 
 interface Warehouse {
@@ -57,6 +57,8 @@ interface LocationIndexProps {
         search?: string;
         warehouse_id?: string;
         per_page?: string;
+        sort_by?: string;
+        sort_order?: 'asc' | 'desc';
     };
 }
 
@@ -67,6 +69,10 @@ export default function Index({ locations, warehouses, summary, filters }: Locat
     const [search, setSearch] = useState(filters?.search || '');
     const [perPage, setPerPage] = useState(filters?.per_page || '10');
     const [tempWarehouseId, setTempWarehouseId] = useState(filters?.warehouse_id || 'all');
+    const [sortBy, setSortBy] = useState(filters?.sort_by || 'created_at');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(
+        (filters?.sort_order as 'asc' | 'desc') || 'desc',
+    );
 
     const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
@@ -81,27 +87,35 @@ export default function Index({ locations, warehouses, summary, filters }: Locat
     }, [flash?.success]);
 
     const applyFilters = useCallback(
-        (newSearch: string, newPerPage: string, warehouseId: string) => {
+        (
+            newSearch: string,
+            newPerPage: string,
+            warehouseId: string,
+            newSortBy: string = sortBy,
+            newSortOrder: 'asc' | 'desc' = sortOrder,
+        ) => {
             router.get(
                 `/${tenantSlug}/locations`,
                 {
                     search: newSearch,
                     per_page: newPerPage,
                     warehouse_id: warehouseId !== 'all' ? warehouseId : undefined,
+                    sort_by: newSortBy,
+                    sort_order: newSortOrder,
                 },
-                { preserveState: true, replace: true, preserveScroll: true }
+                { preserveState: true, replace: true, preserveScroll: true },
             );
         },
-        [tenantSlug]
+        [tenantSlug, sortBy, sortOrder],
     );
 
     const debouncedSearch = useMemo(
         () =>
             debounce(
                 (q: string, p: string, wh: string) => applyFilters(q, p, wh),
-                500
+                500,
             ),
-        [applyFilters]
+        [applyFilters],
     );
 
     useEffect(() => {
@@ -119,18 +133,34 @@ export default function Index({ locations, warehouses, summary, filters }: Locat
         applyFilters(search, value, tempWarehouseId);
     };
 
+    const handleSortChange = (field: string, direction: 'asc' | 'desc') => {
+        setSortBy(field);
+        setSortOrder(direction);
+        applyFilters(
+            search,
+            perPage,
+            tempWarehouseId,
+            field,
+            direction,
+        );
+    };
+
     const handleApplyFilter = () => {
         applyFilters(search, perPage, tempWarehouseId);
     };
 
     const handleResetFilter = () => {
         setTempWarehouseId('all');
-        applyFilters(search, perPage, 'all');
+        setSortBy('created_at');
+        setSortOrder('desc');
+        applyFilters(search, perPage, 'all', 'created_at', 'desc');
     };
 
     const getFilterPayload = () => ({
         search: search || undefined,
         warehouse_id: tempWarehouseId !== 'all' ? tempWarehouseId : undefined,
+        sort_by: sortBy,
+        sort_order: sortOrder,
     });
 
     const handleExportPdf = () => {
@@ -152,6 +182,15 @@ export default function Index({ locations, warehouses, summary, filters }: Locat
     const canEdit = can('tenant.locations.edit') || can('locations.edit');
     const canDelete = can('tenant.locations.delete') || can('locations.delete');
     const canExport = can('tenant.locations.export') || can('locations.export');
+
+    const tableHeaders: Array<string | HeaderConfig> = [
+        { label: 'KODE RAK', sortField: 'rack_code' },
+        { label: 'GUDANG', sortField: 'warehouse_name' },
+        { label: 'ZONA', sortField: 'zone' },
+        'DESKRIPSI',
+        { label: 'STATUS', sortField: 'is_active' },
+        'ACTIONS',
+    ];
 
     return (
         <>
@@ -260,9 +299,12 @@ export default function Index({ locations, warehouses, summary, filters }: Locat
                 </TableFilter>
 
                 <DataTable
-                    headers={['KODE RAK', 'GUDANG', 'ZONA', 'DESKRIPSI', 'STATUS', 'ACTIONS']}
+                    headers={tableHeaders}
                     data={locations.data}
                     pagination={locations}
+                    sortBy={sortBy}
+                    sortDirection={sortOrder}
+                    onSortChange={handleSortChange}
                     renderRow={(item: Location) => (
                         <>
                             <TableCell className="font-mono text-xs font-bold text-primary">{item.rack_code}</TableCell>

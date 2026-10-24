@@ -22,6 +22,9 @@ class InboundOutboundReportController extends Controller
     {
         $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
 
+        $sortBy    = $request->input('sort_by', 'created_at');
+        $sortOrder = strtolower($request->input('sort_order', 'desc')) === 'asc' ? 'asc' : 'desc';
+
         $query = TransactionItem::whereHas('transaction', function ($q) use ($tenant) {
             $q->where('tenant_id', $tenant->id)
               ->whereIn('transaction_type', ['IN', 'OUT', 'INBOUND', 'OUTBOUND']);
@@ -81,8 +84,29 @@ class InboundOutboundReportController extends Controller
             $query->whereDate('created_at', '<=', $dateTo);
         }
 
+        // Apply Click-to-Sort Sorting
+        match ($sortBy) {
+            'quantity' => $query->orderBy('quantity', $sortOrder),
+            'transaction_type' => $query->whereHas('transaction', function ($q) use ($sortOrder) {
+                $q->orderBy('transaction_type', $sortOrder);
+            }),
+            'status' => $query->whereHas('transaction', function ($q) use ($sortOrder) {
+                $q->orderBy('status', $sortOrder);
+            }),
+            'transaction_id' => $query->whereHas('transaction', function ($q) use ($sortOrder) {
+                $q->orderBy('local_uuid', $sortOrder);
+            }),
+            'sku_id' => $query->whereHas('sku', function ($q) use ($sortOrder) {
+                $q->orderBy('sku_code', $sortOrder);
+            }),
+            'product_name' => $query->whereHas('sku.product', function ($q) use ($sortOrder) {
+                $q->orderBy('name', $sortOrder);
+            }),
+            default => $query->orderBy('created_at', $sortOrder),
+        };
+
         $perPage = (int) $request->input('per_page', 10);
-        $reports = $query->latest('created_at')->paginate($perPage)->withQueryString();
+        $reports = $query->paginate($perPage)->withQueryString();
 
         // Hitung Kumpulan Statistik Riil Inbound & Outbound
         $baseItemQuery = TransactionItem::whereHas('transaction', fn($q) => $q->where('tenant_id', $tenant->id));
@@ -122,7 +146,10 @@ class InboundOutboundReportController extends Controller
             'summary'    => $summary,
             'warehouses' => $warehouses,
             'categories' => $categories,
-            'filters'    => $request->only(['search', 'per_page', 'warehouse_id', 'category_id', 'status', 'date_from', 'date_to']),
+            'filters'    => array_merge(
+                $request->only(['search', 'per_page', 'warehouse_id', 'category_id', 'status', 'date_from', 'date_to']),
+                ['sort_by' => $sortBy, 'sort_order' => $sortOrder]
+            ),
         ]);
     }
 

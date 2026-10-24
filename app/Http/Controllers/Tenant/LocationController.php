@@ -28,10 +28,17 @@ class LocationController extends Controller
     {
         $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
 
+        $perPage   = (int) $request->input('per_page', 15);
+        $sortBy    = $request->input('sort_by', 'created_at');
+        $sortOrder = strtolower($request->input('sort_order', 'desc')) === 'asc' ? 'asc' : 'desc';
+
         $locations = $this->service->getPaginatedLocations(
             $tenant_slug,
             $request->search,
-            $request->warehouse_id ? (int) $request->warehouse_id : null
+            $request->warehouse_id ? (int) $request->warehouse_id : null,
+            $perPage,
+            $sortBy,
+            $sortOrder
         );
         $warehouses = $this->service->getAllWarehouses($tenant_slug);
 
@@ -57,7 +64,10 @@ class LocationController extends Controller
             'locations'  => $locations,
             'warehouses' => $warehouses,
             'summary'    => $summary,
-            'filters'    => $request->only(['search', 'warehouse_id', 'per_page']),
+            'filters'    => array_merge(
+                $request->only(['search', 'warehouse_id', 'per_page']),
+                ['sort_by' => $sortBy, 'sort_order' => $sortOrder]
+            ),
         ]);
     }
 

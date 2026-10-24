@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Head, router, usePage } from '@inertiajs/react';
 import { debounce } from 'lodash';
 import { PageHeader } from '@/components/page-header';
-import { DataTable } from '@/components/data-table';
+import { DataTable, HeaderConfig } from '@/components/data-table';
 import { TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { TableFilter } from '@/components/table-filter';
@@ -58,6 +58,8 @@ interface StockSummaryProps {
         status?: string;
         date_from?: string;
         date_to?: string;
+        sort_by?: string;
+        sort_order?: 'asc' | 'desc';
     };
 }
 
@@ -72,6 +74,10 @@ export default function Index({ reports, summary, warehouses, categories, filter
     const [tempStatus, setTempStatus] = useState(filters.status || 'all');
     const [tempDateFrom, setTempDateFrom] = useState(filters.date_from || '');
     const [tempDateTo, setTempDateTo] = useState(filters.date_to || '');
+    const [sortBy, setSortBy] = useState(filters.sort_by || 'updated_at');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(
+        (filters.sort_order as 'asc' | 'desc') || 'desc'
+    );
 
     const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
@@ -104,7 +110,9 @@ export default function Index({ reports, summary, warehouses, categories, filter
             category: string,
             status: string,
             dateFrom: string,
-            dateTo: string
+            dateTo: string,
+            newSortBy: string = sortBy,
+            newSortOrder: 'asc' | 'desc' = sortOrder
         ) => {
             router.get(
                 window.location.pathname,
@@ -116,11 +124,13 @@ export default function Index({ reports, summary, warehouses, categories, filter
                     status: status !== 'all' ? status : undefined,
                     date_from: dateFrom || undefined,
                     date_to: dateTo || undefined,
+                    sort_by: newSortBy,
+                    sort_order: newSortOrder,
                 },
                 { preserveState: true, replace: true, preserveScroll: true }
             );
         },
-        []
+        [sortBy, sortOrder]
     );
 
     const debouncedSearch = useMemo(
@@ -148,6 +158,22 @@ export default function Index({ reports, summary, warehouses, categories, filter
         applyFilters(search, value, tempWarehouse, tempCategory, tempStatus, tempDateFrom, tempDateTo);
     };
 
+    const handleSortChange = (field: string, direction: 'asc' | 'desc') => {
+        setSortBy(field);
+        setSortOrder(direction);
+        applyFilters(
+            search,
+            perPage,
+            tempWarehouse,
+            tempCategory,
+            tempStatus,
+            tempDateFrom,
+            tempDateTo,
+            field,
+            direction
+        );
+    };
+
     const handleApplyFilter = () => {
         applyFilters(search, perPage, tempWarehouse, tempCategory, tempStatus, tempDateFrom, tempDateTo);
     };
@@ -158,7 +184,9 @@ export default function Index({ reports, summary, warehouses, categories, filter
         setTempStatus('all');
         setTempDateFrom('');
         setTempDateTo('');
-        applyFilters(search, perPage, 'all', 'all', 'all', '', '');
+        setSortBy('updated_at');
+        setSortOrder('desc');
+        applyFilters(search, perPage, 'all', 'all', 'all', '', '', 'updated_at', 'desc');
     };
 
     const getFilterPayload = () => ({
@@ -168,6 +196,8 @@ export default function Index({ reports, summary, warehouses, categories, filter
         status: tempStatus !== 'all' ? tempStatus : undefined,
         date_from: tempDateFrom || undefined,
         date_to: tempDateTo || undefined,
+        sort_by: sortBy,
+        sort_order: sortOrder,
     });
 
     const handleExportPdf = () => {
@@ -179,6 +209,18 @@ export default function Index({ reports, summary, warehouses, categories, filter
     };
 
     const canExport = can('tenant.stock_summary.export') || can('stock_summary.export');
+
+    const tableHeaders: Array<string | HeaderConfig> = [
+        { label: 'SKU CODE', sortField: 'sku_id' },
+        { label: 'PRODUCT NAME', sortField: 'product_name' },
+        { label: 'BATCH NO', sortField: 'batch_number' },
+        'WAREHOUSE',
+        'LOCATION',
+        { label: 'STOCK QTY', sortField: 'quantity' },
+        { label: 'BASE COST', sortField: 'base_cost' },
+        { label: 'TOTAL VALUE', sortField: 'total_value' },
+        { label: 'STATUS', sortField: 'status' },
+    ];
 
     return (
         <>
@@ -214,7 +256,7 @@ export default function Index({ reports, summary, warehouses, categories, filter
                     }
                 />
 
-                {/* Stat Cards - Desain konsisten dengan Customer/Supplier */}
+                {/* Stat Cards */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-5">
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
@@ -349,9 +391,12 @@ export default function Index({ reports, summary, warehouses, categories, filter
                 </TableFilter>
 
                 <DataTable
-                    headers={['SKU CODE', 'PRODUCT NAME', 'BATCH NO', 'WAREHOUSE', 'LOCATION', 'STOCK QTY', 'BASE COST', 'TOTAL VALUE', 'STATUS']}
+                    headers={tableHeaders}
                     data={reports.data}
                     pagination={reports}
+                    sortBy={sortBy}
+                    sortDirection={sortOrder}
+                    onSortChange={handleSortChange}
                     renderRow={(item: any) => {
                         const qty = Number(item.quantity) || 0;
                         const cost = Number(item.sku?.base_cost) || 0;
@@ -383,8 +428,8 @@ export default function Index({ reports, summary, warehouses, categories, filter
                                 <TableCell className="text-xs font-bold text-foreground">
                                     {qty.toLocaleString()} <span className="font-normal text-muted-foreground">{item.sku?.unit?.symbol || ''}</span>
                                 </TableCell>
-                                <TableCell className="text-xs font-mono text-muted-foreground">{formatRp(cost)}</TableCell>
-                                <TableCell className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">{formatRp(totalVal)}</TableCell>
+                                <TableCell className="font-mono text-xs text-muted-foreground">{formatRp(cost)}</TableCell>
+                                <TableCell className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">{formatRp(totalVal)}</TableCell>
                                 <TableCell>
                                     <Badge className={badgeStyle}>
                                         {statusText}

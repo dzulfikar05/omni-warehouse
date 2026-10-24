@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Head, router, usePage } from '@inertiajs/react';
 import { debounce } from 'lodash';
 import { PageHeader } from '@/components/page-header';
-import { DataTable } from '@/components/data-table';
+import { DataTable, HeaderConfig } from '@/components/data-table';
 import { TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { TableFilter } from '@/components/table-filter';
@@ -57,6 +57,8 @@ interface InboundOutboundProps {
         status?: string;
         date_from?: string;
         date_to?: string;
+        sort_by?: string;
+        sort_order?: 'asc' | 'desc';
     };
 }
 
@@ -71,6 +73,10 @@ export default function Index({ reports, summary, warehouses, categories, filter
     const [tempStatus, setTempStatus] = useState(filters.status || 'all');
     const [tempDateFrom, setTempDateFrom] = useState(filters.date_from || '');
     const [tempDateTo, setTempDateTo] = useState(filters.date_to || '');
+    const [sortBy, setSortBy] = useState(filters.sort_by || 'created_at');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(
+        (filters.sort_order as 'asc' | 'desc') || 'desc'
+    );
 
     const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
@@ -92,7 +98,9 @@ export default function Index({ reports, summary, warehouses, categories, filter
             category: string,
             status: string,
             dateFrom: string,
-            dateTo: string
+            dateTo: string,
+            newSortBy: string = sortBy,
+            newSortOrder: 'asc' | 'desc' = sortOrder
         ) => {
             router.get(
                 window.location.pathname,
@@ -104,11 +112,13 @@ export default function Index({ reports, summary, warehouses, categories, filter
                     status: status !== 'all' ? status : undefined,
                     date_from: dateFrom || undefined,
                     date_to: dateTo || undefined,
+                    sort_by: newSortBy,
+                    sort_order: newSortOrder,
                 },
                 { preserveState: true, replace: true, preserveScroll: true }
             );
         },
-        []
+        [sortBy, sortOrder]
     );
 
     const debouncedSearch = useMemo(
@@ -136,6 +146,22 @@ export default function Index({ reports, summary, warehouses, categories, filter
         applyFilters(search, value, tempWarehouse, tempCategory, tempStatus, tempDateFrom, tempDateTo);
     };
 
+    const handleSortChange = (field: string, direction: 'asc' | 'desc') => {
+        setSortBy(field);
+        setSortOrder(direction);
+        applyFilters(
+            search,
+            perPage,
+            tempWarehouse,
+            tempCategory,
+            tempStatus,
+            tempDateFrom,
+            tempDateTo,
+            field,
+            direction
+        );
+    };
+
     const handleApplyFilter = () => {
         applyFilters(search, perPage, tempWarehouse, tempCategory, tempStatus, tempDateFrom, tempDateTo);
     };
@@ -146,7 +172,9 @@ export default function Index({ reports, summary, warehouses, categories, filter
         setTempStatus('all');
         setTempDateFrom('');
         setTempDateTo('');
-        applyFilters(search, perPage, 'all', 'all', 'all', '', '');
+        setSortBy('created_at');
+        setSortOrder('desc');
+        applyFilters(search, perPage, 'all', 'all', 'all', '', '', 'created_at', 'desc');
     };
 
     const getFilterPayload = () => ({
@@ -156,6 +184,8 @@ export default function Index({ reports, summary, warehouses, categories, filter
         status: tempStatus !== 'all' ? tempStatus : undefined,
         date_from: tempDateFrom || undefined,
         date_to: tempDateTo || undefined,
+        sort_by: sortBy,
+        sort_order: sortOrder,
     });
 
     const handleExportPdf = () => {
@@ -167,6 +197,17 @@ export default function Index({ reports, summary, warehouses, categories, filter
     };
 
     const canExport = can('tenant.inbound_outbound.export') || can('inbound_outbound.export');
+
+    const tableHeaders: Array<string | HeaderConfig> = [
+        { label: 'DATE', sortField: 'created_at' },
+        { label: 'TRANSACTION REF', sortField: 'transaction_id' },
+        { label: 'FLOW TYPE', sortField: 'transaction_type' },
+        'CONTACT',
+        { label: 'SKU CODE', sortField: 'sku_id' },
+        { label: 'PRODUCT NAME', sortField: 'product_name' },
+        { label: 'QTY', sortField: 'quantity' },
+        { label: 'STATUS', sortField: 'status' },
+    ];
 
     return (
         <>
@@ -202,7 +243,7 @@ export default function Index({ reports, summary, warehouses, categories, filter
                     }
                 />
 
-                {/* 4 Stat Cards - Desain seragam */}
+                {/* 4 Stat Cards */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
@@ -325,9 +366,12 @@ export default function Index({ reports, summary, warehouses, categories, filter
                 </TableFilter>
 
                 <DataTable
-                    headers={['DATE', 'TRANSACTION REF', 'FLOW TYPE', 'CONTACT', 'SKU CODE', 'PRODUCT NAME', 'QTY', 'STATUS']}
+                    headers={tableHeaders}
                     data={reports.data}
                     pagination={reports}
+                    sortBy={sortBy}
+                    sortDirection={sortOrder}
+                    onSortChange={handleSortChange}
                     renderRow={(item: any) => {
                         const rawType = item.transaction?.transaction_type?.toUpperCase() || 'IN';
                         const isInbound = rawType.includes('IN');
@@ -344,12 +388,12 @@ export default function Index({ reports, summary, warehouses, categories, filter
 
                         return (
                             <>
-                                <TableCell className="text-xs text-muted-foreground font-mono">
+                                <TableCell className="font-mono text-xs text-muted-foreground">
                                     {item.created_at ? new Date(item.created_at).toLocaleDateString('id-ID') : '-'}
                                 </TableCell>
                                 <TableCell className="font-mono text-xs font-semibold">{item.transaction?.local_uuid || '-'}</TableCell>
                                 <TableCell>
-                                    <span className={`inline-flex items-center gap-1 font-semibold text-xs ${isInbound ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                                    <span className={`inline-flex items-center gap-1 text-xs font-semibold ${isInbound ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                                         {isInbound ? <ArrowDownRight className="h-3.5 w-3.5" /> : <ArrowUpRight className="h-3.5 w-3.5" />}
                                         {isInbound ? 'Inbound' : 'Outbound'}
                                     </span>

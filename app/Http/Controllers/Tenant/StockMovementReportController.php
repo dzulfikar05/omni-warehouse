@@ -21,6 +21,9 @@ class StockMovementReportController extends Controller
     {
         $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
 
+        $sortBy    = $request->input('sort_by', 'created_at');
+        $sortOrder = strtolower($request->input('sort_order', 'desc')) === 'asc' ? 'asc' : 'desc';
+
         $query = TransactionItem::whereHas('transaction', function ($q) use ($tenant) {
             $q->where('tenant_id', $tenant->id);
         })->with([
@@ -77,8 +80,23 @@ class StockMovementReportController extends Controller
             $query->whereDate('created_at', '<=', $dateTo);
         }
 
+        // Apply Click-to-Sort Sorting
+        match ($sortBy) {
+            'quantity' => $query->orderBy('quantity', $sortOrder),
+            'transaction_type' => $query->whereHas('transaction', function ($q) use ($sortOrder) {
+                $q->orderBy('transaction_type', $sortOrder);
+            }),
+            'sku_id' => $query->whereHas('sku', function ($q) use ($sortOrder) {
+                $q->orderBy('sku_code', $sortOrder);
+            }),
+            'product_name' => $query->whereHas('sku.product', function ($q) use ($sortOrder) {
+                $q->orderBy('name', $sortOrder);
+            }),
+            default => $query->orderBy('created_at', $sortOrder),
+        };
+
         $perPage = (int) $request->input('per_page', 10);
-        $reports = $query->latest('created_at')->paginate($perPage)->withQueryString();
+        $reports = $query->paginate($perPage)->withQueryString();
 
         // Hitung Kumpulan Statistik Riil Mutasi Transaksi
         $baseTransactionQuery = TransactionItem::whereHas('transaction', fn($q) => $q->where('tenant_id', $tenant->id));
@@ -112,7 +130,10 @@ class StockMovementReportController extends Controller
             'summary'    => $summary,
             'warehouses' => $warehouses,
             'categories' => $categories,
-            'filters'    => $request->only(['search', 'per_page', 'warehouse_id', 'category_id', 'transaction_type', 'date_from', 'date_to']),
+            'filters'    => array_merge(
+                $request->only(['search', 'per_page', 'warehouse_id', 'category_id', 'transaction_type', 'date_from', 'date_to']),
+                ['sort_by' => $sortBy, 'sort_order' => $sortOrder]
+            ),
         ]);
     }
 

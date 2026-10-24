@@ -6,6 +6,8 @@ use App\Contracts\TenantContract;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Web\TenantRegisterRequest;
 use App\Models\Plan;
+use App\Models\Tenant;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -83,5 +85,57 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('tenant.welcome', ['tenant_slug' => $tenant_slug]);
+    }
+
+    public function showFindTenantForm(): Response
+    {
+        return Inertia::render('auth/FindTenant');
+    }
+
+    public function findTenant(Request $request)
+    {
+        $request->validate([
+            'tenant' => ['required', 'string', 'max:255'],
+            'email'  => ['required', 'email'],
+        ], [
+            'tenant.required' => 'Nama atau Slug Tenant wajib diisi.',
+            'email.required'  => 'Email akun Anda wajib diisi.',
+        ]);
+
+        $inputTenant = trim($request->input('tenant'));
+        $email = trim($request->input('email'));
+
+        $tenant = Tenant::where(function ($q) use ($inputTenant) {
+            $q->where('slug', strtolower($inputTenant))
+              ->orWhere('name', 'ILIKE', "%{$inputTenant}%"); // ILIKE untuk PostgreSQL
+        })->first();
+
+        if (!$tenant) {
+            return back()->withErrors([
+                'tenant' => 'Workspace / Tenant tidak ditemukan dalam sistem.',
+            ]);
+        }
+
+        // Verifikasi apakah user dengan email tersebut terdaftar di tenant ini
+        $userExists = User::where('tenant_id', $tenant->id)
+            ->where('email', $email)
+            ->exists();
+
+        if (!$userExists) {
+            return back()->withErrors([
+                'email' => "Akun email {$email} tidak terdaftar pada workspace {$tenant->name}.",
+            ]);
+        }
+
+        // Redirect ke halaman sukses dengan membawa data tenant & email terverifikasi
+        return Inertia::render('auth/FindTenantSuccess', [
+            'tenant' => [
+                'id'        => $tenant->id,
+                'name'      => $tenant->name,
+                'slug'      => $tenant->slug,
+                'login_url' => url("/{$tenant->slug}/login"),
+            ],
+            'email' => $email,
+        ]);
     }
 }

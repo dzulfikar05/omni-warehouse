@@ -25,8 +25,10 @@ class ProductsController extends Controller
             'search'      => $request->input('search'),
             'category_id' => $request->input('category_id'),
             'status'      => $request->input('status'),
-            'sort_by'     => $request->input('sort_by', 'latest'),
+            'sort_by'     => $request->input('sort_by', 'created_at'),
+            'sort_order'  => $request->input('sort_order', 'desc'),
         ];
+
         $perPage = (int) $request->input('per_page', 10);
         if (! in_array($perPage, [10, 25, 50])) {
             $perPage = 10;

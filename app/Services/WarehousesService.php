@@ -9,17 +9,39 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class WarehousesService implements WarehousesContract
 {
-    public function getPaginatedWarehouses(string $tenantSlug, ?string $search): LengthAwarePaginator
-    {
+    public function getPaginatedWarehouses(
+        string $tenantSlug,
+        ?string $search = null,
+        ?string $isActive = null,
+        int $perPage = 10,
+        string $sortBy = 'created_at',
+        string $sortOrder = 'desc'
+    ): LengthAwarePaginator {
         $tenant = Tenant::where('slug', $tenantSlug)->firstOrFail();
 
-        return Warehouse::where('tenant_id', $tenant->id)
+        $query = Warehouse::where('tenant_id', $tenant->id)
             ->when($search, function ($query, $searchQuery) {
-                $query->where('name', 'like', "%{$searchQuery}%")
-                      ->orWhere('code', 'like', "%{$searchQuery}%");
+                $query->where(function ($q) use ($searchQuery) {
+                    $q->where('name', 'like', "%{$searchQuery}%")
+                      ->orWhere('code', 'like', "%{$searchQuery}%")
+                      ->orWhere('desc', 'like', "%{$searchQuery}%");
+                });
             })
-            ->latest()
-            ->paginate(10)
+            ->when($isActive !== null && $isActive !== 'all', function ($query) use ($isActive) {
+                $status = $isActive === '1' || $isActive === 'true';
+                $query->where('is_active', $status);
+            });
+
+        // Apply Sorting
+        match ($sortBy) {
+            'code' => $query->orderBy('code', $sortOrder),
+            'name' => $query->orderBy('name', $sortOrder),
+            'is_active' => $query->orderBy('is_active', $sortOrder),
+            default => $query->orderBy('created_at', $sortOrder),
+        };
+
+        return $query
+            ->paginate($perPage)
             ->withQueryString();
     }
 
