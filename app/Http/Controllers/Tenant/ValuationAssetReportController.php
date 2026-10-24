@@ -22,20 +22,22 @@ class ValuationAssetReportController extends Controller
     {
         $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
 
-        $query = InventoryStock::whereHas('sku.product', function ($q) use ($tenant) {
-            $q->where('tenant_id', $tenant->id);
-        })->with(['sku.product.category', 'sku.unit', 'location.warehouse']);
+        $sortBy    = $request->input('sort_by', 'updated_at');
+        $sortOrder = strtolower($request->input('sort_order', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        $query = InventoryStock::query()
+            ->select('inventory_stocks.*')
+            ->join('skus', 'inventory_stocks.sku_id', '=', 'skus.id')
+            ->join('products', 'skus.product_id', '=', 'products.id')
+            ->where('products.tenant_id', $tenant->id)
+            ->with(['sku.product.category', 'sku.unit', 'location.warehouse']);
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
-                $q->where('batch_number', 'like', "%{$search}%")
-                  ->orWhereHas('sku', function ($sq) use ($search) {
-                      $sq->where('sku_code', 'like', "%{$search}%")
-                        ->orWhere('barcode', 'like', "%{$search}%")
-                        ->orWhereHas('product', function ($pq) use ($search) {
-                            $pq->where('name', 'like', "%{$search}%");
-                        });
-                  });
+                $q->where('inventory_stocks.batch_number', 'like', "%{$search}%")
+                  ->orWhere('skus.sku_code', 'like', "%{$search}%")
+                  ->orWhere('skus.barcode', 'like', "%{$search}%")
+                  ->orWhere('products.name', 'like', "%{$search}%");
             });
         }
 
@@ -49,22 +51,30 @@ class ValuationAssetReportController extends Controller
 
         if ($categoryId = $request->input('category_id')) {
             if ($categoryId !== 'all') {
-                $query->whereHas('sku.product', function ($q) use ($categoryId) {
-                    $q->where('category_id', $categoryId);
-                });
+                $query->where('products.category_id', $categoryId);
             }
         }
 
         if ($dateFrom = $request->input('date_from')) {
-            $query->whereDate('updated_at', '>=', $dateFrom);
+            $query->whereDate('inventory_stocks.updated_at', '>=', $dateFrom);
         }
 
         if ($dateTo = $request->input('date_to')) {
-            $query->whereDate('updated_at', '<=', $dateTo);
+            $query->whereDate('inventory_stocks.updated_at', '<=', $dateTo);
         }
 
+        // Apply Click-to-Sort Sorting
+        match ($sortBy) {
+            'quantity' => $query->orderBy('inventory_stocks.quantity', $sortOrder),
+            'sku_id' => $query->orderBy('skus.sku_code', $sortOrder),
+            'product_name' => $query->orderBy('products.name', $sortOrder),
+            'base_cost' => $query->orderBy('skus.base_cost', $sortOrder),
+            'total_value' => $query->orderBy(DB::raw('inventory_stocks.quantity * COALESCE(skus.base_cost, 0)'), $sortOrder),
+            default => $query->orderBy('inventory_stocks.updated_at', $sortOrder),
+        };
+
         $perPage = (int) $request->input('per_page', 10);
-        $reports = $query->latest('updated_at')->paginate($perPage)->withQueryString();
+        $reports = $query->paginate($perPage)->withQueryString();
 
         // Hitung Kumpulan Statistik Riil Valuation Asset
         $tenantStockQuery = InventoryStock::whereHas('sku.product', fn($q) => $q->where('tenant_id', $tenant->id));
@@ -81,7 +91,7 @@ class ValuationAssetReportController extends Controller
         $summary = [
             'total_asset_value' => (float) $totalAssetValue,
             'total_skus'        => $totalSKUs,
-            'total_quantity'   => $totalQuantity,
+            'total_quantity'    => $totalQuantity,
             'avg_unit_cost'     => (float) $avgUnitCost,
         ];
 
@@ -93,7 +103,10 @@ class ValuationAssetReportController extends Controller
             'summary'    => $summary,
             'warehouses' => $warehouses,
             'categories' => $categories,
-            'filters'    => $request->only(['search', 'per_page', 'warehouse_id', 'category_id', 'date_from', 'date_to']),
+            'filters'    => array_merge(
+                $request->only(['search', 'per_page', 'warehouse_id', 'category_id', 'date_from', 'date_to']),
+                ['sort_by' => $sortBy, 'sort_order' => $sortOrder]
+            ),
         ]);
     }
 

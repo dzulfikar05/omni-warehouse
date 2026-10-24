@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Head, Link, usePage, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { TableCell } from '@/components/ui/table';
-import { DataTable } from '@/components/data-table';
+import { DataTable, HeaderConfig } from '@/components/data-table';
 import { TableFilter } from '@/components/table-filter';
 import { ActionButton } from '@/components/action-button';
 import { PageHeader } from '@/components/page-header';
@@ -38,7 +38,12 @@ interface PageProps {
         total: number;
     };
     stats?: SupplierStats;
-    filters: { search?: string; per_page?: string };
+    filters: {
+        search?: string;
+        per_page?: string;
+        sort_by?: string;
+        sort_order?: 'asc' | 'desc';
+    };
 }
 
 export default function SupplierIndex({ suppliers, stats, filters }: PageProps) {
@@ -47,6 +52,10 @@ export default function SupplierIndex({ suppliers, stats, filters }: PageProps) 
 
     const [search, setSearch] = useState(filters?.search || '');
     const [perPage, setPerPage] = useState(filters?.per_page || '10');
+    const [sortBy, setSortBy] = useState(filters?.sort_by || 'created_at');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(
+        (filters?.sort_order as 'asc' | 'desc') || 'desc'
+    );
 
     const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
@@ -61,24 +70,40 @@ export default function SupplierIndex({ suppliers, stats, filters }: PageProps) 
     }, [flash?.success]);
 
     const applyFilters = useCallback(
-        (newSearch: string, newPerPage: string) => {
+        (
+            newSearch: string,
+            newPerPage: string,
+            newSortBy: string = sortBy,
+            newSortOrder: 'asc' | 'desc' = sortOrder
+        ) => {
             router.get(
                 `/${tenantSlug}/contacts/suppliers`,
-                { search: newSearch, per_page: newPerPage },
-                { preserveState: true, replace: true, preserveScroll: true },
+                {
+                    search: newSearch || undefined,
+                    per_page: newPerPage,
+                    sort_by: newSortBy,
+                    sort_order: newSortOrder,
+                },
+                { preserveState: true, replace: true, preserveScroll: true }
             );
         },
-        [tenantSlug],
+        [tenantSlug, sortBy, sortOrder]
     );
 
     const debouncedSearch = useMemo(
         () => debounce((q: string, p: string) => applyFilters(q, p), 500),
-        [applyFilters],
+        [applyFilters]
     );
 
     useEffect(() => {
         return () => debouncedSearch.cancel();
     }, [debouncedSearch]);
+
+    const handleSortChange = (field: string, direction: 'asc' | 'desc') => {
+        setSortBy(field);
+        setSortOrder(direction);
+        applyFilters(search, perPage, field, direction);
+    };
 
     const handleDelete = (id: number) => {
         router.delete(`/${tenantSlug}/contacts/suppliers/${id}`);
@@ -94,6 +119,15 @@ export default function SupplierIndex({ suppliers, stats, filters }: PageProps) 
 
     const canExport = can('tenant.contacts.suppliers.export') || can('suppliers.export');
     const canCreate = can('tenant.contacts.suppliers.create') || can('suppliers.create');
+
+    const tableHeaders: Array<string | HeaderConfig> = [
+        { label: '#', sortField: 'id' },
+        { label: 'SUPPLIER NAME', sortField: 'name' },
+        { label: 'PIC', sortField: 'pic' },
+        { label: 'CONTACT INFO', sortField: 'phone' },
+        { label: 'TAX ID', sortField: 'tax_number' },
+        'ACTIONS',
+    ];
 
     return (
         <>
@@ -191,9 +225,12 @@ export default function SupplierIndex({ suppliers, stats, filters }: PageProps) 
                 />
 
                 <DataTable
-                    headers={['#', 'SUPPLIER NAME', 'PIC', 'CONTACT INFO', 'TAX ID', 'ACTIONS']}
+                    headers={tableHeaders}
                     data={suppliers.data}
                     pagination={suppliers}
+                    sortBy={sortBy}
+                    sortDirection={sortOrder}
+                    onSortChange={handleSortChange}
                     renderRow={(supplier: Supplier) => (
                         <>
                             <TableCell className="font-mono text-xs text-muted-foreground">#{supplier.id}</TableCell>
@@ -203,7 +240,7 @@ export default function SupplierIndex({ suppliers, stats, filters }: PageProps) 
                                 <div className="text-xs font-medium text-foreground">{supplier.phone || '-'}</div>
                                 <div className="text-[11px] text-muted-foreground">{supplier.email || '-'}</div>
                             </TableCell>
-                            <TableCell className="text-xs font-mono text-muted-foreground">{supplier.tax_number || '-'}</TableCell>
+                            <TableCell className="font-mono text-xs text-muted-foreground">{supplier.tax_number || '-'}</TableCell>
                             <TableCell className="text-right">
                                 <ActionButton
                                     label={supplier.name}

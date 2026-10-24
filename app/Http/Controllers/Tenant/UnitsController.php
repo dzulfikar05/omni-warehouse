@@ -21,8 +21,9 @@ class UnitsController extends Controller
     {
         $tenantSlug = $request->route('tenant_slug');
         $filters = [
-            'search'  => $request->input('search'),
-            'sort_by' => $request->input('sort_by', 'latest'),
+            'search'     => $request->input('search'),
+            'sort_by'    => $request->input('sort_by', 'created_at'),
+            'sort_order' => $request->input('sort_order', 'desc'),
         ];
 
         $perPage = (int) $request->input('per_page', 10);

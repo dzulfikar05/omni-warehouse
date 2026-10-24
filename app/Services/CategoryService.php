@@ -14,6 +14,9 @@ class CategoryService implements CategoryContract
 {
     public function getPaginatedCategories(array $filters, int $perPage = 10): LengthAwarePaginator
     {
+        $sortBy    = $filters['sort_by'] ?? 'created_at';
+        $sortOrder = strtolower($filters['sort_order'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
+
         return Category::query()
             ->withCount('products')
             ->when($filters['search'] ?? null, function ($query, $search) {
@@ -23,13 +26,14 @@ class CategoryService implements CategoryContract
                         ->orWhere('desc', 'like', "%{$search}%");
                 });
             })
-            ->when($filters['sort_by'] ?? 'latest', function ($query, $sortBy) {
+            ->when($sortBy, function ($q) use ($sortBy, $sortOrder) {
                 match ($sortBy) {
-                    'oldest'    => $query->oldest(),
-                    'name_asc'  => $query->orderBy('name', 'asc'),
-                    'name_desc' => $query->orderBy('name', 'desc'),
-                    default     => $query->latest(),
+                    'id', 'name', 'desc', 'created_at' => $q->orderBy($sortBy, $sortOrder),
+                    'products_count'                   => $q->orderBy('products_count', $sortOrder),
+                    default                            => $q->orderBy('created_at', $sortOrder),
                 };
+            }, function ($q) use ($sortOrder) {
+                $q->orderBy('created_at', $sortOrder);
             })
             ->paginate($perPage)
             ->withQueryString();

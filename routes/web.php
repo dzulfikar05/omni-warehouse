@@ -22,6 +22,9 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
+Route::get('/find-tenant', [TenantAuthController::class, 'showFindTenantForm'])->name('tenant.find');
+Route::post('/find-tenant', [TenantAuthController::class, 'findTenant'])->name('tenant.find.submit');
+
 Route::get('/register-tenant', [TenantAuthController::class, 'showRegisterForm'])->name('tenant.register');
 Route::post('/register-tenant', [TenantAuthController::class, 'register']);
 

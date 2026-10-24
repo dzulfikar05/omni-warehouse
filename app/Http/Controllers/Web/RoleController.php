@@ -25,20 +25,21 @@ class RoleController extends Controller
 
     public function index(Request $request): Response
     {
-        $search  = $request->input('search');
-        $perPage = (int) $request->input('per_page', 10);
+        $search    = $request->input('search');
+        $perPage   = (int) $request->input('per_page', 10);
+        $sortBy    = $request->input('sort_by', 'created_at');
+        $sortOrder = $request->input('sort_order', 'desc');
 
-        $roles = $this->roleService->getPaginatedRoles($search, $perPage);
+        $roles = $this->roleService->getPaginatedRoles($search, $perPage, $sortBy, $sortOrder);
 
         return Inertia::render('Roles/Index', [
             'roles'   => $roles,
-            'filters' => $request->only(['search', 'per_page']),
+            'filters' => $request->only(['search', 'per_page', 'sort_by', 'sort_order']),
         ]);
     }
 
     public function create(): Response
     {
-        // Hanya ambil permission Central Admin (abaikan yang berawalan tenant.%)
         $permissions = Permission::where('name', 'NOT LIKE', 'tenant.%')->get();
 
         return Inertia::render('Roles/Create', [

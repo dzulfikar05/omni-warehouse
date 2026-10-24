@@ -3,7 +3,7 @@ import { Head, Link, usePage, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TableCell } from '@/components/ui/table';
-import { DataTable } from '@/components/data-table';
+import { DataTable, HeaderConfig } from '@/components/data-table';
 import { TableFilter } from '@/components/table-filter';
 import { ActionButton } from '@/components/action-button';
 import { PageHeader } from '@/components/page-header';
@@ -53,6 +53,8 @@ interface PageProps {
         per_page?: string;
         tab?: string;
         role_filter?: string;
+        sort_by?: string;
+        sort_order?: 'asc' | 'desc';
     };
 }
 
@@ -68,8 +70,12 @@ export default function Index({ users, roles, filters }: PageProps) {
     const [selectedRoleFilter, setSelectedRoleFilter] = useState(
         filters?.role_filter || 'all',
     );
+    const [sortBy, setSortBy] = useState(filters?.sort_by || 'id');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(
+        (filters?.sort_order as 'asc' | 'desc') || 'desc',
+    );
 
-    const currentPathSlug = window.location.pathname.split('/')[1];
+    const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
 
     // Tracker untuk mencegah toast ganda
@@ -88,6 +94,8 @@ export default function Index({ users, roles, filters }: PageProps) {
             newPerPage: string,
             tab: string,
             roleFilter: string,
+            newSortBy: string = sortBy,
+            newSortOrder: 'asc' | 'desc' = sortOrder,
         ) => {
             router.get(
                 `/${tenantSlug}/settings/users-roles`,
@@ -96,11 +104,13 @@ export default function Index({ users, roles, filters }: PageProps) {
                     per_page: newPerPage,
                     tab,
                     role_filter: roleFilter,
+                    sort_by: newSortBy,
+                    sort_order: newSortOrder,
                 },
                 { preserveState: true, replace: true, preserveScroll: true },
             );
         },
-        [tenantSlug],
+        [tenantSlug, sortBy, sortOrder],
     );
 
     const debouncedSearch = useMemo(
@@ -128,9 +138,26 @@ export default function Index({ users, roles, filters }: PageProps) {
         applyFilters(search, value, activeTab, selectedRoleFilter);
     };
 
+    const handleSortChange = (field: string, direction: 'asc' | 'desc') => {
+        setSortBy(field);
+        setSortOrder(direction);
+        applyFilters(
+            search,
+            perPage,
+            activeTab,
+            selectedRoleFilter,
+            field,
+            direction,
+        );
+    };
+
     const handleTabChange = (tab: 'users' | 'roles') => {
         setActiveTab(tab);
-        applyFilters(search, perPage, tab, selectedRoleFilter);
+        const defaultSortBy = 'id';
+        const defaultSortOrder = 'desc';
+        setSortBy(defaultSortBy);
+        setSortOrder(defaultSortOrder);
+        applyFilters(search, perPage, tab, selectedRoleFilter, defaultSortBy, defaultSortOrder);
     };
 
     const handleRoleBadgeFilter = (roleName: string) => {
@@ -147,6 +174,22 @@ export default function Index({ users, roles, filters }: PageProps) {
     const processDeleteRole = (id: number) => {
         router.delete(`/${tenantSlug}/settings/roles/${id}`);
     };
+
+    const userTableHeaders: Array<string | HeaderConfig> = [
+        { label: '#', sortField: 'id' },
+        { label: 'USER', sortField: 'name' },
+        'ROLE',
+        'STATUS',
+        { label: 'LAST LOGIN', sortField: 'last_login_at' },
+        'ACTIONS',
+    ];
+
+    const roleTableHeaders: Array<string | HeaderConfig> = [
+        { label: '#', sortField: 'id' },
+        { label: 'ROLE NAME', sortField: 'name' },
+        { label: 'ATTACHED PERMISSIONS', sortField: 'permissions_count' },
+        'ACTIONS',
+    ];
 
     return (
         <>
@@ -249,16 +292,12 @@ export default function Index({ users, roles, filters }: PageProps) {
                 {/* TAB 1: USERS TABLE */}
                 {activeTab === 'users' && (
                     <DataTable
-                        headers={[
-                            '#',
-                            'USER',
-                            'ROLE',
-                            'STATUS',
-                            'LAST LOGIN',
-                            'ACTIONS',
-                        ]}
+                        headers={userTableHeaders}
                         data={users.data}
                         pagination={users}
+                        sortBy={sortBy}
+                        sortDirection={sortOrder}
+                        onSortChange={handleSortChange}
                         renderRow={(user: MemberUser) => (
                             <>
                                 <TableCell className="font-mono text-xs text-muted-foreground">
@@ -342,14 +381,12 @@ export default function Index({ users, roles, filters }: PageProps) {
                 {/* TAB 2: ROLES TABLE */}
                 {activeTab === 'roles' && (
                     <DataTable
-                        headers={[
-                            '#',
-                            'ROLE NAME',
-                            'ATTACHED PERMISSIONS',
-                            'ACTIONS',
-                        ]}
+                        headers={roleTableHeaders}
                         data={roles.data}
                         pagination={roles}
+                        sortBy={sortBy}
+                        sortDirection={sortOrder}
+                        onSortChange={handleSortChange}
                         renderRow={(role: RoleItem) => (
                             <>
                                 <TableCell className="font-mono text-xs text-muted-foreground">

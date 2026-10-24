@@ -19,7 +19,10 @@ export default function Navbar() {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <Link href="/login" className="text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition-colors">
+                    <Link
+                        href="/find-tenant"
+                        className="text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition-colors"
+                    >
                         Sign In
                     </Link>
                     <Link

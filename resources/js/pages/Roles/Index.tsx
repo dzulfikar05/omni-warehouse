@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { debounce } from 'lodash';
 import { usePermission } from '@/utils/permission';
 import { TableFilter } from '@/components/table-filter';
-import { DataTable } from '@/components/data-table';
+import { DataTable, HeaderConfig } from '@/components/data-table';
 import { ActionButton } from '@/components/action-button';
 import { PageHeader } from '@/components/page-header';
 
@@ -27,7 +27,12 @@ interface RolesProps {
         from: number;
         to: number;
     };
-    filters: { search?: string; per_page?: string };
+    filters: {
+        search?: string;
+        per_page?: string;
+        sort_by?: string;
+        sort_order?: 'asc' | 'desc';
+    };
 }
 
 export default function Index({ roles, filters }: RolesProps) {
@@ -36,6 +41,10 @@ export default function Index({ roles, filters }: RolesProps) {
 
     const [search, setSearch] = useState(filters.search || '');
     const [perPage, setPerPage] = useState(filters.per_page || '10');
+    const [sortBy, setSortBy] = useState(filters.sort_by || 'created_at');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(
+        (filters.sort_order as 'asc' | 'desc') || 'desc'
+    );
 
     const lastShownFlash = useRef<string | null>(null);
 
@@ -47,14 +56,24 @@ export default function Index({ roles, filters }: RolesProps) {
     }, [flash?.success]);
 
     const applyFilters = useCallback(
-        (newSearch: string, newPerPage: string) => {
+        (
+            newSearch: string,
+            newPerPage: string,
+            newSortBy: string = sortBy,
+            newSortOrder: 'asc' | 'desc' = sortOrder
+        ) => {
             router.get(
                 '/roles',
-                { search: newSearch, per_page: newPerPage },
+                {
+                    search: newSearch || undefined,
+                    per_page: newPerPage,
+                    sort_by: newSortBy,
+                    sort_order: newSortOrder,
+                },
                 { preserveState: true, replace: true, preserveScroll: true }
             );
         },
-        []
+        [sortBy, sortOrder]
     );
 
     const debouncedSearch = useMemo(
@@ -77,6 +96,12 @@ export default function Index({ roles, filters }: RolesProps) {
         applyFilters(search, value);
     };
 
+    const handleSortChange = (field: string, direction: 'asc' | 'desc') => {
+        setSortBy(field);
+        setSortOrder(direction);
+        applyFilters(search, perPage, field, direction);
+    };
+
     const processDelete = (id: number) => {
         router.delete(`/roles/${id}`, {
             onSuccess: () => toast.success('Role deleted successfully'),
@@ -96,6 +121,13 @@ export default function Index({ roles, filters }: RolesProps) {
     const canEdit = can('central.roles.edit');
     const canDelete = can('central.roles.delete');
     const canExport = can('central.roles.export');
+
+    const tableHeaders: Array<string | HeaderConfig> = [
+        { label: 'ID', sortField: 'id' },
+        { label: 'Role Name', sortField: 'name' },
+        { label: 'Permissions Count', sortField: 'permissions_count' },
+        'Action',
+    ];
 
     return (
         <>
@@ -146,9 +178,12 @@ export default function Index({ roles, filters }: RolesProps) {
                 </PageHeader>
 
                 <DataTable
-                    headers={['ID', 'Role Name', 'Permissions Count', 'Action']}
+                    headers={tableHeaders}
                     data={roles.data}
                     pagination={roles}
+                    sortBy={sortBy}
+                    sortDirection={sortOrder}
+                    onSortChange={handleSortChange}
                     renderRow={(role) => (
                         <>
                             <TableCell className="font-mono text-xs text-muted-foreground">

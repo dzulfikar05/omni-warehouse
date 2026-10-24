@@ -14,6 +14,9 @@ class ProductService implements ProductContract
 {
     public function getPaginatedProducts(array $filters, int $perPage = 10): LengthAwarePaginator
     {
+        $sortBy    = $filters['sort_by'] ?? 'created_at';
+        $sortOrder = strtolower($filters['sort_order'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
+
         return Product::query()
             ->with(['category', 'skus'])
             ->when($filters['search'] ?? null, function ($query, $search) {
@@ -31,13 +34,13 @@ class ProductService implements ProductContract
             ->when($filters['status'] ?? null, function ($query, $status) {
                 $query->where('status', $status);
             })
-            ->when($filters['sort_by'] ?? 'latest', function ($query, $sortBy) {
+            ->when($sortBy, function ($q) use ($sortBy, $sortOrder) {
                 match ($sortBy) {
-                    'oldest'    => $query->oldest(),
-                    'name_asc'  => $query->orderBy('name', 'asc'),
-                    'name_desc' => $query->orderBy('name', 'desc'),
-                    default     => $query->latest(),
+                    'id', 'name', 'category_id', 'status', 'created_at' => $q->orderBy($sortBy, $sortOrder),
+                    default                                            => $q->orderBy('created_at', $sortOrder),
                 };
+            }, function ($q) use ($sortOrder) {
+                $q->orderBy('created_at', $sortOrder);
             })
             ->paginate($perPage)
             ->withQueryString();

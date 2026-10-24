@@ -27,11 +27,13 @@ class CustomerController extends Controller
 
     public function index(Request $request, string $tenant_slug): Response
     {
-        $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
-        $search = $request->input('search');
-        $perPage = (int) $request->input('per_page', 10);
+        $tenant    = Tenant::where('slug', $tenant_slug)->firstOrFail();
+        $search    = $request->input('search');
+        $perPage   = (int) $request->input('per_page', 10);
+        $sortBy    = $request->input('sort_by', 'created_at');
+        $sortOrder = $request->input('sort_order', 'desc');
 
-        $customers = $this->service->getPaginatedCustomers($tenant_slug, $search, $perPage);
+        $customers = $this->service->getPaginatedCustomers($tenant_slug, $search, $perPage, $sortBy, $sortOrder);
 
         $stats = [
             'total_customers' => Customer::where('tenant_id', $tenant->id)->count(),
@@ -49,7 +51,7 @@ class CustomerController extends Controller
         return Inertia::render('Tenant/Contacts/Customers/Index', [
             'customers' => $customers,
             'stats'     => $stats,
-            'filters'   => $request->only(['search', 'per_page']),
+            'filters'   => $request->only(['search', 'per_page', 'sort_by', 'sort_order']),
         ]);
     }
 

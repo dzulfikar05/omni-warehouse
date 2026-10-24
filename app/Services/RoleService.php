@@ -8,15 +8,29 @@ use Spatie\Permission\Models\Role;
 
 class RoleService implements RoleContract
 {
-    public function getPaginatedRoles(?string $search = null, int $perPage = 10): LengthAwarePaginator
-    {
+    public function getPaginatedRoles(
+        ?string $search = null,
+        int $perPage = 10,
+        string $sortBy = 'created_at',
+        string $sortOrder = 'desc'
+    ): LengthAwarePaginator {
+        $sortOrder = strtolower($sortOrder) === 'asc' ? 'asc' : 'desc';
+
         return Role::query()
-            ->whereNull('tenant_id') // Hanya role milik Central Admin
+            ->whereNull('tenant_id')
             ->when($search, function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%");
             })
             ->withCount('permissions')
-            ->latest()
+            ->when($sortBy, function ($q) use ($sortBy, $sortOrder) {
+                match ($sortBy) {
+                    'id', 'name', 'created_at' => $q->orderBy($sortBy, $sortOrder),
+                    'permissions_count'        => $q->orderBy('permissions_count', $sortOrder),
+                    default                    => $q->orderBy('created_at', $sortOrder),
+                };
+            }, function ($q) use ($sortOrder) {
+                $q->orderBy('created_at', $sortOrder);
+            })
             ->paginate($perPage)
             ->withQueryString();
     }
@@ -24,7 +38,7 @@ class RoleService implements RoleContract
     public function storeRole(array $data): Role
     {
         $role = Role::create([
-            'name' => $data['name'],
+            'name'      => $data['name'],
             'tenant_id' => null,
         ]);
 

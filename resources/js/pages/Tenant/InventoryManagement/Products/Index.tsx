@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Head, Link, usePage, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { TableCell } from '@/components/ui/table';
-import { DataTable } from '@/components/data-table';
+import { DataTable, HeaderConfig } from '@/components/data-table';
 import { TableFilter } from '@/components/table-filter';
 import { FilterDropdown } from '@/components/table-dropdown';
 import { ActionButton } from '@/components/action-button';
@@ -66,6 +66,7 @@ interface IndexProps {
         category_id?: string;
         status?: string;
         sort_by?: string;
+        sort_order?: 'asc' | 'desc';
         per_page?: string;
     };
 }
@@ -77,7 +78,10 @@ export default function ProductIndex({ products, stats, categories, filters }: I
     const [search, setSearch] = useState(filters?.search || '');
     const [categoryId, setCategoryId] = useState(filters?.category_id || 'all');
     const [status, setStatus] = useState(filters?.status || 'all');
-    const [sortBy, setSortBy] = useState(filters?.sort_by || 'latest');
+    const [sortBy, setSortBy] = useState(filters?.sort_by || 'created_at');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(
+        (filters?.sort_order as 'asc' | 'desc') || 'desc'
+    );
     const [perPage, setPerPage] = useState(filters?.per_page || '10');
 
     const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
@@ -98,7 +102,8 @@ export default function ProductIndex({ products, stats, categories, filters }: I
             newPerPage: string,
             newCategory = categoryId,
             newStatus = status,
-            newSort = sortBy
+            newSortBy = sortBy,
+            newSortOrder: 'asc' | 'desc' = sortOrder
         ) => {
             router.get(
                 `/${tenantSlug}/inventory/products`,
@@ -106,13 +111,14 @@ export default function ProductIndex({ products, stats, categories, filters }: I
                     search: newSearch || undefined,
                     category_id: newCategory !== 'all' ? newCategory : undefined,
                     status: newStatus !== 'all' ? newStatus : undefined,
-                    sort_by: newSort !== 'latest' ? newSort : undefined,
+                    sort_by: newSortBy,
+                    sort_order: newSortOrder,
                     per_page: newPerPage,
                 },
                 { preserveState: true, replace: true, preserveScroll: true }
             );
         },
-        [tenantSlug, categoryId, status, sortBy]
+        [tenantSlug, categoryId, status, sortBy, sortOrder]
     );
 
     const debouncedSearch = useMemo(
@@ -123,6 +129,12 @@ export default function ProductIndex({ products, stats, categories, filters }: I
     useEffect(() => {
         return () => debouncedSearch.cancel();
     }, [debouncedSearch]);
+
+    const handleSortChange = (field: string, direction: 'asc' | 'desc') => {
+        setSortBy(field);
+        setSortOrder(direction);
+        applyFilters(search, perPage, categoryId, status, field, direction);
+    };
 
     const handleDelete = (id: number) => {
         router.delete(`/${tenantSlug}/inventory/products/${id}`);
@@ -144,11 +156,20 @@ export default function ProductIndex({ products, stats, categories, filters }: I
     const canExport = can('tenant.products.export') || can('products.export');
     const canCreate = can('tenant.products.create') || can('products.create');
 
+    const tableHeaders: Array<string | HeaderConfig> = [
+        { label: 'ID PRODUK', sortField: 'id' },
+        { label: 'NAMA PRODUK', sortField: 'name' },
+        { label: 'KATEGORI', sortField: 'category_id' },
+        { label: 'STATUS', sortField: 'status' },
+        { label: 'TANGGAL DIBUAT', sortField: 'created_at' },
+        'ACTIONS',
+    ];
+
     return (
         <>
             <Head title="Master Produk" />
 
-            <div className="space-y-6 p-4 sm:p-6 font-sans">
+            <div className="space-y-6 p-4 font-sans sm:p-6">
                 <PageHeader
                     title="Katalog Produk"
                     description="Kelola kelompok barang induk, kategori persediaan, serta pengelompokan varian SKU."
@@ -203,7 +224,7 @@ export default function ProductIndex({ products, stats, categories, filters }: I
                         <div>
                             <p className="text-xs font-medium text-muted-foreground">Produk Aktif</p>
                             <h3 className="mt-1 text-2xl font-bold text-foreground">{activeProducts}</h3>
-                            <p className="mt-0.5 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">Siap Dijual</p>
+                            <p className="mt-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">Siap Dijual</p>
                         </div>
                         <div className="rounded-xl bg-emerald-50 p-3 text-emerald-600 dark:bg-emerald-950/50">
                             <CheckCircle2 size={22} />
@@ -214,7 +235,7 @@ export default function ProductIndex({ products, stats, categories, filters }: I
                         <div>
                             <p className="text-xs font-medium text-muted-foreground">Status Draft</p>
                             <h3 className="mt-1 text-2xl font-bold text-amber-600 dark:text-amber-400">{draftProducts}</h3>
-                            <p className="mt-0.5 text-[11px] text-amber-600 dark:text-amber-400 font-medium">Perlu Review</p>
+                            <p className="mt-0.5 text-[11px] font-medium text-amber-600 dark:text-amber-400">Perlu Review</p>
                         </div>
                         <div className="rounded-xl bg-amber-50 p-3 text-amber-600 dark:bg-amber-950/50">
                             <Clock size={22} />
@@ -252,7 +273,8 @@ export default function ProductIndex({ products, stats, categories, filters }: I
                             setSearch('');
                             setCategoryId('all');
                             setStatus('all');
-                            setSortBy('latest');
+                            setSortBy('created_at');
+                            setSortOrder('desc');
                             router.get(`/${tenantSlug}/inventory/products`);
                         }}
                     >
@@ -288,37 +310,18 @@ export default function ProductIndex({ products, stats, categories, filters }: I
                                     </SelectContent>
                                 </Select>
                             </div>
-
-                            <div className="space-y-2">
-                                <Label className="text-xs font-semibold">Urutkan Berdasarkan</Label>
-                                <Select value={sortBy} onValueChange={setSortBy}>
-                                    <SelectTrigger className="h-9 text-xs">
-                                        <SelectValue placeholder="Urutan" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="latest">Terbaru Ditambahkan</SelectItem>
-                                        <SelectItem value="oldest">Terlama</SelectItem>
-                                        <SelectItem value="name_asc">Nama Produk (A-Z)</SelectItem>
-                                        <SelectItem value="name_desc">Nama Produk (Z-A)</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
                         </div>
                     </FilterDropdown>
                 </TableFilter>
 
                 {/* Data Table Component */}
                 <DataTable
-                    headers={[
-                        'ID PRODUK',
-                        'NAMA PRODUK',
-                        'KATEGORI',
-                        'STATUS',
-                        'TANGGAL DIBUAT',
-                        'ACTIONS',
-                    ]}
+                    headers={tableHeaders}
                     data={products.data}
                     pagination={products}
+                    sortBy={sortBy}
+                    sortDirection={sortOrder}
+                    onSortChange={handleSortChange}
                     renderRow={(product: ProductItem) => (
                         <>
                             <TableCell className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400">

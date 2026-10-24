@@ -31,17 +31,22 @@ class TenantUserRoleController extends Controller
 
     public function index(Request $request, string $tenant_slug): Response
     {
-        $search = $request->input('search');
-        $perPage = (int) $request->input('per_page', 10);
+        $search     = $request->input('search');
+        $perPage    = (int) $request->input('per_page', 10);
         $roleFilter = $request->input('role_filter', 'all');
+        $sortBy     = $request->input('sort_by', 'id');
+        $sortOrder  = strtolower($request->input('sort_order', 'desc')) === 'asc' ? 'asc' : 'desc';
 
-        $users = $this->service->getPaginatedTenantUsers($tenant_slug, $search, $roleFilter, $perPage);
-        $roles = $this->service->getPaginatedTenantRoles($tenant_slug, $search, $perPage);
+        $users = $this->service->getPaginatedTenantUsers($tenant_slug, $search, $roleFilter, $perPage, $sortBy, $sortOrder);
+        $roles = $this->service->getPaginatedTenantRoles($tenant_slug, $search, $perPage, $sortBy, $sortOrder);
 
         return Inertia::render('Tenant/UsersRoles/Index', [
-            'users' => $users,
-            'roles' => $roles,
-            'filters' => $request->only(['search', 'per_page', 'tab', 'role_filter']),
+            'users'   => $users,
+            'roles'   => $roles,
+            'filters' => array_merge(
+                $request->only(['search', 'per_page', 'tab', 'role_filter']),
+                ['sort_by' => $sortBy, 'sort_order' => $sortOrder]
+            ),
         ]);
     }
 
@@ -77,15 +82,15 @@ class TenantUserRoleController extends Controller
 
         return Inertia::render('Tenant/UsersRoles/ShowUser', [
             'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'initials' => strtoupper(substr($user->name, 0, 2)),
-                'role' => $user->roles->first()?->name ?? 'Member',
-                'status' => 'Active',
-                'created_at' => $user->created_at->format('d M Y'),
+                'id'            => $user->id,
+                'name'          => $user->name,
+                'email'         => $user->email,
+                'initials'      => strtoupper(substr($user->name, 0, 2)),
+                'role'          => $user->roles->first()?->name ?? 'Member',
+                'status'        => 'Active',
+                'created_at'    => $user->created_at->format('d M Y'),
                 'last_login_at' => $user->updated_at->format('d M Y, H:i \W\I\B'),
-                'ip_address' => 'IP: 127.0.0.1',
+                'ip_address'    => 'IP: 127.0.0.1',
             ],
         ]);
     }
@@ -103,10 +108,10 @@ class TenantUserRoleController extends Controller
 
         return Inertia::render('Tenant/UsersRoles/EditUser', [
             'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
+                'id'    => $user->id,
+                'name'  => $user->name,
                 'email' => $user->email,
-                'role' => $user->roles->first()?->name ?? '',
+                'role'  => $user->roles->first()?->name ?? '',
             ],
             'roles' => $roles,
         ]);
@@ -175,7 +180,7 @@ class TenantUserRoleController extends Controller
         $permissions = Permission::where('name', 'LIKE', 'tenant.%')->get();
 
         return Inertia::render('Tenant/UsersRoles/EditRole', [
-            'role' => $role,
+            'role'        => $role,
             'permissions' => $permissions,
         ]);
     }

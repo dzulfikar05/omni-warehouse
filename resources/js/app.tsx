@@ -13,16 +13,30 @@ createInertiaApp({
     layout: (name) => {
         const pageName = typeof name === 'string' ? name.toLowerCase() : '';
         switch (true) {
-            // case pageName === 'welcome':
-            case pageName === 'welcome' || pageName.endsWith('/welcome') || pageName.endsWith('/registersuccess'):
+            // 1. Halaman Polos Tanpa Wrapper Layout
+            case pageName === 'welcome' ||
+                 pageName.endsWith('/welcome') ||
+                 pageName.endsWith('/registersuccess'):
                 return null;
-            case pageName.includes('tenant/auth/login') || pageName.includes('auth/login') || pageName.includes('tenant/auth/register') || pageName.includes('auth/register'):
+
+            // 2. Auth Login, Register, & Discovery Tenant (Polos / Standalone)
+            case pageName.includes('tenant/auth/login') ||
+                 pageName.includes('auth/login') ||
+                 pageName.includes('tenant/auth/register') ||
+                 pageName.includes('auth/register') ||
+                 pageName.includes('auth/findtenant') ||
+                 pageName.includes('auth/findtenantsuccess'):
                 return null;
-            // case pageName.startsWith('auth/'):
+
+            // 3. Default Auth Pages Lainnya (Reset Password, dsb.)
             case pageName.startsWith('auth/') || pageName.includes('/auth/'):
                 return AuthLayout;
+
+            // 4. Settings Layout
             case pageName.startsWith('settings/'):
                 return [AppLayout, SettingsLayout];
+
+            // 5. Default Dashboard / Admin Layout
             default:
                 return AppLayout;
         }

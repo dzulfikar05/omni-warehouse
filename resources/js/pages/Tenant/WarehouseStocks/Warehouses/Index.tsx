@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Head, router, usePage, Link } from '@inertiajs/react';
 import { debounce } from 'lodash';
 import { PageHeader } from '@/components/page-header';
-import { DataTable } from '@/components/data-table';
+import { DataTable, HeaderConfig } from '@/components/data-table';
 import { TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { TableFilter } from '@/components/table-filter';
@@ -49,6 +49,8 @@ interface WarehouseIndexProps {
         search?: string;
         per_page?: string;
         is_active?: string;
+        sort_by?: string;
+        sort_order?: 'asc' | 'desc';
     };
 }
 
@@ -59,6 +61,10 @@ export default function Index({ warehouses, summary, filters }: WarehouseIndexPr
     const [search, setSearch] = useState(filters?.search || '');
     const [perPage, setPerPage] = useState(filters?.per_page || '10');
     const [tempIsActive, setTempIsActive] = useState(filters?.is_active || 'all');
+    const [sortBy, setSortBy] = useState(filters?.sort_by || 'created_at');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(
+        (filters?.sort_order as 'asc' | 'desc') || 'desc',
+    );
 
     const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
@@ -73,27 +79,35 @@ export default function Index({ warehouses, summary, filters }: WarehouseIndexPr
     }, [flash?.success]);
 
     const applyFilters = useCallback(
-        (newSearch: string, newPerPage: string, isActive: string) => {
+        (
+            newSearch: string,
+            newPerPage: string,
+            isActive: string,
+            newSortBy: string = sortBy,
+            newSortOrder: 'asc' | 'desc' = sortOrder,
+        ) => {
             router.get(
                 `/${tenantSlug}/warehouses`,
                 {
                     search: newSearch,
                     per_page: newPerPage,
                     is_active: isActive !== 'all' ? isActive : undefined,
+                    sort_by: newSortBy,
+                    sort_order: newSortOrder,
                 },
-                { preserveState: true, replace: true, preserveScroll: true }
+                { preserveState: true, replace: true, preserveScroll: true },
             );
         },
-        [tenantSlug]
+        [tenantSlug, sortBy, sortOrder],
     );
 
     const debouncedSearch = useMemo(
         () =>
             debounce(
                 (q: string, p: string, act: string) => applyFilters(q, p, act),
-                500
+                500,
             ),
-        [applyFilters]
+        [applyFilters],
     );
 
     useEffect(() => {
@@ -111,18 +125,34 @@ export default function Index({ warehouses, summary, filters }: WarehouseIndexPr
         applyFilters(search, value, tempIsActive);
     };
 
+    const handleSortChange = (field: string, direction: 'asc' | 'desc') => {
+        setSortBy(field);
+        setSortOrder(direction);
+        applyFilters(
+            search,
+            perPage,
+            tempIsActive,
+            field,
+            direction,
+        );
+    };
+
     const handleApplyFilter = () => {
         applyFilters(search, perPage, tempIsActive);
     };
 
     const handleResetFilter = () => {
         setTempIsActive('all');
-        applyFilters(search, perPage, 'all');
+        setSortBy('created_at');
+        setSortOrder('desc');
+        applyFilters(search, perPage, 'all', 'created_at', 'desc');
     };
 
     const getFilterPayload = () => ({
         search: search || undefined,
         is_active: tempIsActive !== 'all' ? tempIsActive : undefined,
+        sort_by: sortBy,
+        sort_order: sortOrder,
     });
 
     const handleExportPdf = () => {
@@ -142,6 +172,15 @@ export default function Index({ warehouses, summary, filters }: WarehouseIndexPr
     const canEdit = can('tenant.warehouses.edit') || can('warehouses.edit');
     const canDelete = can('tenant.warehouses.delete') || can('warehouses.delete');
     const canExport = can('tenant.warehouses.export') || can('warehouses.export');
+
+    const tableHeaders: Array<string | HeaderConfig> = [
+        { label: 'KODE GUDANG', sortField: 'code' },
+        { label: 'NAMA WAREHOUSE', sortField: 'name' },
+        'ALAMAT / DESKRIPSI',
+        { label: 'TANGGAL DIBUAT', sortField: 'created_at' },
+        { label: 'STATUS', sortField: 'is_active' },
+        'ACTIONS',
+    ];
 
     return (
         <>
@@ -247,9 +286,12 @@ export default function Index({ warehouses, summary, filters }: WarehouseIndexPr
                 </TableFilter>
 
                 <DataTable
-                    headers={['KODE GUDANG', 'NAMA WAREHOUSE', 'ALAMAT / DESKRIPSI', 'TANGGAL DIBUAT', 'STATUS', 'ACTIONS']}
+                    headers={tableHeaders}
                     data={warehouses.data}
                     pagination={warehouses}
+                    sortBy={sortBy}
+                    sortDirection={sortOrder}
+                    onSortChange={handleSortChange}
                     renderRow={(item: Warehouse) => (
                         <>
                             <TableCell className="font-mono text-xs font-bold text-primary">{item.code}</TableCell>

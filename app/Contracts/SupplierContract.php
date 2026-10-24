@@ -7,7 +7,13 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 interface SupplierContract
 {
-    public function getPaginatedSuppliers(string $tenantSlug, ?string $search = null, int $perPage = 10): LengthAwarePaginator;
+    public function getPaginatedSuppliers(
+        string $tenantSlug,
+        ?string $search = null,
+        int $perPage = 10,
+        string $sortBy = 'created_at',
+        string $sortOrder = 'desc'
+    ): LengthAwarePaginator;
 
     public function storeSupplier(string $tenantSlug, array $data): Supplier;
 

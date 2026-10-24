@@ -14,9 +14,15 @@ class CustomerService implements CustomerContract
         return Tenant::where('slug', $tenantSlug)->firstOrFail();
     }
 
-    public function getPaginatedCustomers(string $tenantSlug, ?string $search = null, int $perPage = 10): LengthAwarePaginator
-    {
-        $tenant = $this->getTenant($tenantSlug);
+    public function getPaginatedCustomers(
+        string $tenantSlug,
+        ?string $search = null,
+        int $perPage = 10,
+        string $sortBy = 'created_at',
+        string $sortOrder = 'desc'
+    ): LengthAwarePaginator {
+        $tenant    = $this->getTenant($tenantSlug);
+        $sortOrder = strtolower($sortOrder) === 'asc' ? 'asc' : 'desc';
 
         return Customer::where('tenant_id', $tenant->id)
             ->when($search, function ($query, $q) {
@@ -26,7 +32,14 @@ class CustomerService implements CustomerContract
                         ->orWhere('email', 'ilike', "%{$q}%");
                 });
             })
-            ->latest()
+            ->when($sortBy, function ($q) use ($sortBy, $sortOrder) {
+                match ($sortBy) {
+                    'id', 'name', 'phone', 'email', 'tax_number', 'created_at' => $q->orderBy($sortBy, $sortOrder),
+                    default                                                     => $q->orderBy('created_at', $sortOrder),
+                };
+            }, function ($q) use ($sortOrder) {
+                $q->orderBy('created_at', $sortOrder);
+            })
             ->paginate($perPage)
             ->withQueryString();
     }
@@ -37,7 +50,7 @@ class CustomerService implements CustomerContract
 
         return Customer::create([
             ...$data,
-            'tenant_id' => $tenant->id,
+            'tenant_id'  => $tenant->id,
             'created_by' => auth()->id(),
         ]);
     }

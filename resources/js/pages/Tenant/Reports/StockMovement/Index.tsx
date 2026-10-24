@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Head, router, usePage } from '@inertiajs/react';
 import { debounce } from 'lodash';
 import { PageHeader } from '@/components/page-header';
-import { DataTable } from '@/components/data-table';
+import { DataTable, HeaderConfig } from '@/components/data-table';
 import { TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { TableFilter } from '@/components/table-filter';
@@ -57,6 +57,8 @@ interface StockMovementProps {
         transaction_type?: string;
         date_from?: string;
         date_to?: string;
+        sort_by?: string;
+        sort_order?: 'asc' | 'desc';
     };
 }
 
@@ -71,6 +73,10 @@ export default function Index({ reports, summary, warehouses, categories, filter
     const [tempType, setTempType] = useState(filters.transaction_type || 'all');
     const [tempDateFrom, setTempDateFrom] = useState(filters.date_from || '');
     const [tempDateTo, setTempDateTo] = useState(filters.date_to || '');
+    const [sortBy, setSortBy] = useState(filters.sort_by || 'created_at');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(
+        (filters.sort_order as 'asc' | 'desc') || 'desc'
+    );
 
     const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
@@ -92,7 +98,9 @@ export default function Index({ reports, summary, warehouses, categories, filter
             category: string,
             type: string,
             dateFrom: string,
-            dateTo: string
+            dateTo: string,
+            newSortBy: string = sortBy,
+            newSortOrder: 'asc' | 'desc' = sortOrder
         ) => {
             router.get(
                 window.location.pathname,
@@ -104,11 +112,13 @@ export default function Index({ reports, summary, warehouses, categories, filter
                     transaction_type: type !== 'all' ? type : undefined,
                     date_from: dateFrom || undefined,
                     date_to: dateTo || undefined,
+                    sort_by: newSortBy,
+                    sort_order: newSortOrder,
                 },
                 { preserveState: true, replace: true, preserveScroll: true }
             );
         },
-        []
+        [sortBy, sortOrder]
     );
 
     const debouncedSearch = useMemo(
@@ -136,6 +146,22 @@ export default function Index({ reports, summary, warehouses, categories, filter
         applyFilters(search, value, tempWarehouse, tempCategory, tempType, tempDateFrom, tempDateTo);
     };
 
+    const handleSortChange = (field: string, direction: 'asc' | 'desc') => {
+        setSortBy(field);
+        setSortOrder(direction);
+        applyFilters(
+            search,
+            perPage,
+            tempWarehouse,
+            tempCategory,
+            tempType,
+            tempDateFrom,
+            tempDateTo,
+            field,
+            direction
+        );
+    };
+
     const handleApplyFilter = () => {
         applyFilters(search, perPage, tempWarehouse, tempCategory, tempType, tempDateFrom, tempDateTo);
     };
@@ -146,7 +172,9 @@ export default function Index({ reports, summary, warehouses, categories, filter
         setTempType('all');
         setTempDateFrom('');
         setTempDateTo('');
-        applyFilters(search, perPage, 'all', 'all', 'all', '', '');
+        setSortBy('created_at');
+        setSortOrder('desc');
+        applyFilters(search, perPage, 'all', 'all', 'all', '', '', 'created_at', 'desc');
     };
 
     const getFilterPayload = () => ({
@@ -156,6 +184,8 @@ export default function Index({ reports, summary, warehouses, categories, filter
         transaction_type: tempType !== 'all' ? tempType : undefined,
         date_from: tempDateFrom || undefined,
         date_to: tempDateTo || undefined,
+        sort_by: sortBy,
+        sort_order: sortOrder,
     });
 
     const handleExportPdf = () => {
@@ -167,6 +197,17 @@ export default function Index({ reports, summary, warehouses, categories, filter
     };
 
     const canExport = can('tenant.stock_movement.export') || can('stock_movement.export');
+
+    const tableHeaders: Array<string | HeaderConfig> = [
+        { label: 'DATE & TIME', sortField: 'created_at' },
+        { label: 'SKU CODE', sortField: 'sku_id' },
+        { label: 'PRODUCT NAME', sortField: 'product_name' },
+        { label: 'TYPE', sortField: 'transaction_type' },
+        'SOURCE',
+        'DESTINATION',
+        { label: 'MOVED QTY', sortField: 'quantity' },
+        'OPERATOR',
+    ];
 
     return (
         <>
@@ -202,7 +243,7 @@ export default function Index({ reports, summary, warehouses, categories, filter
                     }
                 />
 
-                {/* 4 Stat Cards - Desain konsisten dengan Supplier/Customer/StockSummary */}
+                {/* 4 Stat Cards */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
@@ -325,9 +366,12 @@ export default function Index({ reports, summary, warehouses, categories, filter
                 </TableFilter>
 
                 <DataTable
-                    headers={['DATE & TIME', 'SKU CODE', 'PRODUCT NAME', 'TYPE', 'SOURCE', 'DESTINATION', 'MOVED QTY', 'OPERATOR']}
+                    headers={tableHeaders}
                     data={reports.data}
                     pagination={reports}
+                    sortBy={sortBy}
+                    sortDirection={sortOrder}
+                    onSortChange={handleSortChange}
                     renderRow={(item: any) => {
                         const rawType = item.transaction?.transaction_type?.toUpperCase() || 'MOVEMENT';
                         let typeBadge = <Badge className="bg-blue-600 text-white">{rawType}</Badge>;
@@ -345,7 +389,7 @@ export default function Index({ reports, summary, warehouses, categories, filter
 
                         return (
                             <>
-                                <TableCell className="text-xs text-muted-foreground font-mono">
+                                <TableCell className="font-mono text-xs text-muted-foreground">
                                     {item.created_at ? new Date(item.created_at).toLocaleString('id-ID') : '-'}
                                 </TableCell>
                                 <TableCell className="font-mono text-xs font-semibold">{item.sku?.sku_code || '-'}</TableCell>
