@@ -1,7 +1,8 @@
 import { Link, useForm } from '@inertiajs/react';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/input';import { useTranslation } from '@/context/language-context';
+
 
 interface Product {
     id?: number;
@@ -20,6 +21,7 @@ export default function ProductForm({
     product,
     mode,
 }: Props) {
+    const { t } = useTranslation();
     const isEdit = mode === 'edit';
 
     const form = useForm({
@@ -47,8 +49,7 @@ export default function ProductForm({
                     htmlFor="name"
                     className="text-sm font-medium text-foreground"
                 >
-                    Product Name
-                </label>
+                    {t("Product Name")}</label>
 
                 <Input
                     id="name"
@@ -57,7 +58,7 @@ export default function ProductForm({
                     onChange={(e) =>
                         form.setData('name', e.target.value)
                     }
-                    placeholder="Enter product name"
+                    placeholder={t("Enter product name")}
                 />
 
                 {form.errors.name && (
@@ -73,8 +74,7 @@ export default function ProductForm({
                     htmlFor="category_id"
                     className="text-sm font-medium text-foreground"
                 >
-                    Category
-                </label>
+                    {t("Category")}</label>
 
                 <Input
                     id="category_id"
@@ -83,7 +83,7 @@ export default function ProductForm({
                     onChange={(e) =>
                         form.setData('category_id', e.target.value)
                     }
-                    placeholder="Enter category ID"
+                    placeholder={t("Enter category ID")}
                 />
 
                 {form.errors.category_id && (
@@ -99,13 +99,12 @@ export default function ProductForm({
                     <Link
                         href={`/${tenant_slug}/inventory/products`}
                     >
-                        Cancel
-                    </Link>
+                        {t("Cancel")}</Link>
                 </Button>
 
                 <Button type="submit" disabled={form.processing}>
                     {form.processing
-                        ? 'Saving...'
+                        ? t("Saving...")
                         : isEdit
                           ? 'Update Product'
                           : 'Create Product'}

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/page-header';
+import { useTranslation } from '@/context/language-context';
 import { usePermission } from '@/utils/permission';
 import { toast } from 'sonner';
 
@@ -70,6 +71,7 @@ interface Props {
 }
 
 export default function SubscriptionIndex({ subscriptions, stats, plans, filters }: Props) {
+    const { t } = useTranslation();
     const { flash } = usePage().props as any;
     const { can } = usePermission();
 
@@ -177,12 +179,12 @@ export default function SubscriptionIndex({ subscriptions, stats, plans, filters
 
     return (
         <>
-            <Head title="Subscriptions" />
+            <Head title={t("Subscriptions")} />
 
             <div className="space-y-6 p-4 sm:p-6">
                 <PageHeader
-                    title="Subscriptions Management"
-                    description="Monitor active tenant subscriptions, revenue metrics, and issue manual invoices."
+                    title={t("Subscriptions Management")}
+                    description={t("Monitor active tenant subscriptions, revenue metrics, and issue manual invoices.")}
                     renderAction={
                         <div className="flex flex-wrap items-center gap-2">
                             {canExport && (
@@ -193,23 +195,20 @@ export default function SubscriptionIndex({ subscriptions, stats, plans, filters
                                         onClick={handleExportPdf}
                                         className="h-9 gap-1.5 border-border text-xs"
                                     >
-                                        <FileText className="h-4 w-4 text-rose-500" /> Export PDF
-                                    </Button>
+                                        <FileText className="h-4 w-4 text-rose-500" /> {t("Export PDF")}</Button>
                                     <Button
                                         variant="outline"
                                         size="sm"
                                         onClick={handleExportExcel}
                                         className="h-9 gap-1.5 border-border text-xs"
                                     >
-                                        <FileSpreadsheet className="h-4 w-4 text-emerald-500" /> Export Excel
-                                    </Button>
+                                        <FileSpreadsheet className="h-4 w-4 text-emerald-500" /> {t("Export Excel")}</Button>
                                 </>
                             )}
                             {canCreateInvoice && (
                                 <Button asChild className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700">
                                     <Link href="/admin/subscriptions/create-invoice">
-                                        <Plus className="mr-1.5 h-4 w-4" /> Create Manual Invoice
-                                    </Link>
+                                        <Plus className="mr-1.5 h-4 w-4" /> {t("Create Manual Invoice")}</Link>
                                 </Button>
                             )}
                         </div>
@@ -220,7 +219,7 @@ export default function SubscriptionIndex({ subscriptions, stats, plans, filters
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Monthly Active MRR</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Monthly Active MRR")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-foreground">
                                 {formatRupiah(stats?.net_revenue || 0)}
                             </h3>
@@ -232,7 +231,7 @@ export default function SubscriptionIndex({ subscriptions, stats, plans, filters
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Active Subscriptions</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Active Subscriptions")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                                 {stats?.active_count || 0}
                             </h3>
@@ -244,7 +243,7 @@ export default function SubscriptionIndex({ subscriptions, stats, plans, filters
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Past Due Subscriptions</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Past Due Subscriptions")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-amber-600 dark:text-amber-400">
                                 {stats?.past_due_count || 0}
                             </h3>
@@ -256,7 +255,7 @@ export default function SubscriptionIndex({ subscriptions, stats, plans, filters
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Total Registered</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Total Registered")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-purple-600 dark:text-purple-400">
                                 {stats?.total_count || 0}
                             </h3>
@@ -283,7 +282,7 @@ export default function SubscriptionIndex({ subscriptions, stats, plans, filters
                                     }`}
                                 >
                                     {st === 'all'
-                                        ? 'All'
+                                        ? t("All")
                                         : st === 'active'
                                         ? 'Active'
                                         : st === 'past_due'
@@ -299,7 +298,7 @@ export default function SubscriptionIndex({ subscriptions, stats, plans, filters
                                 type="text"
                                 value={search}
                                 onChange={onSearchChange}
-                                placeholder="Search tenant name or slug..."
+                                placeholder={t("Search tenant name or slug...")}
                                 className="h-9 w-full rounded-lg border border-border bg-background pl-9 pr-3 text-xs focus:outline-none focus:ring-1 focus:ring-blue-600"
                             />
                         </div>
@@ -309,14 +308,13 @@ export default function SubscriptionIndex({ subscriptions, stats, plans, filters
                     <div className="grid grid-cols-1 gap-3 rounded-xl border border-border/60 bg-muted/20 p-4 sm:grid-cols-2 lg:grid-cols-4">
                         <div className="space-y-1">
                             <label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
-                                <Filter className="h-3 w-3" /> Filter Plan Tier
-                            </label>
+                                <Filter className="h-3 w-3" /> {t("Filter Plan Tier")}</label>
                             <select
                                 value={selectedPlan}
                                 onChange={handlePlanFilterChange}
                                 className="h-8 w-full rounded-md border border-border bg-background px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-600"
                             >
-                                <option value="">All Plan Tiers</option>
+                                <option value="">{t("All Plan Tiers")}</option>
                                 {plans.map((p) => (
                                     <option key={p.id} value={p.id}>
                                         {p.name}
@@ -327,8 +325,7 @@ export default function SubscriptionIndex({ subscriptions, stats, plans, filters
 
                         <div className="space-y-1">
                             <label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
-                                <Calendar className="h-3 w-3" /> From Date
-                            </label>
+                                <Calendar className="h-3 w-3" /> {t("From Date")}</label>
                             <input
                                 type="date"
                                 value={dateFrom}
@@ -339,8 +336,7 @@ export default function SubscriptionIndex({ subscriptions, stats, plans, filters
 
                         <div className="space-y-1">
                             <label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
-                                <Calendar className="h-3 w-3" /> To Date
-                            </label>
+                                <Calendar className="h-3 w-3" /> {t("To Date")}</label>
                             <input
                                 type="date"
                                 value={dateTo}
@@ -357,8 +353,7 @@ export default function SubscriptionIndex({ subscriptions, stats, plans, filters
                                 onClick={handleResetFilters}
                                 className="h-8 w-full gap-1 border-border text-xs"
                             >
-                                <RotateCcw className="h-3 w-3" /> Reset Filters
-                            </Button>
+                                <RotateCcw className="h-3 w-3" /> {t("Reset Filters")}</Button>
                         </div>
                     </div>
 
@@ -367,12 +362,12 @@ export default function SubscriptionIndex({ subscriptions, stats, plans, filters
                         <table className="w-full border-collapse text-left text-xs">
                             <thead className="border-b border-border bg-muted/50 font-semibold text-muted-foreground">
                                 <tr>
-                                    <th className="py-3 px-4">TENANT ORGANIZATION</th>
-                                    <th className="py-3 px-4">PLAN TIER</th>
-                                    <th className="py-3 px-4">PRICE / MONTH</th>
-                                    <th className="py-3 px-4">STATUS</th>
-                                    <th className="py-3 px-4">EXPIRATION / END DATE</th>
-                                    <th className="py-3 px-4">CREATED AT</th>
+                                    <th className="py-3 px-4">{t("TENANT ORGANIZATION")}</th>
+                                    <th className="py-3 px-4">{t("PLAN TIER")}</th>
+                                    <th className="py-3 px-4">{t("PRICE / MONTH")}</th>
+                                    <th className="py-3 px-4">{t("STATUS")}</th>
+                                    <th className="py-3 px-4">{t("EXPIRATION / END DATE")}</th>
+                                    <th className="py-3 px-4">{t("CREATED AT")}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border">
@@ -380,14 +375,14 @@ export default function SubscriptionIndex({ subscriptions, stats, plans, filters
                                     subscriptions.data.map((sub) => (
                                         <tr key={sub.id} className="transition-colors hover:bg-muted/30">
                                             <td className="py-3.5 px-4 font-semibold">
-                                                {sub.tenant?.name || 'N/A'}
+                                                {sub.tenant?.name || t("N/A")}
                                                 <div className="text-[11px] font-normal text-muted-foreground">
-                                                    slug: {sub.tenant?.slug || '-'}
+                                                    {t("slug:")}{' '}{sub.tenant?.slug || '-'}
                                                 </div>
                                             </td>
                                             <td className="py-3.5 px-4">
                                                 <span className="rounded bg-foreground/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-foreground">
-                                                    {sub.plan?.name || 'N/A'}
+                                                    {sub.plan?.name || t("N/A")}
                                                 </span>
                                             </td>
                                             <td className="py-3.5 px-4 font-mono font-semibold">
@@ -407,7 +402,7 @@ export default function SubscriptionIndex({ subscriptions, stats, plans, filters
                                                 </span>
                                             </td>
                                             <td className="py-3.5 px-4 font-mono text-muted-foreground">
-                                                {sub.ends_at ? new Date(sub.ends_at).toLocaleDateString('id-ID') : 'Lifetime / Auto-renew'}
+                                                {sub.ends_at ? new Date(sub.ends_at).toLocaleDateString('id-ID') : t("Lifetime / Auto-renew")}
                                             </td>
                                             <td className="py-3.5 px-4 font-mono text-muted-foreground">
                                                 {new Date(sub.created_at).toLocaleDateString('id-ID')}
@@ -417,8 +412,7 @@ export default function SubscriptionIndex({ subscriptions, stats, plans, filters
                                 ) : (
                                     <tr>
                                         <td colSpan={6} className="py-12 text-center text-muted-foreground">
-                                            No subscription records found matching filters.
-                                        </td>
+                                            {t("No subscription records found matching filters.")}</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -428,8 +422,7 @@ export default function SubscriptionIndex({ subscriptions, stats, plans, filters
                     {/* Pagination */}
                     <div className="flex items-center justify-between border-t border-border pt-4 text-xs text-muted-foreground">
                         <div>
-                            Showing page {subscriptions?.current_page || 1} of {subscriptions?.last_page || 1} ({subscriptions?.total || 0} total)
-                        </div>
+                            {t("Showing page")}{' '}{subscriptions?.current_page || 1} {t("of")}{' '}{subscriptions?.last_page || 1} {t("(")}{subscriptions?.total || 0} {t("total)")}</div>
                         <div className="flex gap-2">
                             <Button
                                 size="sm"
@@ -438,8 +431,7 @@ export default function SubscriptionIndex({ subscriptions, stats, plans, filters
                                 onClick={() => subscriptions?.prev_page_url && router.visit(subscriptions.prev_page_url)}
                                 className="h-8 border-border text-xs"
                             >
-                                Prev
-                            </Button>
+                                {t("Prev")}</Button>
                             <Button
                                 size="sm"
                                 variant="outline"
@@ -447,8 +439,7 @@ export default function SubscriptionIndex({ subscriptions, stats, plans, filters
                                 onClick={() => subscriptions?.next_page_url && router.visit(subscriptions.next_page_url)}
                                 className="h-8 border-border text-xs"
                             >
-                                Next
-                            </Button>
+                                {t("Next")}</Button>
                         </div>
                     </div>
                 </div>
@@ -459,7 +450,7 @@ export default function SubscriptionIndex({ subscriptions, stats, plans, filters
 
 SubscriptionIndex.layout = {
     breadcrumbs: [
-        { title: 'Admin', href: '#' },
-        { title: 'Subscriptions Management', href: '/admin/subscriptions' },
+        { title: "Admin", href: '#' },
+        { title: "Subscriptions Management", href: '/admin/subscriptions' },
     ],
 };

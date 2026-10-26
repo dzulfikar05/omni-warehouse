@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/ui/badge';import { useTranslation } from '@/context/language-context';
+
 import { toast } from 'sonner';
 import {
     ArrowLeftCircleIcon,
@@ -61,6 +62,7 @@ export default function LocationShow({
     stocks?: StockItem[];
     movements?: MovementLog[];
 }) {
+    const { t } = useTranslation();
     const { flash, current_tenant, auth } = usePage().props as any;
     const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
@@ -75,7 +77,7 @@ export default function LocationShow({
     }, [flash?.success]);
 
     if (!location) {
-        return <div className="p-6 text-xs text-muted-foreground">Data lokasi rak tidak ditemukan.</div>;
+        return <div className="p-6 text-xs text-muted-foreground">{t("Data lokasi rak tidak ditemukan.")}</div>;
     }
 
     const handleDelete = () => {
@@ -91,22 +93,20 @@ export default function LocationShow({
             <div className="space-y-6 p-4 sm:p-6">
                 <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-6 shadow-sm">
                     <div>
-                        <h2 className="text-xl font-bold tracking-tight">Location Details</h2>
+                        <h2 className="text-xl font-bold tracking-tight">{t("Location Details")}</h2>
                         <p className="mt-0.5 text-xs text-muted-foreground">
-                            Detail spesifikasi lokasi rak, daftar fisik barang tersimpan, dan log riwayat mutasi stok.
-                        </p>
+                            {t("Detail spesifikasi lokasi rak, daftar fisik barang tersimpan, dan log riwayat mutasi stok.")}</p>
                     </div>
                     <Button asChild variant="outline" className="rounded-xl border-border">
                         <Link href={`/${tenantSlug}/locations`}>
-                            <ArrowLeftCircleIcon className="mr-2 h-4 w-4 text-blue-600" /> Back
-                        </Link>
+                            <ArrowLeftCircleIcon className="mr-2 h-4 w-4 text-blue-600" /> {t("Back")}</Link>
                     </Button>
                 </div>
 
                 <div className="space-y-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                         <div className="space-y-1.5">
-                            <Label className="text-xs font-semibold">Kode Rak / Slot</Label>
+                            <Label className="text-xs font-semibold">{t("Kode Rak / Slot")}</Label>
                             <Input
                                 value={location.rack_code || ''}
                                 readOnly
@@ -115,7 +115,7 @@ export default function LocationShow({
                         </div>
 
                         <div className="space-y-1.5">
-                            <Label className="text-xs font-semibold">Gudang Target</Label>
+                            <Label className="text-xs font-semibold">{t("Gudang Target")}</Label>
                             <Input
                                 value={location.warehouse?.name || '-'}
                                 readOnly
@@ -124,7 +124,7 @@ export default function LocationShow({
                         </div>
 
                         <div className="space-y-1.5">
-                            <Label className="text-xs font-semibold">Zona Area</Label>
+                            <Label className="text-xs font-semibold">{t("Zona Area")}</Label>
                             <Input
                                 value={location.zone || 'General Storage Zone'}
                                 readOnly
@@ -134,7 +134,7 @@ export default function LocationShow({
                     </div>
 
                     <div className="space-y-1.5">
-                        <Label className="text-xs font-semibold">Deskripsi / Catatan Rak</Label>
+                        <Label className="text-xs font-semibold">{t("Deskripsi / Catatan Rak")}</Label>
                         <Textarea
                             value={location.desc || '-'}
                             readOnly
@@ -144,7 +144,7 @@ export default function LocationShow({
                     </div>
 
                     <div className="space-y-1.5">
-                        <Label className="text-xs font-semibold">Status Operasional</Label>
+                        <Label className="text-xs font-semibold">{t("Status Operasional")}</Label>
                         <div>
                             <Badge
                                 variant="outline"
@@ -154,7 +154,7 @@ export default function LocationShow({
                                         : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/50 dark:text-rose-400'
                                 }
                             >
-                                {location.is_active ? 'Active' : 'Inactive'}
+                                {location.is_active ? t("Active") : t("Inactive")}
                             </Badge>
                         </div>
                     </div>
@@ -165,8 +165,7 @@ export default function LocationShow({
                             className="flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-xs font-semibold text-white shadow-md shadow-blue-600/20 hover:bg-blue-700"
                         >
                             <Link href={`/${tenantSlug}/locations/${location.id}/edit`}>
-                                <PencilIcon className="h-4 w-4" /> Edit
-                            </Link>
+                                <PencilIcon className="h-4 w-4" /> {t("Edit")}</Link>
                         </Button>
                         <Button
                             type="button"
@@ -174,8 +173,7 @@ export default function LocationShow({
                             onClick={handleDelete}
                             className="h-9 gap-2 rounded-xl border-red-200 text-xs text-red-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30"
                         >
-                            <Trash2 size={16} /> Delete
-                        </Button>
+                            <Trash2 size={16} /> {t("Delete")}</Button>
                     </div>
                 </div>
 
@@ -184,8 +182,7 @@ export default function LocationShow({
                     <div className="space-y-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
                         <h3 className="border-b border-border pb-3 text-sm font-bold text-foreground flex items-center gap-2">
                             <Boxes className="h-4 w-4 text-emerald-600" />
-                            Inventory Items On Rack
-                        </h3>
+                            {t("Inventory Items On Rack")}</h3>
 
                         {stocks.length > 0 ? (
                             <div className="space-y-3">
@@ -203,7 +200,7 @@ export default function LocationShow({
                                             </p>
                                         </div>
                                         <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 font-mono">
-                                            Qty: {stk.quantity ?? 0}
+                                            {t("Qty:")}{' '}{stk.quantity ?? 0}
                                         </span>
                                     </div>
                                 ))}
@@ -211,7 +208,7 @@ export default function LocationShow({
                         ) : (
                             <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
                                 <PackageX className="mb-2 h-8 w-8 text-muted-foreground/50" />
-                                <p className="text-xs font-medium">Belum ada barang fisik tersimpan di rak ini.</p>
+                                <p className="text-xs font-medium">{t("Belum ada barang fisik tersimpan di rak ini.")}</p>
                             </div>
                         )}
                     </div>
@@ -220,8 +217,7 @@ export default function LocationShow({
                     <div className="space-y-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
                         <h3 className="border-b border-border pb-3 text-sm font-bold text-foreground flex items-center gap-2">
                             <Clock className="h-4 w-4 text-blue-600" />
-                            Stock Movement Log
-                        </h3>
+                            {t("Stock Movement Log")}</h3>
 
                         {movements.length > 0 ? (
                             <div className="space-y-3">
@@ -247,8 +243,7 @@ export default function LocationShow({
                                                 </span>
                                             </div>
                                             <p className="mt-0.5 text-[11px] text-muted-foreground">
-                                                <span className="font-mono font-semibold text-primary">{log.sku_code}</span> ({log.quantity} pcs)
-                                            </p>
+                                                <span className="font-mono font-semibold text-primary">{log.sku_code}</span> {t("(")}{log.quantity} {t("pcs)")}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -256,7 +251,7 @@ export default function LocationShow({
                         ) : (
                             <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
                                 <Clock className="mb-2 h-8 w-8 text-muted-foreground/50" />
-                                <p className="text-xs font-medium">Belum ada riwayat pergerakan stok di rak ini.</p>
+                                <p className="text-xs font-medium">{t("Belum ada riwayat pergerakan stok di rak ini.")}</p>
                             </div>
                         )}
                     </div>
@@ -268,8 +263,8 @@ export default function LocationShow({
 
 LocationShow.layout = {
     breadcrumbs: [
-        { title: 'Warehouse & Stocks', href: '#' },
-        { title: 'Rack & Locations', href: '#' },
-        { title: 'Location Details', href: '#' },
+        { title: "Warehouse & Stocks", href: '#' },
+        { title: "Rack & Locations", href: '#' },
+        { title: "Location Details", href: '#' },
     ],
 };

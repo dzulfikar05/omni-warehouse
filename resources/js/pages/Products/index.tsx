@@ -6,7 +6,8 @@ import {
     DropdownMenuContent, 
     DropdownMenuItem, 
     DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
+} from '@/components/ui/dropdown-menu';import { useTranslation } from '@/context/language-context';
+
 import { Plus, Search, SlidersHorizontal, Eye, Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -19,43 +20,42 @@ interface Product {
 }
 
 export default function Index({ products }: { products: Product[] }) {
+    const { t } = useTranslation();
     const [search, setSearch] = useState('');
 
     return (
         <>
-            <Head title="Products" />
+            <Head title={t("Products")} />
 
             <div className="space-y-6 p-4">
                 {/* Header Section */}
                 <div className="rounded-lg bg-card text-card-foreground p-6 shadow-md border border-border">
                     <div className="flex items-center justify-between">
                         <h2 className="text-2xl font-bold text-foreground">
-                            Products
-                        </h2>
+                            {t("Products")}</h2>
                         <Button asChild className="shadow-md">
                             <Link href="/products/create">
-                                <Plus className="mr-2 h-4 w-4" /> Add Product
-                            </Link>
+                                <Plus className="mr-2 h-4 w-4" /> {t("Add Product")}</Link>
                         </Button>
                     </div>
 
                     {/* Controls Bar (Show entries & Search/Filter) */}
                     <div className="mt-6 flex flex-col md:flex-row items-center justify-between gap-4">
                         <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                            <span>Show</span>
+                            <span>{t("Show")}</span>
                             <select className="rounded-md border border-border bg-card px-2 py-1 text-foreground focus:outline-none focus:ring-2 focus:ring-primary">
-                                <option value="10">10</option>
-                                <option value="25">25</option>
-                                <option value="50">50</option>
+                                <option value="10">{t("10")}</option>
+                                <option value="25">{t("25")}</option>
+                                <option value="50">{t("50")}</option>
                             </select>
-                            <span>entries</span>
+                            <span>{t("entries")}</span>
                         </div>
 
                         <div className="flex items-center space-x-3 w-full md:w-auto">
                             <div className="relative w-full md:w-72">
                                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                                 <Input
-                                    placeholder="Search..."
+                                    placeholder={t("Search...")}
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
                                     className="pl-9"
@@ -63,7 +63,7 @@ export default function Index({ products }: { products: Product[] }) {
                             </div>
                             <Button variant="outline" className="flex items-center space-x-2">
                                 <SlidersHorizontal className="h-4 w-4" />
-                                <span>Filter</span>
+                                <span>{t("Filter")}</span>
                             </Button>
                         </div>
                     </div>
@@ -75,12 +75,12 @@ export default function Index({ products }: { products: Product[] }) {
                         <table className="w-full border-collapse text-left text-sm">
                             <thead>
                                 <tr className="border-b border-border bg-muted/50 text-muted-foreground">
-                                    <th className="p-4 font-semibold">Product ID</th>
-                                    <th className="p-4 font-semibold">Product Name</th>
-                                    <th className="p-4 font-semibold">Category</th>
-                                    <th className="p-4 font-semibold">Created By</th>
-                                    <th className="p-4 font-semibold">Date Added</th>
-                                    <th className="p-4 font-semibold text-right">Actions</th>
+                                    <th className="p-4 font-semibold">{t("Product ID")}</th>
+                                    <th className="p-4 font-semibold">{t("Product Name")}</th>
+                                    <th className="p-4 font-semibold">{t("Category")}</th>
+                                    <th className="p-4 font-semibold">{t("Created By")}</th>
+                                    <th className="p-4 font-semibold">{t("Date Added")}</th>
+                                    <th className="p-4 font-semibold text-right">{t("Actions")}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border">
@@ -96,20 +96,19 @@ export default function Index({ products }: { products: Product[] }) {
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
                                                         <Button variant="outline" size="sm">
-                                                            Actions
-                                                        </Button>
+                                                            {t("Actions")}</Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end" className="w-40">
                                                         <DropdownMenuItem asChild>
                                                             <Link href={`/products/${product.product_id}`} className="flex items-center cursor-pointer">
                                                                 <Eye className="mr-2 h-4 w-4 text-muted-foreground" />
-                                                                <span>View Details</span>
+                                                                <span>{t("View Details")}</span>
                                                             </Link>
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem asChild>
                                                             <Link href={`/products/${product.product_id}/edit`} className="flex items-center cursor-pointer">
                                                                 <Pencil className="mr-2 h-4 w-4 text-muted-foreground" />
-                                                                <span>Edit Data</span>
+                                                                <span>{t("Edit Data")}</span>
                                                             </Link>
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem asChild>
@@ -120,7 +119,7 @@ export default function Index({ products }: { products: Product[] }) {
                                                                 className="flex items-center w-full cursor-pointer text-red-600 focus:text-red-600"
                                                             >
                                                                 <Trash2 className="mr-2 h-4 w-4 text-red-600" />
-                                                                <span>Delete Data</span>
+                                                                <span>{t("Delete Data")}</span>
                                                             </Link>
                                                         </DropdownMenuItem>
                                                     </DropdownMenuContent>
@@ -131,8 +130,7 @@ export default function Index({ products }: { products: Product[] }) {
                                 ) : (
                                     <tr>
                                         <td colSpan={6} className="p-6 text-center text-muted-foreground">
-                                            No products found.
-                                        </td>
+                                            {t("No products found.")}</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -142,15 +140,12 @@ export default function Index({ products }: { products: Product[] }) {
                     {/* Pagination Footer */}
                     <div className="flex items-center justify-between p-4 border-t border-border bg-muted/20 text-sm text-muted-foreground">
                         <div>
-                            Page <span className="font-medium text-foreground">1</span> of 10
-                        </div>
+                            {t("Page")}{' '}<span className="font-medium text-foreground">{t("1")}</span> {t("of 10")}</div>
                         <div className="flex items-center space-x-2">
                             <Button variant="outline" size="sm" disabled>
-                                Prev
-                            </Button>
+                                {t("Prev")}</Button>
                             <Button variant="outline" size="sm">
-                                Next
-                            </Button>
+                                {t("Next")}</Button>
                         </div>
                     </div>
                 </div>
@@ -161,7 +156,7 @@ export default function Index({ products }: { products: Product[] }) {
 
 Index.layout = {
     breadcrumbs: [
-        { title: 'Dashboard', href: '/dashboard' },
-        { title: 'Products', href: '/products' },
+        { title: "Dashboard", href: '/dashboard' },
+        { title: "Products", href: '/products' },
     ],
 };

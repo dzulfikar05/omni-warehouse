@@ -1,10 +1,12 @@
 import React from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
-import { PageHeader } from '@/components/page-header';
+import { PageHeader } from '@/components/page-header';import { useTranslation } from '@/context/language-context';
+
 import { ArrowLeft, Plus, Trash2, Save, RotateCcw } from 'lucide-react';
 
 export default function PlanCreate() {
+    const { t } = useTranslation();
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         price: '',
@@ -34,17 +36,16 @@ export default function PlanCreate() {
 
     return (
         <>
-            <Head title="Add New Plan" />
+            <Head title={t("Add New Plan")} />
 
             <div className="space-y-6 p-4 sm:p-6">
                 <PageHeader
-                    title="Add New Plan"
-                    description="Create a new subscription tier along with feature limits."
+                    title={t("Add New Plan")}
+                    description={t("Create a new subscription tier along with feature limits.")}
                     renderAction={
                         <Button asChild variant="outline" size="sm" className="h-9 gap-1.5 border-border text-xs">
                             <Link href="/admin/plans">
-                                <ArrowLeft className="h-4 w-4" /> Back
-                            </Link>
+                                <ArrowLeft className="h-4 w-4" /> {t("Back")}</Link>
                         </Button>
                     }
                 />
@@ -55,13 +56,13 @@ export default function PlanCreate() {
                             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-semibold text-foreground">
-                                        Plan Name <span className="text-red-500">*</span>
+                                        {t("Plan Name")}{' '}<span className="text-red-500">{t("*")}</span>
                                     </label>
                                     <input
                                         type="text"
                                         value={data.name}
                                         onChange={(e) => setData('name', e.target.value)}
-                                        placeholder="e.g. Enterprise Warehouse"
+                                        placeholder={t("e.g. Enterprise Warehouse")}
                                         className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-600"
                                     />
                                     {errors.name && <span className="text-[11px] text-red-500">{errors.name}</span>}
@@ -69,25 +70,25 @@ export default function PlanCreate() {
 
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-semibold text-foreground">
-                                        Price Monthly (IDR) <span className="text-red-500">*</span>
+                                        {t("Price Monthly (IDR)")}{' '}<span className="text-red-500">{t("*")}</span>
                                     </label>
                                     <input
                                         type="number"
                                         value={data.price}
                                         onChange={(e) => setData('price', e.target.value)}
-                                        placeholder="750000"
+                                        placeholder={t("750000")}
                                         className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-600"
                                     />
                                     {errors.price && <span className="text-[11px] text-red-500">{errors.price}</span>}
                                 </div>
 
                                 <div className="space-y-1.5 md:col-span-2">
-                                    <label className="text-xs font-semibold text-foreground">Short Description</label>
+                                    <label className="text-xs font-semibold text-foreground">{t("Short Description")}</label>
                                     <textarea
                                         value={data.desc}
                                         onChange={(e) => setData('desc', e.target.value)}
                                         rows={3}
-                                        placeholder="Brief description of plan tier capabilities..."
+                                        placeholder={t("Brief description of plan tier capabilities...")}
                                         className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-600"
                                     />
                                     {errors.desc && <span className="text-[11px] text-red-500">{errors.desc}</span>}
@@ -98,8 +99,7 @@ export default function PlanCreate() {
                             <div className="space-y-3 pt-4 border-t border-border">
                                 <div className="flex items-center justify-between">
                                     <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                                        Feature List
-                                    </label>
+                                        {t("Feature List")}</label>
                                     <Button
                                         type="button"
                                         variant="outline"
@@ -107,8 +107,7 @@ export default function PlanCreate() {
                                         onClick={addFeatureField}
                                         className="h-8 gap-1 border-border text-xs"
                                     >
-                                        <Plus className="h-3.5 w-3.5" /> Add Feature
-                                    </Button>
+                                        <Plus className="h-3.5 w-3.5" /> {t("Add Feature")}</Button>
                                 </div>
 
                                 {data.features.map((feat, index) => (
@@ -117,7 +116,7 @@ export default function PlanCreate() {
                                             type="text"
                                             value={feat}
                                             onChange={(e) => handleFeatureChange(index, e.target.value)}
-                                            placeholder="e.g. Multi-warehouse (up to 5 facilities)"
+                                            placeholder={t("e.g. Multi-warehouse (up to 5 facilities)")}
                                             className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-600"
                                         />
                                         <Button
@@ -143,15 +142,14 @@ export default function PlanCreate() {
                                 onClick={() => reset()}
                                 className="h-9 gap-1.5 border-border text-xs"
                             >
-                                <RotateCcw className="h-3.5 w-3.5" /> Reset
-                            </Button>
+                                <RotateCcw className="h-3.5 w-3.5" /> {t("Reset")}</Button>
                             <Button
                                 type="submit"
                                 size="sm"
                                 disabled={processing}
                                 className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700"
                             >
-                                <Save className="mr-1.5 h-4 w-4" /> {processing ? 'Saving...' : 'Save Plan Tier'}
+                                <Save className="mr-1.5 h-4 w-4" /> {processing ? t("Saving...") : t("Save Plan Tier")}
                             </Button>
                         </div>
                     </form>
@@ -163,8 +161,8 @@ export default function PlanCreate() {
 
 PlanCreate.layout = {
     breadcrumbs: [
-        { title: 'Admin', href: '#' },
-        { title: 'Plans Management', href: '/admin/plans' },
-        { title: 'Add Plan Tier', href: '#' },
+        { title: "Admin", href: '#' },
+        { title: "Plans Management", href: '/admin/plans' },
+        { title: "Add Plan Tier", href: '#' },
     ],
 };

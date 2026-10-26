@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 
-import CategoryForm from './components/CategoryForm';
+import CategoryForm from './components/CategoryForm';import { useTranslation } from '@/context/language-context';
+
 
 interface Category {
     id: number;
@@ -17,19 +18,18 @@ export default function Edit({
     tenant_slug,
     category,
 }: Props) {
+    const { t } = useTranslation();
     return (
         <>
-            <Head title="Edit Category" />
+            <Head title={t("Edit Category")} />
 
             <div className="space-y-6 p-4">
                 <div>
                     <h1 className="text-2xl font-bold text-foreground">
-                        Edit Category
-                    </h1>
+                        {t("Edit Category")}</h1>
 
                     <p className="mt-1 text-sm text-muted-foreground">
-                        Update category information.
-                    </p>
+                        {t("Update category information.")}</p>
                 </div>
 
                 <div className="rounded-lg border border-border bg-card p-6 shadow-md">
@@ -46,8 +46,8 @@ export default function Edit({
 
 Edit.layout = {
     breadcrumbs: [
-        { title: 'Inventory Management', href: '/categories' },
-        { title: 'Categories', href: '/categories' },
-        { title: 'Edit Category', href: '#' },
+        { title: "Inventory Management", href: '/categories' },
+        { title: "Categories", href: '/categories' },
+        { title: "Edit Category", href: '#' },
     ],
 };

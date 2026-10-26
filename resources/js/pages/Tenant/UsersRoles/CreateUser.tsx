@@ -9,7 +9,8 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@/components/ui/select';
+} from '@/components/ui/select';import { useTranslation } from '@/context/language-context';
+
 import { ArrowLeftCircleIcon, UserPlus } from 'lucide-react';
 
 interface Role {
@@ -18,6 +19,7 @@ interface Role {
 }
 
 export default function CreateUser({ roles = [] }: { roles: Role[] }) {
+    const { t } = useTranslation();
     const { current_tenant, auth } = usePage().props as any;
     // const tenantSlug = current_tenant?.slug || '';
 
@@ -40,20 +42,18 @@ export default function CreateUser({ roles = [] }: { roles: Role[] }) {
 
     return (
         <>
-            <Head title="Invite New Member" />
+            <Head title={t("Invite New Member")} />
 
             <div className="space-y-6 p-4 sm:p-6">
                 <div className="rounded-2xl border border-border bg-card p-6 shadow-sm flex items-center justify-between text-card-foreground">
                     <div>
-                        <h2 className="text-xl font-bold tracking-tight">Add New Team Member</h2>
+                        <h2 className="text-xl font-bold tracking-tight">{t("Add New Team Member")}</h2>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                            Create an operational account for this tenant workspace.
-                        </p>
+                            {t("Create an operational account for this tenant workspace.")}</p>
                     </div>
                     <Button asChild variant="outline" className="rounded-xl border-border">
                         <Link href={`/${tenantSlug}/settings/users-roles?tab=users`}>
-                            <ArrowLeftCircleIcon className="mr-2 h-4 w-4 text-blue-600" /> Back
-                        </Link>
+                            <ArrowLeftCircleIcon className="mr-2 h-4 w-4 text-blue-600" /> {t("Back")}</Link>
                     </Button>
                 </div>
 
@@ -61,13 +61,12 @@ export default function CreateUser({ roles = [] }: { roles: Role[] }) {
                     <form onSubmit={submit} className="max-w-2xl space-y-5">
                         <div className="space-y-1.5">
                             <Label htmlFor="name" className="text-xs font-semibold">
-                                Full Name
-                            </Label>
+                                {t("Full Name")}</Label>
                             <Input
                                 id="name"
                                 value={data.name}
                                 onChange={(e) => setData('name', e.target.value)}
-                                placeholder="e.g. Wahyu Pratama"
+                                placeholder={t("e.g. Wahyu Pratama")}
                                 required
                                 className="h-10 text-xs border-border bg-background rounded-xl"
                             />
@@ -78,14 +77,13 @@ export default function CreateUser({ roles = [] }: { roles: Role[] }) {
 
                         <div className="space-y-1.5">
                             <Label htmlFor="email" className="text-xs font-semibold">
-                                Email Address
-                            </Label>
+                                {t("Email Address")}</Label>
                             <Input
                                 id="email"
                                 type="email"
                                 value={data.email}
                                 onChange={(e) => setData('email', e.target.value)}
-                                placeholder="wahyu@company.com"
+                                placeholder={t("wahyu@company.com")}
                                 required
                                 className="h-10 text-xs border-border bg-background rounded-xl"
                             />
@@ -96,14 +94,13 @@ export default function CreateUser({ roles = [] }: { roles: Role[] }) {
 
                         <div className="space-y-1.5">
                             <Label htmlFor="role" className="text-xs font-semibold">
-                                Assign Role
-                            </Label>
+                                {t("Assign Role")}</Label>
                             <Select
                                 value={data.role}
                                 onValueChange={(val) => setData('role', val)}
                             >
                                 <SelectTrigger className="h-10 text-xs border-border bg-background rounded-xl">
-                                    <SelectValue placeholder="Select Role" />
+                                    <SelectValue placeholder={t("Select Role")} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {roles.map((r) => (
@@ -121,13 +118,12 @@ export default function CreateUser({ roles = [] }: { roles: Role[] }) {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-1.5">
                                 <Label htmlFor="password" className="text-xs font-semibold">
-                                    Password
-                                </Label>
+                                    {t("Password")}</Label>
                                 <PasswordInput
                                     id="password"
                                     value={data.password}
                                     onChange={(e) => setData('password', e.target.value)}
-                                    placeholder="••••••••"
+                                    placeholder={t("••••••••")}
                                     required
                                     className="h-10 text-xs border-border bg-background rounded-xl"
                                 />
@@ -138,13 +134,12 @@ export default function CreateUser({ roles = [] }: { roles: Role[] }) {
 
                             <div className="space-y-1.5">
                                 <Label htmlFor="password_confirmation" className="text-xs font-semibold">
-                                    Confirm Password
-                                </Label>
+                                    {t("Confirm Password")}</Label>
                                 <PasswordInput
                                     id="password_confirmation"
                                     value={data.password_confirmation}
                                     onChange={(e) => setData('password_confirmation', e.target.value)}
-                                    placeholder="••••••••"
+                                    placeholder={t("••••••••")}
                                     required
                                     className="h-10 text-xs border-border bg-background rounded-xl"
                                 />
@@ -158,7 +153,7 @@ export default function CreateUser({ roles = [] }: { roles: Role[] }) {
                                 disabled={processing}
                             >
                                 <UserPlus className="h-4 w-4" />
-                                {processing ? 'Creating...' : 'Create Member'}
+                                {processing ? t("Creating...") : t("Create Member")}
                             </Button>
                         </div>
                     </form>
@@ -170,8 +165,8 @@ export default function CreateUser({ roles = [] }: { roles: Role[] }) {
 
 CreateUser.layout = {
     breadcrumbs: [
-        { title: 'Settings', href: '#' },
-        { title: 'User & Roles', href: '#' },
-        { title: 'Add Member', href: '#' },
+        { title: "Settings", href: '#' },
+        { title: "User & Roles", href: '#' },
+        { title: "Add Member", href: '#' },
     ],
 };

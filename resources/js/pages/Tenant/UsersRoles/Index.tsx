@@ -9,6 +9,7 @@ import { ActionButton } from '@/components/action-button';
 import { PageHeader } from '@/components/page-header';
 import { toast } from 'sonner';
 import { debounce } from 'lodash';
+import { useTranslation } from '@/context/language-context';
 import { usePermission } from '@/utils/permission';
 import { Users, Shield, Plus } from 'lucide-react';
 
@@ -59,6 +60,7 @@ interface PageProps {
 }
 
 export default function Index({ users, roles, filters }: PageProps) {
+    const { t } = useTranslation();
     const { flash, current_tenant, auth } = usePage().props as any;
     const { can } = usePermission();
 
@@ -176,29 +178,29 @@ export default function Index({ users, roles, filters }: PageProps) {
     };
 
     const userTableHeaders: Array<string | HeaderConfig> = [
-        { label: '#', sortField: 'id' },
-        { label: 'USER', sortField: 'name' },
+        { label: t("#"), sortField: 'id' },
+        { label: t("USER"), sortField: 'name' },
         'ROLE',
         'STATUS',
-        { label: 'LAST LOGIN', sortField: 'last_login_at' },
+        { label: t("LAST LOGIN"), sortField: 'last_login_at' },
         'ACTIONS',
     ];
 
     const roleTableHeaders: Array<string | HeaderConfig> = [
-        { label: '#', sortField: 'id' },
-        { label: 'ROLE NAME', sortField: 'name' },
-        { label: 'ATTACHED PERMISSIONS', sortField: 'permissions_count' },
+        { label: t("#"), sortField: 'id' },
+        { label: t("ROLE NAME"), sortField: 'name' },
+        { label: t("ATTACHED PERMISSIONS"), sortField: 'permissions_count' },
         'ACTIONS',
     ];
 
     return (
         <>
-            <Head title="Team & Access Control" />
+            <Head title={t("Team & Access Control")} />
 
             <div className="space-y-6 p-4">
                 <PageHeader
-                    title="Team & Access Control"
-                    description="Manage organization members, Spatie RBAC roles, and operational module permissions."
+                    title={t("Team & Access Control")}
+                    description={t("Manage organization members, Spatie RBAC roles, and operational module permissions.")}
                     renderAction={
                         <Button
                             asChild
@@ -213,8 +215,8 @@ export default function Index({ users, roles, filters }: PageProps) {
                             >
                                 <Plus className="mr-2 h-4 w-4" />
                                 {activeTab === 'users'
-                                    ? 'Add Member'
-                                    : 'Add Role'}
+                                    ? t("Add Member")
+                                    : t("Add Role")}
                             </Link>
                         </Button>
                     }
@@ -231,8 +233,7 @@ export default function Index({ users, roles, filters }: PageProps) {
                                 }`}
                             >
                                 <Users className="h-4 w-4" />
-                                Team Members ({users?.total || 0})
-                            </button>
+                                {t("Team Members (")}{users?.total || 0}{t(")")}</button>
 
                             <button
                                 type="button"
@@ -244,8 +245,7 @@ export default function Index({ users, roles, filters }: PageProps) {
                                 }`}
                             >
                                 <Shield className="h-4 w-4" />
-                                Roles & Permissions (Spatie RBAC)
-                            </button>
+                                {t("Roles & Permissions (Spatie RBAC)")}</button>
                         </div>
 
                         <TableFilter
@@ -266,8 +266,7 @@ export default function Index({ users, roles, filters }: PageProps) {
                                             : 'bg-muted text-muted-foreground hover:bg-muted/80'
                                     }`}
                                 >
-                                    All ({users?.total || 0})
-                                </button>
+                                    {t("All (")}{users?.total || 0}{t(")")}</button>
                                 {roles.data.map((r) => (
                                     <button
                                         key={r.id}
@@ -301,7 +300,7 @@ export default function Index({ users, roles, filters }: PageProps) {
                         renderRow={(user: MemberUser) => (
                             <>
                                 <TableCell className="font-mono text-xs text-muted-foreground">
-                                    #{user.id}
+                                    {t("#")}{user.id}
                                 </TableCell>
 
                                 <TableCell>
@@ -328,7 +327,7 @@ export default function Index({ users, roles, filters }: PageProps) {
                                         variant="secondary"
                                         className="border-blue-200 bg-blue-50 text-[11px] font-semibold text-blue-700 dark:bg-blue-950/50 dark:text-blue-400"
                                     >
-                                        {user.role || 'Member'}
+                                        {user.role || t("Member")}
                                     </Badge>
                                 </TableCell>
 
@@ -347,14 +346,14 @@ export default function Index({ users, roles, filters }: PageProps) {
                                                     : 'bg-amber-500'
                                             }`}
                                         />
-                                        {user.status || 'Active'}
+                                        {user.status || t("Active")}
                                     </span>
                                 </TableCell>
 
                                 <TableCell>
                                     <div className="text-xs font-medium text-foreground">
                                         {user.last_login_at ||
-                                            'Never logged in'}
+                                            t("Never logged in")}
                                     </div>
                                     <div className="text-[10px] text-muted-foreground">
                                         {user.ip_address || '-'}
@@ -390,7 +389,7 @@ export default function Index({ users, roles, filters }: PageProps) {
                         renderRow={(role: RoleItem) => (
                             <>
                                 <TableCell className="font-mono text-xs text-muted-foreground">
-                                    #{role.id}
+                                    {t("#")}{role.id}
                                 </TableCell>
 
                                 <TableCell className="text-xs font-bold text-foreground">
@@ -403,8 +402,7 @@ export default function Index({ users, roles, filters }: PageProps) {
                                         className="text-xs"
                                     >
                                         {role.permissions_count || 0}{' '}
-                                        Permissions
-                                    </Badge>
+                                        {t("Permissions")}</Badge>
                                 </TableCell>
 
                                 {/* ACTION BUTTON ROLE */}
@@ -430,7 +428,7 @@ export default function Index({ users, roles, filters }: PageProps) {
 
 Index.layout = {
     breadcrumbs: [
-        { title: 'Settings', href: '#' },
-        { title: 'User & Roles', href: '#' },
+        { title: "Settings", href: '#' },
+        { title: "User & Roles", href: '#' },
     ],
 };

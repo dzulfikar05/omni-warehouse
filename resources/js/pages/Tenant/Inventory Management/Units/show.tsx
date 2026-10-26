@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';import { useTranslation } from '@/context/language-context';
+
 
 interface Unit {
     id: number;
@@ -19,6 +20,7 @@ export default function Show({
     tenant_slug,
     unit,
 }: Props) {
+    const { t } = useTranslation();
     return (
         <>
             <Head title={`Unit - ${unit.name}`} />
@@ -26,20 +28,17 @@ export default function Show({
             <div className="space-y-6 p-4">
                 <div>
                     <h1 className="text-2xl font-bold text-foreground">
-                        Unit Details
-                    </h1>
+                        {t("Unit Details")}</h1>
 
                     <p className="mt-1 text-sm text-muted-foreground">
-                        View unit information.
-                    </p>
+                        {t("View unit information.")}</p>
                 </div>
 
                 <div className="rounded-lg border border-border bg-card p-6 shadow-md">
                     <div className="grid gap-6 md:grid-cols-2">
                         <div>
                             <p className="text-sm text-muted-foreground">
-                                Unit ID
-                            </p>
+                                {t("Unit ID")}</p>
 
                             <p className="mt-1 font-medium text-foreground">
                                 {unit.id}
@@ -48,8 +47,7 @@ export default function Show({
 
                         <div>
                             <p className="text-sm text-muted-foreground">
-                                Unit Name
-                            </p>
+                                {t("Unit Name")}</p>
 
                             <p className="mt-1 font-medium text-foreground">
                                 {unit.name}
@@ -58,8 +56,7 @@ export default function Show({
 
                         <div>
                             <p className="text-sm text-muted-foreground">
-                                Unit Symbol
-                            </p>
+                                {t("Unit Symbol")}</p>
 
                             <p className="mt-1 font-medium text-foreground">
                                 {unit.symbol}
@@ -68,8 +65,7 @@ export default function Show({
 
                         <div>
                             <p className="text-sm text-muted-foreground">
-                                Date Added
-                            </p>
+                                {t("Date Added")}</p>
 
                             <p className="mt-1 font-medium text-foreground">
                                 {new Date(
@@ -80,8 +76,7 @@ export default function Show({
 
                         <div>
                             <p className="text-sm text-muted-foreground">
-                                Last Updated
-                            </p>
+                                {t("Last Updated")}</p>
 
                             <p className="mt-1 font-medium text-foreground">
                                 {new Date(
@@ -96,16 +91,14 @@ export default function Show({
                             <Link
                                 href={`/${tenant_slug}/inventory/units`}
                             >
-                                Back
-                            </Link>
+                                {t("Back")}</Link>
                         </Button>
 
                         <Button asChild>
                             <Link
                                 href={`/${tenant_slug}/inventory/units/${unit.id}/edit`}
                             >
-                                Edit Unit
-                            </Link>
+                                {t("Edit Unit")}</Link>
                         </Button>
                     </div>
                 </div>

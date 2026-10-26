@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AlertCircle, ChevronDown, Save, X } from 'lucide-react';
+import { useTranslation } from '@/context/language-context';
 import type { OutboundItem } from '@/types/outbound';
 
 interface PackingDrawerProps {
@@ -15,6 +16,7 @@ export const PackingDrawer: React.FC<PackingDrawerProps> = ({
     item,
     onSave,
 }) => {
+    const { t } = useTranslation();
     const [pickedQty, setPickedQty] = useState<number>(0);
     const [packedQty, setPackedQty] = useState<number>(0);
     const [issueNote, setIssueNote] = useState<string>('');
@@ -50,12 +52,10 @@ export const PackingDrawer: React.FC<PackingDrawerProps> = ({
                         <div className="flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-400"></span>
                             <h3 className="text-sm font-bold text-foreground tracking-tight">
-                                Verifikasi Picking &amp; Packing Dus
-                            </h3>
+                                {t("Verifikasi Picking & Packing Dus")}</h3>
                         </div>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                            Konfirmasi item yang diambil dari rak ke meja packing
-                        </p>
+                            {t("Konfirmasi item yang diambil dari rak ke meja packing")}</p>
                     </div>
                     <button
                         onClick={onClose}
@@ -74,7 +74,7 @@ export const PackingDrawer: React.FC<PackingDrawerProps> = ({
                                 {item.sku}
                             </span>
                             <span className="font-mono text-[11px] text-muted-foreground">
-                                RAK ASAL: <strong className="text-foreground">{item.source_rack}</strong>
+                                {t("RAK ASAL:")}{' '}<strong className="text-foreground">{item.source_rack}</strong>
                             </span>
                         </div>
                         <div className="font-semibold text-foreground text-xs mt-0.5">
@@ -82,13 +82,13 @@ export const PackingDrawer: React.FC<PackingDrawerProps> = ({
                         </div>
                         <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-border mt-1">
                             <span>
-                                Target SO:{' '}
+                                {t("Target SO:")}{' '}
                                 <strong className="font-mono text-foreground">
                                     {item.so_qty} {item.unit}
                                 </strong>
                             </span>
                             <span>
-                                Batch:{' '}
+                                {t("Batch:")}{' '}
                                 <strong className="font-mono text-foreground">
                                     {item.batch_no}
                                 </strong>
@@ -99,13 +99,11 @@ export const PackingDrawer: React.FC<PackingDrawerProps> = ({
                     {/* Form Picking & Packing */}
                     <div className="p-3.5 border border-border rounded-xl flex flex-col gap-3 bg-muted/20">
                         <span className="font-semibold text-foreground text-[11px] uppercase tracking-wider">
-                            Progress Pengambilan &amp; Packing
-                        </span>
+                            {t("Progress Pengambilan & Packing")}</span>
                         <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <label className="text-[11px] font-medium text-muted-foreground">
-                                    Diambil dari Rak (Picked)
-                                </label>
+                                    {t("Diambil dari Rak (Picked)")}</label>
                                 <input
                                     type="number"
                                     min={0}
@@ -116,8 +114,7 @@ export const PackingDrawer: React.FC<PackingDrawerProps> = ({
                             </div>
                             <div>
                                 <label className="text-[11px] font-medium text-muted-foreground">
-                                    Verifikasi Dus (Packed)
-                                </label>
+                                    {t("Verifikasi Dus (Packed)")}</label>
                                 <input
                                     type="number"
                                     min={0}
@@ -133,13 +130,13 @@ export const PackingDrawer: React.FC<PackingDrawerProps> = ({
                     <div className="p-3 bg-amber-50/50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 rounded-xl flex flex-col gap-2">
                         <div className="flex items-center gap-1.5 text-amber-900 dark:text-amber-300 font-semibold text-[11px]">
                             <AlertCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                            <span>Catatan Masalah / Selisih Rak</span>
+                            <span>{t("Catatan Masalah / Selisih Rak")}</span>
                         </div>
                         <input
                             type="text"
                             value={issueNote}
                             onChange={(e) => setIssueNote(e.target.value)}
-                            placeholder="Catatan selisih (Cth: Stok di rak kosong, minta refill)..."
+                            placeholder={t("Catatan selisih (Cth: Stok di rak kosong, minta refill)...")}
                             className="w-full h-8 px-2 bg-card border border-amber-200 dark:border-amber-800 rounded-md text-[11px] text-foreground outline-none placeholder-amber-700/50 dark:placeholder-amber-400/50"
                         />
                     </div>
@@ -151,14 +148,13 @@ export const PackingDrawer: React.FC<PackingDrawerProps> = ({
                         onClick={onClose}
                         className="h-9 px-4 bg-card hover:bg-muted border border-border rounded-lg text-xs font-semibold text-foreground transition-all cursor-pointer"
                     >
-                        Batal
-                    </button>
+                        {t("Batal")}</button>
                     <button
                         onClick={handleSave}
                         className="h-9 px-4 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
                     >
                         <Save className="w-3.5 h-3.5" />
-                        <span>Simpan Progress</span>
+                        <span>{t("Simpan Progress")}</span>
                     </button>
                 </div>
             </aside>

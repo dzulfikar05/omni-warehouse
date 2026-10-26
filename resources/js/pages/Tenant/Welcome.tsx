@@ -1,7 +1,8 @@
 import React from 'react';
 import { Head, Link } from '@inertiajs/react';
 import AppLogo from '@/components/app-logo';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';import { useTranslation } from '@/context/language-context';
+
 import { ArrowRight, MapPin, Phone } from 'lucide-react';
 
 interface Props {
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export default function TenantWelcome({ tenant }: Props) {
+    const { t } = useTranslation();
     const tenantName = tenant?.name || 'Tenant Portal';
 
     return (
@@ -38,8 +40,7 @@ export default function TenantWelcome({ tenant }: Props) {
                             className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 text-white font-medium text-xs h-9 px-4 rounded-xl shadow-md shadow-blue-600/20 dark:shadow-blue-950/50 transition-all active:scale-95"
                         >
                             <Link href={`/${tenant?.slug}/login`}>
-                                Employee Sign In
-                            </Link>
+                                {t("Employee Sign In")}</Link>
                         </Button>
                     </div>
                 </nav>
@@ -53,16 +54,14 @@ export default function TenantWelcome({ tenant }: Props) {
                     </div>
 
                     <span className="px-3.5 py-1.5 bg-blue-50 dark:bg-blue-950/60 border border-blue-200/60 dark:border-blue-800/80 rounded-full text-blue-700 dark:text-blue-400 text-xs font-semibold tracking-wide uppercase shadow-xs">
-                        Official Warehouse Portal
-                    </span>
+                        {t("Official Warehouse Portal")}</span>
 
                     <h1 className="mt-5 text-4xl sm:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
                         {tenantName}
                     </h1>
 
                     <p className="mt-4 text-slate-600 dark:text-slate-400 text-sm sm:text-base max-w-lg leading-relaxed">
-                        Official Operations & Inventory Management Portal powered by OmniWarehouse SaaS.
-                    </p>
+                        {t("Official Operations & Inventory Management Portal powered by OmniWarehouse SaaS.")}</p>
 
                     {/* Information Box (Address & Phone) */}
                     {(tenant?.address || tenant?.phone) && (
@@ -90,8 +89,7 @@ export default function TenantWelcome({ tenant }: Props) {
                             className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 text-white font-semibold text-sm px-8 py-6 rounded-2xl shadow-lg shadow-blue-600/25 dark:shadow-blue-950/50 transition-all hover:shadow-xl hover:shadow-blue-600/30 active:scale-98"
                         >
                             <Link href={`/${tenant?.slug}/login`} className="flex items-center gap-2">
-                                Access Warehouse Dashboard
-                                <ArrowRight size={18} />
+                                {t("Access Warehouse Dashboard")}<ArrowRight size={18} />
                             </Link>
                         </Button>
                     </div>
@@ -99,8 +97,7 @@ export default function TenantWelcome({ tenant }: Props) {
 
                 {/* Footer */}
                 <footer className="relative z-10 border-t border-slate-200/80 dark:border-slate-800/80 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xs py-6 text-center text-xs text-slate-500 dark:text-slate-400 transition-colors duration-300">
-                    &copy; {new Date().getFullYear()} <span className="font-semibold text-slate-700 dark:text-slate-200">{tenantName}</span>. Powered by <span className="font-semibold text-blue-600 dark:text-blue-400">OmniWarehouse</span>.
-                </footer>
+                    {t("&copy;")}{' '}{new Date().getFullYear()} <span className="font-semibold text-slate-700 dark:text-slate-200">{tenantName}</span>{t(". Powered by")}{' '}<span className="font-semibold text-blue-600 dark:text-blue-400">{t("OmniWarehouse")}</span>{t(".")}</footer>
             </div>
         </>
     );

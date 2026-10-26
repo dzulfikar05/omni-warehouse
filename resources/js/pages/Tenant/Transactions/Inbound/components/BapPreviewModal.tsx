@@ -1,5 +1,6 @@
 import React from 'react';
 import { FileText, Printer, X } from 'lucide-react';
+import { useTranslation } from '@/context/language-context';
 import type { InboundItem, InboundManifest } from '@/types/inbound';
 
 interface BapPreviewModalProps {
@@ -15,6 +16,7 @@ export const BapPreviewModal: React.FC<BapPreviewModalProps> = ({
     manifest,
     items,
 }) => {
+    const { t } = useTranslation();
     if (!isOpen) return null;
 
     return (
@@ -25,11 +27,10 @@ export const BapPreviewModal: React.FC<BapPreviewModalProps> = ({
                     <div>
                         <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
                             <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                            <span>Preview Berita Acara Penerimaan (BAP)</span>
+                            <span>{t("Preview Berita Acara Penerimaan (BAP)")}</span>
                         </h2>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                            Dokumen resmi serah terima bongkar muatan gudang Cakung
-                        </p>
+                            {t("Dokumen resmi serah terima bongkar muatan gudang Cakung")}</p>
                     </div>
                     <button
                         onClick={onClose}
@@ -45,22 +46,17 @@ export const BapPreviewModal: React.FC<BapPreviewModalProps> = ({
                     <div className="flex items-start justify-between border-b border-border pb-4">
                         <div>
                             <div className="font-bold text-foreground text-base">
-                                OMNIWAREHOUSE SYSTEM
-                            </div>
+                                {t("OMNIWAREHOUSE SYSTEM")}</div>
                             <div className="text-muted-foreground text-[11px]">
-                                DC Cakung Utama, Blok B-4, Jakarta Timur
-                            </div>
+                                {t("DC Cakung Utama, Blok B-4, Jakarta Timur")}</div>
                             <div className="font-mono text-muted-foreground/70 text-[10px] mt-1">
-                                Ref: DOC-BAP-202609-0142
-                            </div>
+                                {t("Ref: DOC-BAP-202609-0142")}</div>
                         </div>
                         <div className="text-right">
                             <span className="inline-block px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 rounded font-mono font-bold text-[11px]">
-                                BAP RESMI
-                            </span>
+                                {t("BAP RESMI")}</span>
                             <div className="text-muted-foreground text-[11px] mt-1 font-mono">
-                                12/09/2026 • 13:30 WIB
-                            </div>
+                                {t("12/09/2026 • 13:30 WIB")}</div>
                         </div>
                     </div>
 
@@ -68,13 +64,13 @@ export const BapPreviewModal: React.FC<BapPreviewModalProps> = ({
                     <div className="grid grid-cols-2 gap-4 bg-muted/30 p-3 rounded-lg border border-border text-[11px]">
                         <div>
                             <div>
-                                Supplier:{' '}
+                                {t("Supplier:")}{' '}
                                 <strong className="text-foreground">
                                     {manifest.supplier_name}
                                 </strong>
                             </div>
                             <div>
-                                No. PO Terkait:{' '}
+                                {t("No. PO Terkait:")}{' '}
                                 <strong className="font-mono text-foreground">
                                     {manifest.manifest_code}
                                 </strong>
@@ -82,16 +78,14 @@ export const BapPreviewModal: React.FC<BapPreviewModalProps> = ({
                         </div>
                         <div>
                             <div>
-                                Kendaraan:{' '}
+                                {t("Kendaraan:")}{' '}
                                 <strong className="font-mono text-foreground">
-                                    {manifest.vehicle_no} ({manifest.vehicle_type})
-                                </strong>
+                                    {manifest.vehicle_no} {t("(")}{manifest.vehicle_type}{t(")")}</strong>
                             </div>
                             <div>
-                                Sopir / Kurir:{' '}
+                                {t("Sopir / Kurir:")}{' '}
                                 <strong className="text-foreground">
-                                    {manifest.driver_name} ({manifest.driver_phone})
-                                </strong>
+                                    {manifest.driver_name} {t("(")}{manifest.driver_phone}{t(")")}</strong>
                             </div>
                         </div>
                     </div>
@@ -100,11 +94,11 @@ export const BapPreviewModal: React.FC<BapPreviewModalProps> = ({
                     <table className="w-full text-left border border-border rounded-lg text-[11px] overflow-hidden">
                         <thead className="bg-muted/60 text-foreground font-semibold border-b border-border">
                             <tr>
-                                <th className="p-2">Item SKU</th>
-                                <th className="p-2 text-right">PO</th>
-                                <th className="p-2 text-right">Fisik Baik</th>
-                                <th className="p-2 text-right text-red-600 dark:text-red-400">Rusak</th>
-                                <th className="p-2">Keterangan</th>
+                                <th className="p-2">{t("Item SKU")}</th>
+                                <th className="p-2 text-right">{t("PO")}</th>
+                                <th className="p-2 text-right">{t("Fisik Baik")}</th>
+                                <th className="p-2 text-right text-red-600 dark:text-red-400">{t("Rusak")}</th>
+                                <th className="p-2">{t("Keterangan")}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
@@ -114,8 +108,7 @@ export const BapPreviewModal: React.FC<BapPreviewModalProps> = ({
                                     className={item.status === 'issue' ? 'bg-amber-50/40 dark:bg-amber-950/20' : ''}
                                 >
                                     <td className="p-2 font-mono font-medium text-foreground">
-                                        {item.sku} ({item.product_name})
-                                    </td>
+                                        {item.sku} {t("(")}{item.product_name}{t(")")}</td>
                                     <td className="p-2 text-right font-mono text-foreground">{item.po_qty}</td>
                                     <td className="p-2 text-right font-mono text-emerald-700 dark:text-emerald-400 font-bold">
                                         {item.good_qty}
@@ -139,20 +132,19 @@ export const BapPreviewModal: React.FC<BapPreviewModalProps> = ({
                     {/* Signatures Area */}
                     <div className="grid grid-cols-2 gap-8 pt-4 mt-2 border-t border-border text-center text-[11px]">
                         <div>
-                            <div className="text-muted-foreground mb-10">Pihak Pengemudi / Ekspedisi</div>
+                            <div className="text-muted-foreground mb-10">{t("Pihak Pengemudi / Ekspedisi")}</div>
                             <div className="font-bold text-foreground underline">
                                 {manifest.driver_name}
                             </div>
-                            <div className="text-muted-foreground/70 text-[10px]">Driver Supplier</div>
+                            <div className="text-muted-foreground/70 text-[10px]">{t("Driver Supplier")}</div>
                         </div>
                         <div>
-                            <div className="text-muted-foreground mb-10">Penerima Gudang (Lead Ops)</div>
+                            <div className="text-muted-foreground mb-10">{t("Penerima Gudang (Lead Ops)")}</div>
                             <div className="font-bold text-foreground underline">
                                 {manifest.operator_name}
                             </div>
                             <div className="text-muted-foreground/70 text-[10px]">
-                                OmniWarehouse DC Cakung
-                            </div>
+                                {t("OmniWarehouse DC Cakung")}</div>
                         </div>
                     </div>
                 </div>
@@ -160,21 +152,19 @@ export const BapPreviewModal: React.FC<BapPreviewModalProps> = ({
                 {/* Modal Footer Actions */}
                 <div className="px-6 py-3 border-t border-border bg-muted/40 flex items-center justify-between">
                     <span className="text-[11px] text-muted-foreground font-mono">
-                        Format PDF A4 Siap Cetak
-                    </span>
+                        {t("Format PDF A4 Siap Cetak")}</span>
                     <div className="flex items-center gap-2">
                         <button
                             onClick={onClose}
                             className="h-9 px-3 bg-card hover:bg-muted border border-border rounded-lg text-xs font-semibold text-foreground transition-all cursor-pointer"
                         >
-                            Tutup
-                        </button>
+                            {t("Tutup")}</button>
                         <button
                             onClick={() => window.print()}
                             className="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
                         >
                             <Printer className="w-3.5 h-3.5" />
-                            <span>Cetak Sekarang</span>
+                            <span>{t("Cetak Sekarang")}</span>
                         </button>
                     </div>
                 </div>

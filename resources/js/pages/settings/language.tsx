@@ -1,25 +1,48 @@
 import { Head } from '@inertiajs/react';
+
 import Heading from '@/components/heading';
-import GoogleTranslate from '@/components/google-translate';
-// Jika Anda sudah membuat helper rutenya, gunakan ini:
-// import { edit as editLanguage } from '@/routes/language';
+import { Button } from '@/components/ui/button';import { useTranslation } from '@/context/language-context';
+
 
 export default function Language() {
+    const { locale, setLocale, t } = useTranslation();
+
     return (
         <>
-            <Head title="Language settings" />
+            <Head title={t('Pengaturan bahasa')} />
 
-            <h1 className="sr-only">Language settings</h1>
+            <h1 className="sr-only">{t('Pengaturan bahasa')}</h1>
 
             <div className="space-y-6">
                 <Heading
                     variant="small"
-                    title="Language settings"
-                    description="Update your account's language preferences"
+                    title={t('Pengaturan bahasa')}
+                    description={t('Ubah preferensi bahasa akun Anda')}
                 />
-                
-                <div className="p-4 bg-muted/40 rounded-xl border border-border inline-block">
-                    <GoogleTranslate />
+
+                <div className="inline-block space-y-3 rounded-xl border border-border bg-muted/40 p-4">
+                    <p className="text-sm font-medium">{t('Bahasa pilihan')}</p>
+                    <div className="flex flex-wrap gap-2">
+                        <Button
+                            type="button"
+                            variant={locale === 'id' ? 'default' : 'outline'}
+                            aria-pressed={locale === 'id'}
+                            onClick={() => setLocale('id')}
+                        >
+                            {t('Bahasa Indonesia')}
+                        </Button>
+                        <Button
+                            type="button"
+                            variant={locale === 'en' ? 'default' : 'outline'}
+                            aria-pressed={locale === 'en'}
+                            onClick={() => setLocale('en')}
+                        >
+                            {t('Inggris')}
+                        </Button>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                        {t('Preferensi bahasa Anda disimpan di perangkat ini.')}
+                    </p>
                 </div>
             </div>
         </>
@@ -29,8 +52,8 @@ export default function Language() {
 Language.layout = {
     breadcrumbs: [
         {
-            title: 'Language settings',
-            href: '/settings/language', // Atau gunakan editLanguage() jika helper rutenya ada
+            title: "Pengaturan bahasa",
+            href: '/settings/language',
         },
     ],
 };

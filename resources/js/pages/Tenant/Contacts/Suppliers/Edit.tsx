@@ -3,7 +3,8 @@ import { Head, useForm, usePage, Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Textarea } from '@/components/ui/textarea';import { useTranslation } from '@/context/language-context';
+
 import { toast } from 'sonner';
 import { ArrowLeftCircleIcon, Save } from 'lucide-react';
 
@@ -19,6 +20,7 @@ interface Supplier {
 }
 
 export default function SupplierEdit({ supplier }: { supplier: Supplier }) {
+    const { t } = useTranslation();
     const { flash, current_tenant, auth } = usePage().props as any;
     const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
@@ -64,16 +66,14 @@ export default function SupplierEdit({ supplier }: { supplier: Supplier }) {
                 <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-sm">
                     <div>
                         <h2 className="text-xl font-bold tracking-tight">
-                            Edit Supplier: <span className="text-blue-600">{supplier.name}</span>
+                            {t("Edit Supplier:")}{' '}<span className="text-blue-600">{supplier.name}</span>
                         </h2>
                         <p className="mt-0.5 text-xs text-muted-foreground">
-                            Update vendor contact details and information.
-                        </p>
+                            {t("Update vendor contact details and information.")}</p>
                     </div>
                     <Button asChild variant="outline" className="rounded-xl border-border">
                         <Link href={`/${tenantSlug}/contacts/suppliers`}>
-                            <ArrowLeftCircleIcon className="mr-2 h-4 w-4 text-blue-600" /> Back
-                        </Link>
+                            <ArrowLeftCircleIcon className="mr-2 h-4 w-4 text-blue-600" /> {t("Back")}</Link>
                     </Button>
                 </div>
 
@@ -81,7 +81,7 @@ export default function SupplierEdit({ supplier }: { supplier: Supplier }) {
                     <form onSubmit={handleSubmit} className="max-w-2xl space-y-5">
                         <div className="space-y-1.5">
                             <Label htmlFor="name" className="text-xs font-semibold">
-                                Supplier Name <span className="text-red-500">*</span>
+                                {t("Supplier Name")}{' '}<span className="text-red-500">{t("*")}</span>
                             </Label>
                             <Input
                                 id="name"
@@ -95,7 +95,7 @@ export default function SupplierEdit({ supplier }: { supplier: Supplier }) {
 
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div className="space-y-1.5">
-                                <Label htmlFor="pic" className="text-xs font-semibold">Contact Person (PIC)</Label>
+                                <Label htmlFor="pic" className="text-xs font-semibold">{t("Contact Person (PIC)")}</Label>
                                 <Input
                                     id="pic"
                                     value={data.pic}
@@ -106,7 +106,7 @@ export default function SupplierEdit({ supplier }: { supplier: Supplier }) {
                             </div>
 
                             <div className="space-y-1.5">
-                                <Label htmlFor="phone" className="text-xs font-semibold">Phone</Label>
+                                <Label htmlFor="phone" className="text-xs font-semibold">{t("Phone")}</Label>
                                 <Input
                                     id="phone"
                                     value={data.phone}
@@ -119,7 +119,7 @@ export default function SupplierEdit({ supplier }: { supplier: Supplier }) {
 
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div className="space-y-1.5">
-                                <Label htmlFor="email" className="text-xs font-semibold">Email</Label>
+                                <Label htmlFor="email" className="text-xs font-semibold">{t("Email")}</Label>
                                 <Input
                                     id="email"
                                     type="email"
@@ -131,7 +131,7 @@ export default function SupplierEdit({ supplier }: { supplier: Supplier }) {
                             </div>
 
                             <div className="space-y-1.5">
-                                <Label htmlFor="tax_number" className="text-xs font-semibold">NPWP / Tax ID</Label>
+                                <Label htmlFor="tax_number" className="text-xs font-semibold">{t("NPWP / Tax ID")}</Label>
                                 <Input
                                     id="tax_number"
                                     value={data.tax_number}
@@ -143,7 +143,7 @@ export default function SupplierEdit({ supplier }: { supplier: Supplier }) {
                         </div>
 
                         <div className="space-y-1.5">
-                            <Label htmlFor="address" className="text-xs font-semibold">Address</Label>
+                            <Label htmlFor="address" className="text-xs font-semibold">{t("Address")}</Label>
                             <Textarea
                                 id="address"
                                 rows={2}
@@ -155,7 +155,7 @@ export default function SupplierEdit({ supplier }: { supplier: Supplier }) {
                         </div>
 
                         <div className="space-y-1.5">
-                            <Label htmlFor="notes" className="text-xs font-semibold">Notes</Label>
+                            <Label htmlFor="notes" className="text-xs font-semibold">{t("Notes")}</Label>
                             <Textarea
                                 id="notes"
                                 rows={3}
@@ -173,10 +173,10 @@ export default function SupplierEdit({ supplier }: { supplier: Supplier }) {
                                 className="flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-xs font-semibold text-white shadow-md shadow-blue-600/20 hover:bg-blue-700"
                             >
                                 <Save className="h-4 w-4" />
-                                {processing ? 'Updating...' : 'Update'}
+                                {processing ? t("Updating...") : t("Update")}
                             </Button>
                             <Button asChild variant="ghost" className="rounded-xl text-xs">
-                                <Link href={`/${tenantSlug}/contacts/suppliers`}>Cancel</Link>
+                                <Link href={`/${tenantSlug}/contacts/suppliers`}>{t("Cancel")}</Link>
                             </Button>
                         </div>
                     </form>
@@ -188,8 +188,8 @@ export default function SupplierEdit({ supplier }: { supplier: Supplier }) {
 
 SupplierEdit.layout = {
     breadcrumbs: [
-        { title: 'Contact', href: '#' },
-        { title: 'Supplier', href: '#' },
-        { title: 'Edit Supplier', href: '#' },
+        { title: "Contact", href: '#' },
+        { title: "Supplier", href: '#' },
+        { title: "Edit Supplier", href: '#' },
     ],
 };

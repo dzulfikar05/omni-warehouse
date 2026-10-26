@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/ui/badge';import { useTranslation } from '@/context/language-context';
+
 import { toast } from 'sonner';
 import {
     ArrowLeftCircleIcon,
@@ -44,6 +45,7 @@ interface Warehouse {
 }
 
 export default function WarehouseShow({ warehouse }: { warehouse?: Warehouse }) {
+    const { t } = useTranslation();
     const { flash, current_tenant, auth } = usePage().props as any;
     const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
@@ -60,8 +62,7 @@ export default function WarehouseShow({ warehouse }: { warehouse?: Warehouse }) 
     if (!warehouse) {
         return (
             <div className="p-6 text-center text-xs text-muted-foreground">
-                Data gudang tidak ditemukan.
-            </div>
+                {t("Data gudang tidak ditemukan.")}</div>
         );
     }
 
@@ -78,16 +79,14 @@ export default function WarehouseShow({ warehouse }: { warehouse?: Warehouse }) 
             <div className="space-y-6 p-4 sm:p-6">
                 <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-sm">
                     <div>
-                        <h2 className="text-xl font-bold tracking-tight">Warehouse Details</h2>
+                        <h2 className="text-xl font-bold tracking-tight">{t("Warehouse Details")}</h2>
                         <p className="mt-0.5 text-xs text-muted-foreground">
-                            Detail profil fasilitas gudang, area rak penyimpan, dan ketersediaan stok fisik.
-                        </p>
+                            {t("Detail profil fasilitas gudang, area rak penyimpan, dan ketersediaan stok fisik.")}</p>
                     </div>
                     <div className="flex items-center gap-2">
                         <Button asChild variant="outline" className="rounded-xl border-border">
                             <Link href={`/${tenantSlug}/warehouses`}>
-                                <ArrowLeftCircleIcon className="mr-2 h-4 w-4 text-blue-600" /> Back
-                            </Link>
+                                <ArrowLeftCircleIcon className="mr-2 h-4 w-4 text-blue-600" /> {t("Back")}</Link>
                         </Button>
                     </div>
                 </div>
@@ -95,7 +94,7 @@ export default function WarehouseShow({ warehouse }: { warehouse?: Warehouse }) 
                 <div className="space-y-4 rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-sm">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div className="space-y-1.5">
-                            <Label className="text-xs font-semibold">Kode Gudang</Label>
+                            <Label className="text-xs font-semibold">{t("Kode Gudang")}</Label>
                             <Input
                                 value={warehouse.code || ''}
                                 readOnly
@@ -104,7 +103,7 @@ export default function WarehouseShow({ warehouse }: { warehouse?: Warehouse }) 
                         </div>
 
                         <div className="space-y-1.5">
-                            <Label className="text-xs font-semibold">Nama Warehouse</Label>
+                            <Label className="text-xs font-semibold">{t("Nama Warehouse")}</Label>
                             <Input
                                 value={warehouse.name || ''}
                                 readOnly
@@ -114,7 +113,7 @@ export default function WarehouseShow({ warehouse }: { warehouse?: Warehouse }) 
                     </div>
 
                     <div className="space-y-1.5">
-                        <Label className="text-xs font-semibold">Alamat / Deskripsi</Label>
+                        <Label className="text-xs font-semibold">{t("Alamat / Deskripsi")}</Label>
                         <Textarea
                             value={warehouse.desc || '-'}
                             readOnly
@@ -124,7 +123,7 @@ export default function WarehouseShow({ warehouse }: { warehouse?: Warehouse }) 
                     </div>
 
                     <div className="space-y-1.5">
-                        <Label className="text-xs font-semibold">Status Operasional</Label>
+                        <Label className="text-xs font-semibold">{t("Status Operasional")}</Label>
                         <div>
                             <Badge
                                 variant="outline"
@@ -134,7 +133,7 @@ export default function WarehouseShow({ warehouse }: { warehouse?: Warehouse }) 
                                         : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/50 dark:text-rose-400'
                                 }
                             >
-                                {warehouse.is_active ? 'Active' : 'Inactive'}
+                                {warehouse.is_active ? t("Active") : t("Inactive")}
                             </Badge>
                         </div>
                     </div>
@@ -145,8 +144,7 @@ export default function WarehouseShow({ warehouse }: { warehouse?: Warehouse }) 
                             className="flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-xs font-semibold text-white shadow-md shadow-blue-600/20 hover:bg-blue-700"
                         >
                             <Link href={`/${tenantSlug}/warehouses/${warehouse.id}/edit`}>
-                                <PencilIcon className="h-4 w-4" /> Edit
-                            </Link>
+                                <PencilIcon className="h-4 w-4" /> {t("Edit")}</Link>
                         </Button>
                         <Button
                             type="button"
@@ -154,8 +152,7 @@ export default function WarehouseShow({ warehouse }: { warehouse?: Warehouse }) 
                             onClick={handleDelete}
                             className="h-9 gap-2 rounded-xl border-red-200 text-xs text-red-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30"
                         >
-                            <Trash2 size={16} /> Delete
-                        </Button>
+                            <Trash2 size={16} /> {t("Delete")}</Button>
                     </div>
                 </div>
 
@@ -164,8 +161,7 @@ export default function WarehouseShow({ warehouse }: { warehouse?: Warehouse }) 
                     <div className="space-y-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
                         <h3 className="border-b border-border pb-3 text-sm font-bold text-foreground flex items-center gap-2">
                             <Layers className="h-4 w-4 text-blue-600" />
-                            Registered Racks & Zones
-                        </h3>
+                            {t("Registered Racks & Zones")}</h3>
 
                         {warehouse.locations && warehouse.locations.length > 0 ? (
                             <div className="space-y-3">
@@ -179,7 +175,7 @@ export default function WarehouseShow({ warehouse }: { warehouse?: Warehouse }) 
                                                 {loc.rack_code}
                                             </p>
                                             <p className="mt-0.5 text-[11px] text-muted-foreground">
-                                                Zone: {loc.zone || '-'}
+                                                {t("Zone:")}{' '}{loc.zone || '-'}
                                             </p>
                                         </div>
                                     </div>
@@ -188,7 +184,7 @@ export default function WarehouseShow({ warehouse }: { warehouse?: Warehouse }) 
                         ) : (
                             <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
                                 <Building2 className="mb-2 h-8 w-8 text-muted-foreground/50" />
-                                <p className="text-xs font-medium">Belum ada titik rak/lokasi terdaftar pada gudang ini.</p>
+                                <p className="text-xs font-medium">{t("Belum ada titik rak/lokasi terdaftar pada gudang ini.")}</p>
                             </div>
                         )}
                     </div>
@@ -197,8 +193,7 @@ export default function WarehouseShow({ warehouse }: { warehouse?: Warehouse }) 
                     <div className="space-y-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
                         <h3 className="border-b border-border pb-3 text-sm font-bold text-foreground flex items-center gap-2">
                             <Boxes className="h-4 w-4 text-emerald-600" />
-                            Stock On Hand Summary
-                        </h3>
+                            {t("Stock On Hand Summary")}</h3>
 
                         {warehouse.stocks && warehouse.stocks.length > 0 ? (
                             <div className="space-y-3">
@@ -209,14 +204,14 @@ export default function WarehouseShow({ warehouse }: { warehouse?: Warehouse }) 
                                     >
                                         <div>
                                             <p className="text-xs font-bold text-foreground font-mono">
-                                                {stk.sku?.sku_code || 'SKU-N/A'}
+                                                {stk.sku?.sku_code || t("SKU-N/A")}
                                             </p>
                                             <p className="mt-0.5 text-[11px] text-muted-foreground">
                                                 {stk.sku?.product?.name || '-'}
                                             </p>
                                         </div>
                                         <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                                            Qty: {stk.quantity ?? 0}
+                                            {t("Qty:")}{' '}{stk.quantity ?? 0}
                                         </span>
                                     </div>
                                 ))}
@@ -224,7 +219,7 @@ export default function WarehouseShow({ warehouse }: { warehouse?: Warehouse }) 
                         ) : (
                             <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
                                 <PackageX className="mb-2 h-8 w-8 text-muted-foreground/50" />
-                                <p className="text-xs font-medium">Belum ada barang fisik tersimpan pada gudang ini.</p>
+                                <p className="text-xs font-medium">{t("Belum ada barang fisik tersimpan pada gudang ini.")}</p>
                             </div>
                         )}
                     </div>
@@ -236,8 +231,8 @@ export default function WarehouseShow({ warehouse }: { warehouse?: Warehouse }) 
 
 WarehouseShow.layout = {
     breadcrumbs: [
-        { title: 'Warehouse & Stocks', href: '#' },
-        { title: 'Warehouses', href: '#' },
-        { title: 'Warehouse Details', href: '#' },
+        { title: "Warehouse & Stocks", href: '#' },
+        { title: "Warehouses", href: '#' },
+        { title: "Warehouse Details", href: '#' },
     ],
 };

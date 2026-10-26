@@ -6,7 +6,8 @@ import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
+import { Spinner } from '@/components/ui/spinner';import { useTranslation } from '@/context/language-context';
+
 import { ArrowRight, Lock, User } from 'lucide-react';
 
 type TenantProps = {
@@ -29,6 +30,7 @@ export default function TenantLogin({
     canRegister = false,
     tenant: propTenant,
 }: Props) {
+    const { t } = useTranslation();
     const { current_tenant } = usePage<{ current_tenant?: TenantProps }>().props;
     const activeTenant = propTenant || current_tenant;
 
@@ -56,12 +58,10 @@ export default function TenantLogin({
                         </div>
 
                         <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                            {tenantDisplayName} Portal Login
-                        </h1>
+                            {tenantDisplayName} {t("Portal Login")}</h1>
 
                         <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400 px-2">
-                            Access your company warehouse console, rack inventory, and operational manifests.
-                        </p>
+                            {t("Access your company warehouse console, rack inventory, and operational manifests.")}</p>
                     </div>
 
                     <Form
@@ -77,8 +77,7 @@ export default function TenantLogin({
                                     <div className="grid gap-2">
                                         <Label htmlFor="email" className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300">
                                             <User className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                                            Username
-                                        </Label>
+                                            {t("Username")}</Label>
                                         <div className="relative">
                                             <Input
                                                 id="email"
@@ -100,16 +99,14 @@ export default function TenantLogin({
                                         <div className="flex items-center justify-between">
                                             <Label htmlFor="password" className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300">
                                                 <Lock className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                                                Password
-                                            </Label>
+                                                {t("Password")}</Label>
                                             {canResetPassword && (
                                                 <TextLink
                                                     href={`/${activeTenant?.slug}/forgot-password`}
                                                     className="text-[11px] font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline"
                                                     tabIndex={5}
                                                 >
-                                                    Forgot password?
-                                                </TextLink>
+                                                    {t("Forgot password?")}</TextLink>
                                             )}
                                         </div>
                                         <PasswordInput
@@ -118,7 +115,7 @@ export default function TenantLogin({
                                             required
                                             tabIndex={2}
                                             autoComplete="current-password"
-                                            placeholder="••••••••••••••••"
+                                            placeholder={t("••••••••••••••••")}
                                             className="h-11 border-slate-200/80 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-100 dark:placeholder:text-slate-500 text-sm transition-all focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 dark:focus:border-blue-500"
                                         />
                                         <InputError message={errors.password} />
@@ -136,8 +133,7 @@ export default function TenantLogin({
                                             <Spinner className="mr-2 h-4 w-4" />
                                         ) : (
                                             <span className="flex items-center justify-center gap-2">
-                                                Sign In to Tenant Console
-                                                <ArrowRight className="h-4 w-4" />
+                                                {t("Sign In to Tenant Console")}<ArrowRight className="h-4 w-4" />
                                             </span>
                                         )}
                                     </Button>
@@ -145,10 +141,9 @@ export default function TenantLogin({
 
                                 {canRegister && (
                                     <div className="mt-2 text-center text-xs text-slate-500 dark:text-slate-400">
-                                        Don't have an account?{' '}
+                                        {t("Don't have an account?")}{' '}
                                         <TextLink href={`/${activeTenant?.slug}/register`} tabIndex={5} className="font-semibold text-blue-600 dark:text-blue-400 hover:underline">
-                                            Sign up
-                                        </TextLink>
+                                            {t("Sign up")}</TextLink>
                                     </div>
                                 )}
                             </>

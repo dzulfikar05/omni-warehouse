@@ -1,36 +1,38 @@
 import React from 'react';
-import { ShieldCheck, Map, RefreshCw, Users, BarChart3, Plug } from 'lucide-react';
+import { ShieldCheck, Map, RefreshCw, Users, BarChart3, Plug } from 'lucide-react';import { useTranslation } from '@/context/language-context';
+
 
 export default function FeatureGrid() {
+    const { t } = useTranslation();
     const features = [
         {
             icon: <ShieldCheck size={18} />,
-            title: 'Keamanan Data Stok 100% Terenkripsi',
+            title: t("Keamanan Data Stok 100% Terenkripsi"),
             desc: 'Data inventori setiap klien terisolasi sepenuhnya. Tidak ada kebocoran data lintas tenant, dijamin secara arsitektur database.',
         },
         {
             icon: <Map size={18} />,
-            title: 'Denah Rak & Jalur Picking Visual',
+            title: t("Denah Rak & Jalur Picking Visual"),
             desc: 'Petakan lokasi fisik gudang Anda — zona, lorong, rak, dan slot bin — dan panduan rute picking terpendek untuk operator.',
         },
         {
             icon: <RefreshCw size={18} />,
-            title: 'Update Stok Instan, Nol Selisih',
+            title: t("Update Stok Instan, Nol Selisih"),
             desc: 'Setiap pergerakan barang (masuk, keluar, penyesuaian) langsung tercatat dan dapat diaudit. Akhiri era stock opname berhari-hari.',
         },
         {
             icon: <Users size={18} />,
-            title: 'Hak Akses Admin, Supervisor & Picker',
+            title: t("Hak Akses Admin, Supervisor & Picker"),
             desc: 'Tentukan siapa yang bisa melihat, mencatat, atau menyetujui transaksi stok. Kontrol penuh dengan manajemen peran berjenjang.',
         },
         {
             icon: <BarChart3 size={18} />,
-            title: 'Laporan & KPI Operasional Harian',
+            title: t("Laporan & KPI Operasional Harian"),
             desc: 'Pantau akurasi stok, kecepatan picking, dan status kapasitas rak setiap hari dalam satu dashboard terpusat.',
         },
         {
             icon: <Plug size={18} />,
-            title: 'Terintegrasi dengan ERP & OMS Anda',
+            title: t("Terintegrasi dengan ERP & OMS Anda"),
             desc: 'API terbuka untuk sambungkan OmniWarehouse dengan sistem ERP, marketplace, atau platform logistik yang sudah Anda gunakan.',
         },
     ];
@@ -40,13 +42,11 @@ export default function FeatureGrid() {
             <div className="max-w-7xl mx-auto">
                 {/* Header Section */}
                 <div className="text-center mb-14">
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-[#2B7FFF] dark:text-blue-400 mb-3">Fitur Platform</p>
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-[#2B7FFF] dark:text-blue-400 mb-3">{t("Fitur Platform")}</p>
                     <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-                        Semua yang dibutuhkan kepala gudang Anda
-                    </h2>
+                        {t("Semua yang dibutuhkan kepala gudang Anda")}</h2>
                     <p className="text-slate-500 dark:text-slate-400 text-sm mt-3 max-w-lg mx-auto">
-                        Dirancang untuk operasional nyata — dari depot kecil hingga jaringan distribusi multi-lokasi.
-                    </p>
+                        {t("Dirancang untuk operasional nyata — dari depot kecil hingga jaringan distribusi multi-lokasi.")}</p>
                 </div>
 
                 {/* Grid Feature Cards */}

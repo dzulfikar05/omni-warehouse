@@ -9,7 +9,8 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@/components/ui/select';
+} from '@/components/ui/select';import { useTranslation } from '@/context/language-context';
+
 import { Check, ArrowLeft } from 'lucide-react';
 
 interface Product { id: number; name: string; }
@@ -34,6 +35,7 @@ interface SkuFormProps {
 }
 
 export default function SkuForm({ tenant_slug, products, units, sku, mode }: SkuFormProps) {
+    const { t } = useTranslation();
     const { data, setData, post, put, processing, errors } = useForm({
         product_id: sku ? String(sku.product_id) : '',
         unit_id: sku ? String(sku.unit_id) : '',
@@ -58,11 +60,11 @@ export default function SkuForm({ tenant_slug, products, units, sku, mode }: Sku
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                     <Label className="font-semibold text-foreground">
-                        Pilih Produk Induk <span className="text-red-500">*</span>
+                        {t("Pilih Produk Induk")}{' '}<span className="text-red-500">{t("*")}</span>
                     </Label>
                     <Select value={data.product_id} onValueChange={(val) => setData('product_id', val)}>
                         <SelectTrigger className="h-9 text-xs rounded-xl border-border bg-background">
-                            <SelectValue placeholder="Pilih Produk" />
+                            <SelectValue placeholder={t("Pilih Produk")} />
                         </SelectTrigger>
                         <SelectContent>
                             {products.map((p) => (
@@ -75,15 +77,15 @@ export default function SkuForm({ tenant_slug, products, units, sku, mode }: Sku
 
                 <div className="space-y-1.5">
                     <Label className="font-semibold text-foreground">
-                        Satuan / Unit <span className="text-red-500">*</span>
+                        {t("Satuan / Unit")}{' '}<span className="text-red-500">{t("*")}</span>
                     </Label>
                     <Select value={data.unit_id} onValueChange={(val) => setData('unit_id', val)}>
                         <SelectTrigger className="h-9 text-xs rounded-xl border-border bg-background">
-                            <SelectValue placeholder="Pilih Satuan" />
+                            <SelectValue placeholder={t("Pilih Satuan")} />
                         </SelectTrigger>
                         <SelectContent>
                             {units.map((u) => (
-                                <SelectItem key={u.id} value={String(u.id)}>{u.name} ({u.symbol})</SelectItem>
+                                <SelectItem key={u.id} value={String(u.id)}>{u.name} {t("(")}{u.symbol}{t(")")}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
@@ -94,25 +96,25 @@ export default function SkuForm({ tenant_slug, products, units, sku, mode }: Sku
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                     <Label className="font-semibold text-foreground">
-                        Kode SKU Unik <span className="text-red-500">*</span>
+                        {t("Kode SKU Unik")}{' '}<span className="text-red-500">{t("*")}</span>
                     </Label>
                     <Input
                         type="text"
                         value={data.sku_code}
                         onChange={(e) => setData('sku_code', e.target.value)}
-                        placeholder="Cth: SKU-IND-001"
+                        placeholder={t("Cth: SKU-IND-001")}
                         className="h-9 font-mono rounded-xl border-border bg-background"
                     />
                     {errors.sku_code && <span className="text-destructive text-[11px]">{errors.sku_code}</span>}
                 </div>
 
                 <div className="space-y-1.5">
-                    <Label className="font-semibold text-foreground">Barcode / EAN-13</Label>
+                    <Label className="font-semibold text-foreground">{t("Barcode / EAN-13")}</Label>
                     <Input
                         type="text"
                         value={data.barcode}
                         onChange={(e) => setData('barcode', e.target.value)}
-                        placeholder="Cth: 8998866200114"
+                        placeholder={t("Cth: 8998866200114")}
                         className="h-9 font-mono rounded-xl border-border bg-background"
                     />
                     {errors.barcode && <span className="text-destructive text-[11px]">{errors.barcode}</span>}
@@ -122,7 +124,7 @@ export default function SkuForm({ tenant_slug, products, units, sku, mode }: Sku
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-1.5">
                     <Label className="font-semibold text-foreground">
-                        Harga Dasar / Base Cost (Rp) <span className="text-red-500">*</span>
+                        {t("Harga Dasar / Base Cost (Rp)")}{' '}<span className="text-red-500">{t("*")}</span>
                     </Label>
                     <Input
                         type="number"
@@ -135,7 +137,7 @@ export default function SkuForm({ tenant_slug, products, units, sku, mode }: Sku
 
                 <div className="space-y-1.5">
                     <Label className="font-semibold text-foreground">
-                        Stok Awal <span className="text-red-500">*</span>
+                        {t("Stok Awal")}{' '}<span className="text-red-500">{t("*")}</span>
                     </Label>
                     <Input
                         type="number"
@@ -147,7 +149,7 @@ export default function SkuForm({ tenant_slug, products, units, sku, mode }: Sku
                 </div>
 
                 <div className="space-y-1.5">
-                    <Label className="font-semibold text-foreground">Batas Minimum Stok (Alert)</Label>
+                    <Label className="font-semibold text-foreground">{t("Batas Minimum Stok (Alert)")}</Label>
                     <Input
                         type="number"
                         value={data.min_stock}
@@ -160,8 +162,7 @@ export default function SkuForm({ tenant_slug, products, units, sku, mode }: Sku
             <div className="pt-4 border-t border-border flex items-center justify-end gap-2">
                 <Button variant="outline" asChild className="h-9 px-4 rounded-xl border-border">
                     <Link href={`/${tenant_slug}/inventory/skus`}>
-                        <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Batal
-                    </Link>
+                        <ArrowLeft className="w-3.5 h-3.5 mr-1" /> {t("Batal")}</Link>
                 </Button>
                 <Button
                     type="submit"
@@ -169,7 +170,7 @@ export default function SkuForm({ tenant_slug, products, units, sku, mode }: Sku
                     className="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold gap-1.5 shadow-md"
                 >
                     <Check className="w-3.5 h-3.5" />
-                    <span>{processing ? 'Menyimpan...' : mode === 'create' ? 'Simpan SKU' : 'Perbarui SKU'}</span>
+                    <span>{processing ? t("Menyimpan...") : mode === 'create' ? 'Simpan SKU' : 'Perbarui SKU'}</span>
                 </Button>
             </div>
         </form>

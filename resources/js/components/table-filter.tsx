@@ -1,4 +1,6 @@
+import { Search, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import React from 'react';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
     Select,
@@ -7,8 +9,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Search, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/context/language-context';
 
 export interface SortOption {
     label: string;
@@ -39,6 +40,8 @@ export function TableFilter({
     onSortChange,
     children,
 }: Props) {
+    const { t } = useTranslation();
+
     const handleFieldChange = (value: string) => {
         if (onSortChange) {
             onSortChange(value, sortDirection);
@@ -56,7 +59,7 @@ export function TableFilter({
         <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             {/* Per Page Selector */}
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>Show</span>
+                <span>{t('Show')}</span>
                 <Select value={perPage} onValueChange={onPerPageChange}>
                     <SelectTrigger className="w-[80px]">
                         <SelectValue placeholder="10" />
@@ -68,7 +71,7 @@ export function TableFilter({
                         <SelectItem value="100">100</SelectItem>
                     </SelectContent>
                 </Select>
-                <span>entries</span>
+                <span>{t('entries')}</span>
             </div>
 
             {/* Controls: Sort Options, Search Input, and Extra Children */}
@@ -84,7 +87,7 @@ export function TableFilter({
                             <SelectContent>
                                 {sortOptions.map((option) => (
                                     <SelectItem key={option.value} value={option.value} className="text-xs">
-                                        {option.label}
+                                        {t(option.label)}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
@@ -97,7 +100,7 @@ export function TableFilter({
                             disabled={!sortBy}
                             onClick={toggleDirection}
                             className="h-9 w-9 border-border"
-                            title={`Order: ${sortDirection.toUpperCase()}`}
+                            title={`${t('Order')}: ${sortDirection.toUpperCase()}`}
                         >
                             {sortDirection === 'asc' ? (
                                 <ArrowUp className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -112,7 +115,7 @@ export function TableFilter({
                 <div className="relative w-full sm:w-64">
                     <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
-                        placeholder="Search..."
+                        placeholder={t('Search...')}
                         value={search}
                         onChange={onSearchChange}
                         className="pl-10"

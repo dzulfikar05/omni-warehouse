@@ -20,6 +20,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PageHeader } from '@/components/page-header';
+import { useTranslation } from '@/context/language-context';
 import type { InboundItem, InboundManifest, InboundStatus } from '@/types/inbound';
 import { PutawayDrawer } from './components/PutawayDrawer';
 import { BapPreviewModal } from './components/BapPreviewModal';
@@ -35,6 +36,7 @@ export default function Show({
     manifest: initialManifest,
     items: initialItems,
 }: InboundShowProps) {
+    const { t } = useTranslation();
     const { current_tenant, auth } = usePage().props as any;
 
     const [manifest, setManifest] = useState<InboundManifest>(initialManifest);
@@ -242,13 +244,12 @@ export default function Show({
                                 <Link
                                     href={`/${tenantSlug}/transactions/inbound`}
                                     className="p-1 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors mr-1 cursor-pointer"
-                                    title="Kembali ke Daftar Manifest Inbound"
+                                    title={t("Kembali ke Daftar Manifest Inbound")}
                                 >
                                     <ArrowLeft className="w-5 h-5" />
                                 </Link>
                                 <h1 className="text-xl font-bold text-foreground tracking-tight">
-                                    Inbound Receiving &amp; Putaway
-                                </h1>
+                                    {t("Inbound Receiving & Putaway")}</h1>
                                 <span className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 px-2.5 py-0.5 rounded-md">
                                     {manifest.manifest_code}
                                 </span>
@@ -267,9 +268,9 @@ export default function Show({
                                 <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-muted/60 border border-border font-medium text-foreground">
                                     <Truck className="w-3.5 h-3.5 text-muted-foreground" />
                                     <span>
-                                        Armada:{' '}
+                                        {t("Armada:")}{' '}
                                         <strong className="font-mono text-foreground font-semibold">
-                                            {manifest.vehicle_no !== '-' && manifest.vehicle_no ? manifest.vehicle_no : 'Belum Terdaftar'}
+                                            {manifest.vehicle_no !== '-' && manifest.vehicle_no ? manifest.vehicle_no : t("Belum Terdaftar")}
                                         </strong>
                                         {manifest.vehicle_type !== '-' && manifest.vehicle_type ? ` (${manifest.vehicle_type})` : ''}
                                     </span>
@@ -277,9 +278,9 @@ export default function Show({
                                 <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-muted/60 border border-border font-medium text-foreground">
                                     <User className="w-3.5 h-3.5 text-muted-foreground" />
                                     <span>
-                                        Sopir:{' '}
+                                        {t("Sopir:")}{' '}
                                         <strong className="text-foreground font-semibold">
-                                            {manifest.driver_name !== '-' && manifest.driver_name ? manifest.driver_name : 'Belum Ada'}
+                                            {manifest.driver_name !== '-' && manifest.driver_name ? manifest.driver_name : t("Belum Ada")}
                                         </strong>
                                     </span>
                                 </div>
@@ -290,7 +291,7 @@ export default function Show({
                         <div className="flex flex-wrap items-center gap-2.5">
                             <div className="h-9 px-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center gap-2 text-xs font-semibold">
                                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                                <span>Mobile Operator Sync Ready</span>
+                                <span>{t("Mobile Operator Sync Ready")}</span>
                             </div>
 
                             <div className="h-9 px-3 bg-muted/60 border border-border rounded-xl flex items-center gap-2 text-xs font-semibold text-foreground">
@@ -305,7 +306,7 @@ export default function Show({
                                 className="h-9 px-3 border-border rounded-xl text-xs font-semibold gap-1.5"
                             >
                                 <Printer className="w-3.5 h-3.5 text-muted-foreground" />
-                                <span>Cetak Bukti Penerimaan (BAP)</span>
+                                <span>{t("Cetak Bukti Penerimaan (BAP)")}</span>
                             </Button>
                         </div>
                     </div>
@@ -323,19 +324,18 @@ export default function Show({
                                 type="text"
                                 value={barcodeInput}
                                 onChange={(e) => setBarcodeInput(e.target.value)}
-                                placeholder="Scan Barcode SKU lalu tekan Enter..."
+                                placeholder={t("Scan Barcode SKU lalu tekan Enter...")}
                                 className="pl-9 pr-14 h-9 bg-background border-border text-xs font-mono font-medium rounded-xl"
                             />
                             <kbd className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[10px] bg-muted border border-border text-muted-foreground px-1.5 py-0.5 rounded font-bold">
-                                Enter
-                            </kbd>
+                                {t("Enter")}</kbd>
                         </div>
                         <Button
                             type="submit"
                             className="w-full sm:w-auto h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-xs gap-2 flex-shrink-0"
                         >
                             <Check className="w-4 h-4" />
-                            <span>Verifikasi Item</span>
+                            <span>{t("Verifikasi Item")}</span>
                         </Button>
                     </form>
 
@@ -369,8 +369,7 @@ export default function Show({
                     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between h-36 text-card-foreground">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-semibold text-muted-foreground">
-                                Total Line SKU
-                            </span>
+                                {t("Total Line SKU")}</span>
                             <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                                 <Boxes className="w-4 h-4" />
                             </div>
@@ -378,13 +377,12 @@ export default function Show({
                         <div>
                             <div className="text-3xl font-bold text-foreground tracking-tight">
                                 {totalLineSku}{' '}
-                                <span className="text-xs font-normal text-muted-foreground">SKU</span>
+                                <span className="text-xs font-normal text-muted-foreground">{t("SKU")}</span>
                             </div>
                             <div className="text-xs text-muted-foreground mt-1">
-                                Total pesanan PO:{' '}
+                                {t("Total pesanan PO:")}{' '}
                                 <strong className="font-mono text-foreground font-semibold">
-                                    {totalPoUnits} Units
-                                </strong>
+                                    {totalPoUnits} {t("Units")}</strong>
                             </div>
                         </div>
                     </div>
@@ -392,8 +390,7 @@ export default function Show({
                     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between h-36 text-card-foreground">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-semibold text-muted-foreground">
-                                Fisik Tervalidasi Baik
-                            </span>
+                                {t("Fisik Tervalidasi Baik")}</span>
                             <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                                 <CheckCircle2 className="w-4 h-4" />
                             </div>
@@ -401,19 +398,17 @@ export default function Show({
                         <div>
                             <div className="text-3xl font-bold text-foreground tracking-tight">
                                 {totalGoodUnits}{' '}
-                                <span className="text-xs font-normal text-muted-foreground">Units</span>
+                                <span className="text-xs font-normal text-muted-foreground">{t("Units")}</span>
                             </div>
                             <div className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1">
-                                Siap alokasi ke rak penyimpanan
-                            </div>
+                                {t("Siap alokasi ke rak penyimpanan")}</div>
                         </div>
                     </div>
 
                     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between h-36 text-card-foreground">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-semibold text-muted-foreground">
-                                Anomali / Rusak
-                            </span>
+                                {t("Anomali / Rusak")}</span>
                             <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center">
                                 <AlertTriangle className="w-4 h-4" />
                             </div>
@@ -421,19 +416,17 @@ export default function Show({
                         <div>
                             <div className="text-3xl font-bold text-foreground tracking-tight">
                                 {totalDamagedUnits}{' '}
-                                <span className="text-xs font-normal text-muted-foreground">Units</span>
+                                <span className="text-xs font-normal text-muted-foreground">{t("Units")}</span>
                             </div>
                             <div className="text-xs text-amber-600 dark:text-amber-400 font-medium mt-1">
-                                Draft Berita Acara (BAP)
-                            </div>
+                                {t("Draft Berita Acara (BAP)")}</div>
                         </div>
                     </div>
 
                     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between h-36 text-card-foreground">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-semibold text-muted-foreground">
-                                Progress Manifest &amp; Dock
-                            </span>
+                                {t("Progress Manifest & Dock")}</span>
                             <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
                                 <Truck className="w-4 h-4" />
                             </div>
@@ -441,12 +434,12 @@ export default function Show({
                         <div>
                             <div className="text-base font-bold text-foreground flex items-center gap-1.5">
                                 <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                                {manifest.status === 'CLOSED' ? 'Selesai / Closed' : `Receiving (${progressPct}%)`}
+                                {manifest.status === 'CLOSED' ? t("Selesai / Closed") : `Receiving (${progressPct}%)`}
                             </div>
                             <div className="text-xs text-muted-foreground mt-1">
-                                Dock Unloading:{' '}
+                                {t("Dock Unloading:")}{' '}
                                 <strong className="font-mono text-foreground">
-                                    {manifest.dock_bay !== '-' ? manifest.dock_bay : 'BAY-01'}
+                                    {manifest.dock_bay !== '-' ? manifest.dock_bay : t("BAY-01")}
                                 </strong>
                             </div>
                         </div>
@@ -459,11 +452,9 @@ export default function Show({
                     <div className="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
                             <h2 className="text-sm font-bold text-foreground">
-                                Ledger Verifikasi Fisik &amp; Alokasi Putaway Rak
-                            </h2>
+                                {t("Ledger Verifikasi Fisik & Alokasi Putaway Rak")}</h2>
                             <p className="text-xs text-muted-foreground">
-                                Daftar item masuk PO untuk dialokasikan ke rak gudang
-                            </p>
+                                {t("Daftar item masuk PO untuk dialokasikan ke rak gudang")}</p>
                         </div>
                         <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-xl">
                             <button
@@ -475,8 +466,7 @@ export default function Show({
                                         : 'text-muted-foreground hover:text-foreground'
                                 }`}
                             >
-                                Semua ({items.length})
-                            </button>
+                                {t("Semua (")}{items.length}{t(")")}</button>
                             <button
                                 type="button"
                                 onClick={() => setFilterTab('valid')}
@@ -486,8 +476,7 @@ export default function Show({
                                         : 'text-muted-foreground hover:text-foreground'
                                 }`}
                             >
-                                Sesuai ({validCount})
-                            </button>
+                                {t("Sesuai (")}{validCount}{t(")")}</button>
                             <button
                                 type="button"
                                 onClick={() => setFilterTab('process')}
@@ -497,8 +486,7 @@ export default function Show({
                                         : 'text-muted-foreground hover:text-foreground'
                                 }`}
                             >
-                                Proses ({processCount})
-                            </button>
+                                {t("Proses (")}{processCount}{t(")")}</button>
                             <button
                                 type="button"
                                 onClick={() => setFilterTab('issue')}
@@ -508,8 +496,7 @@ export default function Show({
                                         : 'text-muted-foreground hover:text-foreground'
                                 }`}
                             >
-                                Selisih/BAP ({issueCount})
-                            </button>
+                                {t("Selisih/BAP (")}{issueCount}{t(")")}</button>
                         </div>
                     </div>
 
@@ -518,24 +505,19 @@ export default function Show({
                         <table className="w-full text-left border-collapse text-xs">
                             <thead className="bg-muted/40 text-muted-foreground font-semibold border-b border-border">
                                 <tr>
-                                    <th className="py-3 px-5 whitespace-nowrap">SKU / Barcode</th>
+                                    <th className="py-3 px-5 whitespace-nowrap">{t("SKU / Barcode")}</th>
                                     <th className="py-3 px-5 whitespace-nowrap">
-                                        Deskripsi Produk &amp; Kategori
-                                    </th>
+                                        {t("Deskripsi Produk & Kategori")}</th>
                                     <th className="py-3 px-5 whitespace-nowrap">
-                                        Batch &amp; Kadaluarsa
-                                    </th>
+                                        {t("Batch & Kadaluarsa")}</th>
                                     <th className="py-3 px-5 text-right whitespace-nowrap">
-                                        PO Target
-                                    </th>
+                                        {t("PO Target")}</th>
                                     <th className="py-3 px-5 text-right whitespace-nowrap">
-                                        Fisik Diterima
-                                    </th>
-                                    <th className="py-3 px-5 whitespace-nowrap">Rekomendasi Rak</th>
+                                        {t("Fisik Diterima")}</th>
+                                    <th className="py-3 px-5 whitespace-nowrap">{t("Rekomendasi Rak")}</th>
                                     <th className="py-3 px-5 text-center whitespace-nowrap">
-                                        Status Validasi
-                                    </th>
-                                    <th className="py-3 px-4 text-center whitespace-nowrap">Aksi</th>
+                                        {t("Status Validasi")}</th>
+                                    <th className="py-3 px-4 text-center whitespace-nowrap">{t("Aksi")}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border text-foreground">
@@ -577,7 +559,7 @@ export default function Show({
                                                     {item.batch_no}
                                                 </div>
                                                 <div className="text-[11px] text-muted-foreground font-mono">
-                                                    Exp: {item.exp_date}
+                                                    {t("Exp:")}{' '}{item.exp_date}
                                                 </div>
                                             </td>
                                             <td className="py-3.5 px-5 text-right font-mono font-semibold text-muted-foreground">
@@ -591,22 +573,20 @@ export default function Show({
                                                 )}
                                                 {item.status === 'process' && (
                                                     <span className="text-blue-600 dark:text-blue-400">
-                                                        {item.good_qty} / {item.po_qty} {item.unit}
+                                                        {item.good_qty} {t("/")}{' '}{item.po_qty} {item.unit}
                                                     </span>
                                                 )}
                                                 {item.status === 'issue' && (
                                                     <>
                                                         <span className="text-foreground">
-                                                            {item.good_qty} Baik
-                                                        </span>{' '}
+                                                            {item.good_qty} {t("Baik")}</span>{' '}
                                                         <span className="text-amber-600 dark:text-amber-400 font-bold">
-                                                            (-{item.damaged_qty} Rusak)
-                                                        </span>
+                                                            {t("(-")}{item.damaged_qty} {t("Rusak)")}</span>
                                                     </>
                                                 )}
                                                 {item.status === 'pending' && (
                                                     <span className="text-muted-foreground">
-                                                        0 / {item.po_qty} {item.unit}
+                                                        {t("0 /")}{' '}{item.po_qty} {item.unit}
                                                     </span>
                                                 )}
                                             </td>
@@ -618,8 +598,7 @@ export default function Show({
                                                     {item.status === 'issue' && (
                                                         <span className="px-1.5 py-0.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg font-mono text-[10px] text-amber-800 dark:text-amber-300 font-semibold flex items-center gap-1">
                                                             <AlertTriangle className="w-3 h-3 text-amber-600" />
-                                                            QUARANTINE
-                                                        </span>
+                                                            {t("QUARANTINE")}</span>
                                                     )}
                                                 </div>
                                             </td>
@@ -643,7 +622,7 @@ export default function Show({
                                                     type="button"
                                                     onClick={() => setSelectedDrawerItem(item)}
                                                     className="p-1 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                                                    title="Kelola Alokasi Rak & Inspeksi"
+                                                    title={t("Kelola Alokasi Rak & Inspeksi")}
                                                 >
                                                     <MoreHorizontal className="w-4 h-4" />
                                                 </button>
@@ -656,11 +635,9 @@ export default function Show({
                                             <div className="flex flex-col items-center justify-center gap-2">
                                                 <Boxes className="w-8 h-8 text-muted-foreground/60 stroke-1" />
                                                 <p className="text-xs font-semibold text-foreground">
-                                                    Belum ada item penerimaan barang (Inbound) yang aktif saat ini.
-                                                </p>
+                                                    {t("Belum ada item penerimaan barang (Inbound) yang aktif saat ini.")}</p>
                                                 <p className="text-[11px] text-muted-foreground">
-                                                    Gunakan scanner di atas untuk verifikasi barang masuk PO.
-                                                </p>
+                                                    {t("Gunakan scanner di atas untuk verifikasi barang masuk PO.")}</p>
                                             </div>
                                         </td>
                                     </tr>
@@ -673,24 +650,21 @@ export default function Show({
                     <div className="p-4 bg-muted/30 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
                         <div className="flex items-center gap-3 text-xs text-muted-foreground">
                             <span>
-                                Total Dipesan:{' '}
+                                {t("Total Dipesan:")}{' '}
                                 <strong className="font-mono text-foreground">
-                                    {totalPoUnits} Unit
-                                </strong>
+                                    {totalPoUnits} {t("Unit")}</strong>
                             </span>
-                            <span className="text-border">•</span>
+                            <span className="text-border">{t("•")}</span>
                             <span>
-                                Tervalidasi:{' '}
+                                {t("Tervalidasi:")}{' '}
                                 <strong className="font-mono text-emerald-600 dark:text-emerald-400">
-                                    {totalGoodUnits} Unit
-                                </strong>
+                                    {totalGoodUnits} {t("Unit")}</strong>
                             </span>
-                            <span className="text-border">•</span>
+                            <span className="text-border">{t("•")}</span>
                             <span>
-                                Rusak/BAP:{' '}
+                                {t("Rusak/BAP:")}{' '}
                                 <strong className="font-mono text-amber-600 dark:text-amber-400">
-                                    {totalDamagedUnits} Unit
-                                </strong>
+                                    {totalDamagedUnits} {t("Unit")}</strong>
                             </span>
                         </div>
                         <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -700,15 +674,14 @@ export default function Show({
                                 onClick={() => setIsHoldModalOpen(true)}
                                 className="w-1/2 sm:w-auto h-9 px-4 border-border rounded-xl text-xs font-semibold"
                             >
-                                Batal / Hold Sesi
-                            </Button>
+                                {t("Batal / Hold Sesi")}</Button>
                             <Button
                                 type="button"
                                 onClick={() => setIsCommitModalOpen(true)}
                                 className="w-1/2 sm:w-auto h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md gap-2"
                             >
                                 <CheckCheck className="w-4 h-4" />
-                                <span>Simpan ke Rak &amp; Tambah Stok</span>
+                                <span>{t("Simpan ke Rak & Tambah Stok")}</span>
                             </Button>
                         </div>
                     </div>
@@ -752,8 +725,8 @@ export default function Show({
 
 Show.layout = {
     breadcrumbs: [
-        { title: 'Transaction', href: '#' },
-        { title: 'Inbound Management', href: '/transactions/inbound' },
-        { title: 'Workspace Receiving & Putaway', href: '#' },
+        { title: "Transaction", href: '#' },
+        { title: "Inbound Management", href: '/transactions/inbound' },
+        { title: "Workspace Receiving & Putaway", href: '#' },
     ],
 };

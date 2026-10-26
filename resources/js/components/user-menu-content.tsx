@@ -7,6 +7,7 @@ import {
     DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { UserInfo } from '@/components/user-info';
+import { useTranslation } from '@/context/language-context';
 
 interface UserMenuContentProps {
     user: any;
@@ -19,6 +20,8 @@ export function UserMenuContent({
     logoutUrl = '/logout',
     settingsUrl = '/settings/profile',
 }: UserMenuContentProps) {
+    const { t } = useTranslation();
+
     return (
         <>
             <DropdownMenuLabel className="p-0 font-normal">
@@ -34,7 +37,7 @@ export function UserMenuContent({
                         className="flex w-full items-center gap-2 cursor-pointer"
                     >
                         <Settings className="size-4" />
-                        <span>Settings</span>
+                        <span>{t('Settings')}</span>
                     </Link>
                 </DropdownMenuItem>
             </DropdownMenuGroup>
@@ -47,7 +50,7 @@ export function UserMenuContent({
                     className="flex w-full items-center gap-2"
                 >
                     <LogOut className="size-4" />
-                    <span>Log out</span>
+                    <span>{t('Log out')}</span>
                 </Link>
             </DropdownMenuItem>
         </>

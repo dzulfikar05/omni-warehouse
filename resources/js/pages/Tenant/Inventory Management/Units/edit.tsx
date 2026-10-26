@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 
-import UnitForm from './components/UnitForm';
+import UnitForm from './components/UnitForm';import { useTranslation } from '@/context/language-context';
+
 
 interface Unit {
     id: number;
@@ -17,19 +18,18 @@ export default function Edit({
     tenant_slug,
     unit,
 }: Props) {
+    const { t } = useTranslation();
     return (
         <>
-            <Head title="Edit Unit" />
+            <Head title={t("Edit Unit")} />
 
             <div className="space-y-6 p-4">
                 <div>
                     <h1 className="text-2xl font-bold text-foreground">
-                        Edit Unit
-                    </h1>
+                        {t("Edit Unit")}</h1>
 
                     <p className="mt-1 text-sm text-muted-foreground">
-                        Update unit information.
-                    </p>
+                        {t("Update unit information.")}</p>
                 </div>
 
                 <div className="rounded-lg border border-border bg-card p-6 shadow-md">
@@ -46,8 +46,8 @@ export default function Edit({
 
 Edit.layout = {
     breadcrumbs: [
-        { title: 'Dashboard', href: '/dashboard' },
-        { title: 'Units', href: '/units' },
-        { title: 'Edit Unit', href: '#' },
+        { title: "Dashboard", href: '/dashboard' },
+        { title: "Units", href: '/units' },
+        { title: "Edit Unit", href: '#' },
     ],
 };

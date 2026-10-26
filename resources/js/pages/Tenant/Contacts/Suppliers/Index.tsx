@@ -8,6 +8,7 @@ import { ActionButton } from '@/components/action-button';
 import { PageHeader } from '@/components/page-header';
 import { toast } from 'sonner';
 import { debounce } from 'lodash';
+import { useTranslation } from '@/context/language-context';
 import { usePermission } from '@/utils/permission';
 import { Plus, Truck, UserPlus, PhoneCall, FileText, FileSpreadsheet } from 'lucide-react';
 
@@ -47,6 +48,7 @@ interface PageProps {
 }
 
 export default function SupplierIndex({ suppliers, stats, filters }: PageProps) {
+    const { t } = useTranslation();
     const { flash, current_tenant, auth } = usePage().props as any;
     const { can } = usePermission();
 
@@ -121,22 +123,22 @@ export default function SupplierIndex({ suppliers, stats, filters }: PageProps) 
     const canCreate = can('tenant.contacts.suppliers.create') || can('suppliers.create');
 
     const tableHeaders: Array<string | HeaderConfig> = [
-        { label: '#', sortField: 'id' },
-        { label: 'SUPPLIER NAME', sortField: 'name' },
-        { label: 'PIC', sortField: 'pic' },
-        { label: 'CONTACT INFO', sortField: 'phone' },
-        { label: 'TAX ID', sortField: 'tax_number' },
+        { label: t("#"), sortField: 'id' },
+        { label: t("SUPPLIER NAME"), sortField: 'name' },
+        { label: t("PIC"), sortField: 'pic' },
+        { label: t("CONTACT INFO"), sortField: 'phone' },
+        { label: t("TAX ID"), sortField: 'tax_number' },
         'ACTIONS',
     ];
 
     return (
         <>
-            <Head title="Suppliers Management" />
+            <Head title={t("Suppliers Management")} />
 
             <div className="space-y-6 p-4 sm:p-6">
                 <PageHeader
-                    title="Suppliers Management"
-                    description="Manage supplier list and vendor contacts."
+                    title={t("Suppliers Management")}
+                    description={t("Manage supplier list and vendor contacts.")}
                     renderAction={
                         <div className="flex items-center gap-2">
                             {canExport && (
@@ -147,8 +149,7 @@ export default function SupplierIndex({ suppliers, stats, filters }: PageProps) 
                                         className="h-9 gap-1.5 border-red-200 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
                                         onClick={handleExportPdf}
                                     >
-                                        <FileText size={15} /> Export PDF
-                                    </Button>
+                                        <FileText size={15} /> {t("Export PDF")}</Button>
 
                                     <Button
                                         variant="outline"
@@ -156,16 +157,14 @@ export default function SupplierIndex({ suppliers, stats, filters }: PageProps) 
                                         className="h-9 gap-1.5 border-emerald-200 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
                                         onClick={handleExportExcel}
                                     >
-                                        <FileSpreadsheet size={15} /> Export Excel
-                                    </Button>
+                                        <FileSpreadsheet size={15} /> {t("Export Excel")}</Button>
                                 </>
                             )}
 
                             {canCreate && (
                                 <Button asChild className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700">
                                     <Link href={`/${tenantSlug}/contacts/suppliers/create`}>
-                                        <Plus className="mr-1.5 h-4 w-4" /> Add Supplier
-                                    </Link>
+                                        <Plus className="mr-1.5 h-4 w-4" /> {t("Add Supplier")}</Link>
                                 </Button>
                             )}
                         </div>
@@ -176,7 +175,7 @@ export default function SupplierIndex({ suppliers, stats, filters }: PageProps) 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Total Suppliers</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Total Suppliers")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-foreground">
                                 {stats?.total_suppliers ?? suppliers.total ?? 0}
                             </h3>
@@ -188,7 +187,7 @@ export default function SupplierIndex({ suppliers, stats, filters }: PageProps) 
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">New This Month</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("New This Month")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-foreground">
                                 {stats?.new_this_month ?? 0}
                             </h3>
@@ -200,7 +199,7 @@ export default function SupplierIndex({ suppliers, stats, filters }: PageProps) 
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">With Contact Info</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("With Contact Info")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-foreground">
                                 {stats?.has_contact ?? 0}
                             </h3>
@@ -233,7 +232,7 @@ export default function SupplierIndex({ suppliers, stats, filters }: PageProps) 
                     onSortChange={handleSortChange}
                     renderRow={(supplier: Supplier) => (
                         <>
-                            <TableCell className="font-mono text-xs text-muted-foreground">#{supplier.id}</TableCell>
+                            <TableCell className="font-mono text-xs text-muted-foreground">{t("#")}{supplier.id}</TableCell>
                             <TableCell className="text-xs font-bold text-foreground">{supplier.name}</TableCell>
                             <TableCell className="text-xs text-muted-foreground">{supplier.pic || '-'}</TableCell>
                             <TableCell>
@@ -262,7 +261,7 @@ export default function SupplierIndex({ suppliers, stats, filters }: PageProps) 
 
 SupplierIndex.layout = {
     breadcrumbs: [
-        { title: 'Contact', href: '#' },
-        { title: 'Supplier', href: '#' },
+        { title: "Contact", href: '#' },
+        { title: "Supplier", href: '#' },
     ],
 };

@@ -3,6 +3,7 @@ import { Package, X, HelpCircle, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useTranslation } from '@/context/language-context';
 import { ReconciliationItem } from '@/types/stock-opname';
 
 interface VerificationModalProps {
@@ -13,6 +14,7 @@ interface VerificationModalProps {
 }
 
 export function VerificationModal({ isOpen, item, onClose, onSaveSuccess }: VerificationModalProps) {
+    const { t } = useTranslation();
     const [physicalQty, setPhysicalQty] = useState<number>(0);
     const [notes, setNotes] = useState<string>('');
 
@@ -53,11 +55,10 @@ export function VerificationModal({ isOpen, item, onClose, onSaveSuccess }: Veri
                     <div>
                         <div className="flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-                            <h2 className="text-sm font-bold text-foreground">Blind Count - Input Fisik Barang</h2>
+                            <h2 className="text-sm font-bold text-foreground">{t("Blind Count - Input Fisik Barang")}</h2>
                         </div>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                            Input jumlah riil yang ada di rak tanpa asumsi sistem
-                        </p>
+                            {t("Input jumlah riil yang ada di rak tanpa asumsi sistem")}</p>
                     </div>
                     <button
                         type="button"
@@ -79,13 +80,13 @@ export function VerificationModal({ isOpen, item, onClose, onSaveSuccess }: Veri
                                     {item.sku}
                                 </span>
                                 <span className="font-mono text-[11px] font-bold text-foreground bg-background border border-border px-2 py-0.5 rounded-lg">
-                                    Rak: {item.rack}
+                                    {t("Rak:")}{' '}{item.rack}
                                 </span>
                             </div>
                             <h4 className="font-bold text-foreground text-sm mt-1 truncate">{item.name}</h4>
                             <div className="flex items-center gap-3 text-[11px] text-muted-foreground font-mono mt-1">
                                 <span>{item.barcode}</span>
-                                <span>•</span>
+                                <span>{t("•")}</span>
                                 <span>{item.batch}</span>
                             </div>
                         </div>
@@ -94,10 +95,10 @@ export function VerificationModal({ isOpen, item, onClose, onSaveSuccess }: Veri
                     <div className="flex flex-col gap-2">
                         <Label className="font-semibold text-foreground flex items-center justify-between">
                             <span>
-                                Hitungan Fisik Terhitung di Rak <span className="text-red-500">*</span>
+                                {t("Hitungan Fisik Terhitung di Rak")}{' '}<span className="text-red-500">{t("*")}</span>
                             </span>
                             <span className="text-muted-foreground text-[11px] font-mono">
-                                Buku: <span className="font-bold text-foreground">{systemQty}</span> {item.unit}
+                                {t("Buku:")}{' '}<span className="font-bold text-foreground">{systemQty}</span> {item.unit}
                             </span>
                         </Label>
 
@@ -114,10 +115,10 @@ export function VerificationModal({ isOpen, item, onClose, onSaveSuccess }: Veri
                         </div>
 
                         <div className="grid grid-cols-4 gap-2 pt-1 font-mono">
-                            <Button type="button" variant="outline" onClick={() => quickAdd(1)} className="h-8 rounded-xl border-border text-xs font-bold">+1</Button>
-                            <Button type="button" variant="outline" onClick={() => quickAdd(5)} className="h-8 rounded-xl border-border text-xs font-bold">+5</Button>
-                            <Button type="button" variant="outline" onClick={() => quickAdd(10)} className="h-8 rounded-xl border-border text-xs font-bold">+10</Button>
-                            <Button type="button" variant="outline" onClick={() => quickAdd(50)} className="h-8 rounded-xl border-border text-xs font-bold">+50</Button>
+                            <Button type="button" variant="outline" onClick={() => quickAdd(1)} className="h-8 rounded-xl border-border text-xs font-bold">{t("+1")}</Button>
+                            <Button type="button" variant="outline" onClick={() => quickAdd(5)} className="h-8 rounded-xl border-border text-xs font-bold">{t("+5")}</Button>
+                            <Button type="button" variant="outline" onClick={() => quickAdd(10)} className="h-8 rounded-xl border-border text-xs font-bold">{t("+10")}</Button>
+                            <Button type="button" variant="outline" onClick={() => quickAdd(50)} className="h-8 rounded-xl border-border text-xs font-bold">{t("+50")}</Button>
                         </div>
                     </div>
 
@@ -125,7 +126,7 @@ export function VerificationModal({ isOpen, item, onClose, onSaveSuccess }: Veri
                         <div className="flex items-center gap-2">
                             <HelpCircle className="w-4 h-4 text-muted-foreground" />
                             <span className="text-xs font-semibold text-foreground">
-                                {delta === 0 ? 'Fisik Sesuai Buku (0 Selisih)' : delta < 0 ? `Defisit (${delta} ${item.unit})` : `Surplus (+${delta} ${item.unit})`}
+                                {delta === 0 ? t("Fisik Sesuai Buku (0 Selisih)") : delta < 0 ? `Defisit (${delta} ${item.unit})` : `Surplus (+${delta} ${item.unit})`}
                             </span>
                         </div>
                         <span
@@ -142,26 +143,25 @@ export function VerificationModal({ isOpen, item, onClose, onSaveSuccess }: Veri
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                        <Label className="font-semibold text-foreground">Catatan Kondisi Rak</Label>
+                        <Label className="font-semibold text-foreground">{t("Catatan Kondisi Rak")}</Label>
                         <Input
                             type="text"
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
-                            placeholder="Cth: Ditemukan 2 kardus basah, atau salah tumpuk..."
+                            placeholder={t("Cth: Ditemukan 2 kardus basah, atau salah tumpuk...")}
                             className="h-9 text-xs rounded-xl border-border bg-background"
                         />
                     </div>
                 </div>
 
                 <div className="p-4 border-t border-border bg-muted/20 flex items-center justify-between">
-                    <span className="text-[11px] text-muted-foreground font-mono">[Enter] Simpan</span>
+                    <span className="text-[11px] text-muted-foreground font-mono">{t("[Enter] Simpan")}</span>
                     <div className="flex items-center gap-2">
                         <Button type="button" variant="outline" onClick={onClose} className="h-9 px-4 rounded-xl border-border text-xs">
-                            Batal
-                        </Button>
+                            {t("Batal")}</Button>
                         <Button type="button" onClick={handleSave} className="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold gap-1.5 shadow-md">
                             <Check className="w-3.5 h-3.5" />
-                            <span>Simpan Hasil Hitung</span>
+                            <span>{t("Simpan Hasil Hitung")}</span>
                         </Button>
                     </div>
                 </div>

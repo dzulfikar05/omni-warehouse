@@ -5,6 +5,7 @@ import { TableCell } from '@/components/ui/table';
 import { Plus, FileText, FileSpreadsheet } from 'lucide-react';
 import { toast } from 'sonner';
 import { debounce } from 'lodash';
+import { useTranslation } from '@/context/language-context';
 import { usePermission } from '@/utils/permission';
 import { TableFilter } from '@/components/table-filter';
 import { DataTable, HeaderConfig } from '@/components/data-table';
@@ -36,6 +37,7 @@ interface RolesProps {
 }
 
 export default function Index({ roles, filters }: RolesProps) {
+    const { t } = useTranslation();
     const { flash } = usePage<{ flash: { success?: string } }>().props;
     const { can } = usePermission();
 
@@ -123,20 +125,20 @@ export default function Index({ roles, filters }: RolesProps) {
     const canExport = can('central.roles.export');
 
     const tableHeaders: Array<string | HeaderConfig> = [
-        { label: 'ID', sortField: 'id' },
-        { label: 'Role Name', sortField: 'name' },
-        { label: 'Permissions Count', sortField: 'permissions_count' },
+        { label: t("ID"), sortField: 'id' },
+        { label: t("Role Name"), sortField: 'name' },
+        { label: t("Permissions Count"), sortField: 'permissions_count' },
         'Action',
     ];
 
     return (
         <>
-            <Head title="Roles Management" />
+            <Head title={t("Roles Management")} />
 
             <div className="space-y-6 p-4 sm:p-6">
                 <PageHeader
-                    title="Role List"
-                    description="Manage central system access levels and permissions."
+                    title={t("Role List")}
+                    description={t("Manage central system access levels and permissions.")}
                     renderAction={
                         <div className="flex flex-wrap items-center gap-2">
                             {canExport && (
@@ -147,23 +149,20 @@ export default function Index({ roles, filters }: RolesProps) {
                                         onClick={handleExportPdf}
                                         className="h-9 gap-1.5 border-border text-xs"
                                     >
-                                        <FileText className="h-4 w-4 text-rose-500" /> Export PDF
-                                    </Button>
+                                        <FileText className="h-4 w-4 text-rose-500" /> {t("Export PDF")}</Button>
                                     <Button
                                         variant="outline"
                                         size="sm"
                                         onClick={handleExportExcel}
                                         className="h-9 gap-1.5 border-border text-xs"
                                     >
-                                        <FileSpreadsheet className="h-4 w-4 text-emerald-500" /> Export Excel
-                                    </Button>
+                                        <FileSpreadsheet className="h-4 w-4 text-emerald-500" /> {t("Export Excel")}</Button>
                                 </>
                             )}
                             {canCreate && (
                                 <Button asChild className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700">
                                     <Link href="/roles/create">
-                                        <Plus className="mr-1.5 h-4 w-4" /> Add Role
-                                    </Link>
+                                        <Plus className="mr-1.5 h-4 w-4" /> {t("Add Role")}</Link>
                                 </Button>
                             )}
                         </div>
@@ -187,14 +186,13 @@ export default function Index({ roles, filters }: RolesProps) {
                     renderRow={(role) => (
                         <>
                             <TableCell className="font-mono text-xs text-muted-foreground">
-                                #{role.id}
+                                {t("#")}{role.id}
                             </TableCell>
                             <TableCell className="font-semibold text-foreground capitalize">
                                 {role.name}
                             </TableCell>
                             <TableCell className="text-muted-foreground font-mono text-xs">
-                                {role.permissions_count ?? 0} mapped
-                            </TableCell>
+                                {role.permissions_count ?? 0} {t("mapped")}</TableCell>
                             <TableCell className="text-right">
                                 <ActionButton
                                     label={role.name}
@@ -214,4 +212,4 @@ export default function Index({ roles, filters }: RolesProps) {
     );
 }
 
-Index.layout = { breadcrumbs: [{ title: 'Roles Management', href: '/roles' }] };
+Index.layout = { breadcrumbs: [{ title: "Roles Management", href: '/roles' }] };

@@ -1,7 +1,8 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/ui/badge';import { useTranslation } from '@/context/language-context';
+
 import { ArrowLeftCircleIcon, PencilIcon } from 'lucide-react';
 import { useMemo } from 'react';
 
@@ -17,6 +18,7 @@ interface Role {
 }
 
 export default function ShowRole({ role }: { role: Role }) {
+    const { t } = useTranslation();
     const { current_tenant, auth } = usePage().props as any;
     const currentPathSlug = window.location.pathname.split('/')[1];
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
@@ -51,22 +53,19 @@ export default function ShowRole({ role }: { role: Role }) {
             <div className="space-y-6 p-4 sm:p-6">
                 <div className="rounded-2xl border border-border bg-card p-6 shadow-sm flex items-center justify-between text-card-foreground">
                     <div>
-                        <h2 className="text-xl font-bold tracking-tight">Role Details</h2>
+                        <h2 className="text-xl font-bold tracking-tight">{t("Role Details")}</h2>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                            Viewing assigned permissions for this security group
-                        </p>
+                            {t("Viewing assigned permissions for this security group")}</p>
                     </div>
 
                     <div className="flex items-center gap-2">
                         <Button asChild variant="outline" className="rounded-xl border-border">
                             <Link href={`/${tenantSlug}/settings/users-roles?tab=roles`}>
-                                <ArrowLeftCircleIcon className="mr-2 h-4 w-4 text-blue-600" /> Back
-                            </Link>
+                                <ArrowLeftCircleIcon className="mr-2 h-4 w-4 text-blue-600" /> {t("Back")}</Link>
                         </Button>
                         <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-4 rounded-xl">
                             <Link href={`/${tenantSlug}/settings/roles/${role.id}/edit`}>
-                                <PencilIcon className="mr-2 h-3.5 w-3.5" /> Edit Role
-                            </Link>
+                                <PencilIcon className="mr-2 h-3.5 w-3.5" /> {t("Edit Role")}</Link>
                         </Button>
                     </div>
                 </div>
@@ -74,8 +73,7 @@ export default function ShowRole({ role }: { role: Role }) {
                 <div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-6 text-card-foreground">
                     <div className="border-b border-border pb-4">
                         <Label className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">
-                            Role Name
-                        </Label>
+                            {t("Role Name")}</Label>
                         <p className="text-2xl font-black text-foreground capitalize mt-1">
                             {role.name}
                         </p>
@@ -83,8 +81,7 @@ export default function ShowRole({ role }: { role: Role }) {
 
                     <div className="space-y-4">
                         <Label className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground block">
-                            Attached Permissions ({role.permissions?.length || 0})
-                        </Label>
+                            {t("Attached Permissions (")}{role.permissions?.length || 0}{t(")")}</Label>
 
                         {Object.keys(groupedPermissions).length > 0 ? (
                             <div className="grid grid-cols-1 gap-4">
@@ -109,7 +106,7 @@ export default function ShowRole({ role }: { role: Role }) {
                             </div>
                         ) : (
                             <div className="text-center py-12 border-2 border-dashed border-border rounded-2xl">
-                                <p className="text-xs text-muted-foreground italic">No permissions attached to this role.</p>
+                                <p className="text-xs text-muted-foreground italic">{t("No permissions attached to this role.")}</p>
                             </div>
                         )}
                     </div>
@@ -121,8 +118,8 @@ export default function ShowRole({ role }: { role: Role }) {
 
 ShowRole.layout = {
     breadcrumbs: [
-        { title: 'Settings', href: '#' },
-        { title: 'User & Roles', href: '#' },
-        { title: 'Role Details', href: '#' },
+        { title: "Settings", href: '#' },
+        { title: "User & Roles", href: '#' },
+        { title: "Role Details", href: '#' },
     ],
 };

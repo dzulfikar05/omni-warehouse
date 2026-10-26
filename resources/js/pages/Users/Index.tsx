@@ -6,6 +6,7 @@ import { Plus, FileText, FileSpreadsheet } from 'lucide-react';
 import { toast } from 'sonner';
 import { debounce } from 'lodash';
 
+import { useTranslation } from '@/context/language-context';
 import { User } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { usePermission } from '@/utils/permission';
@@ -37,6 +38,7 @@ interface UsersProps {
 }
 
 export default function Index({ users, filters }: UsersProps) {
+    const { t } = useTranslation();
     const { flash } = usePage<{ flash: { success?: string } }>().props;
     const { can } = usePermission();
 
@@ -124,21 +126,21 @@ export default function Index({ users, filters }: UsersProps) {
     const canExport = can('central.users.export');
 
     const tableHeaders: Array<string | HeaderConfig> = [
-        { label: 'ID', sortField: 'id' },
-        { label: 'Name', sortField: 'name' },
-        { label: 'Email', sortField: 'email' },
+        { label: t("ID"), sortField: 'id' },
+        { label: t("Name"), sortField: 'name' },
+        { label: t("Email"), sortField: 'email' },
         'Roles',
         'Action',
     ];
 
     return (
         <>
-            <Head title="Central Users Management" />
+            <Head title={t("Central Users Management")} />
 
             <div className="space-y-6 p-4 sm:p-6">
                 <PageHeader
-                    title="Users List"
-                    description="Manage central platform admin users, their credentials, and system roles."
+                    title={t("Users List")}
+                    description={t("Manage central platform admin users, their credentials, and system roles.")}
                     renderAction={
                         <div className="flex flex-wrap items-center gap-2">
                             {canExport && (
@@ -149,23 +151,20 @@ export default function Index({ users, filters }: UsersProps) {
                                         onClick={handleExportPdf}
                                         className="h-9 gap-1.5 border-border text-xs"
                                     >
-                                        <FileText className="h-4 w-4 text-rose-500" /> Export PDF
-                                    </Button>
+                                        <FileText className="h-4 w-4 text-rose-500" /> {t("Export PDF")}</Button>
                                     <Button
                                         variant="outline"
                                         size="sm"
                                         onClick={handleExportExcel}
                                         className="h-9 gap-1.5 border-border text-xs"
                                     >
-                                        <FileSpreadsheet className="h-4 w-4 text-emerald-500" /> Export Excel
-                                    </Button>
+                                        <FileSpreadsheet className="h-4 w-4 text-emerald-500" /> {t("Export Excel")}</Button>
                                 </>
                             )}
                             {canCreate && (
                                 <Button asChild className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700">
                                     <Link href="/users/create">
-                                        <Plus className="mr-1.5 h-4 w-4" /> Add User
-                                    </Link>
+                                        <Plus className="mr-1.5 h-4 w-4" /> {t("Add User")}</Link>
                                 </Button>
                             )}
                         </div>
@@ -189,7 +188,7 @@ export default function Index({ users, filters }: UsersProps) {
                     renderRow={(user) => (
                         <>
                             <TableCell className="font-mono text-xs text-muted-foreground">
-                                #{user.id}
+                                {t("#")}{user.id}
                             </TableCell>
                             <TableCell className="font-semibold text-foreground">
                                 {user.name}
@@ -211,8 +210,7 @@ export default function Index({ users, filters }: UsersProps) {
                                         ))
                                     ) : (
                                         <span className="text-xs italic text-muted-foreground">
-                                            No Role
-                                        </span>
+                                            {t("No Role")}</span>
                                     )}
                                 </div>
                             </TableCell>
@@ -235,4 +233,4 @@ export default function Index({ users, filters }: UsersProps) {
     );
 }
 
-Index.layout = { breadcrumbs: [{ title: 'Users Management', href: '/users' }] };
+Index.layout = { breadcrumbs: [{ title: "Users Management", href: '/users' }] };

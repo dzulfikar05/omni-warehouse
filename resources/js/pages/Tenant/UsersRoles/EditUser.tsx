@@ -9,7 +9,8 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@/components/ui/select';
+} from '@/components/ui/select';import { useTranslation } from '@/context/language-context';
+
 import { ArrowLeftCircleIcon, Save } from 'lucide-react';
 
 interface MemberUser {
@@ -31,6 +32,7 @@ export default function EditUser({
     user: MemberUser;
     roles: Role[];
 }) {
+    const { t } = useTranslation();
     const { current_tenant, auth } = usePage().props as any;
     // const tenantSlug = current_tenant?.slug || '';
     const currentPathSlug = window.location.pathname.split('/')[1];
@@ -57,12 +59,11 @@ export default function EditUser({
                 <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-sm">
                     <div>
                         <h2 className="text-xl font-bold tracking-tight">
-                            Edit Member:{' '}
+                            {t("Edit Member:")}{' '}
                             <span className="text-blue-600">{user.name}</span>
                         </h2>
                         <p className="mt-0.5 text-xs text-muted-foreground">
-                            Update user account details and role authorization.
-                        </p>
+                            {t("Update user account details and role authorization.")}</p>
                     </div>
                     <Button
                         asChild
@@ -73,8 +74,7 @@ export default function EditUser({
                             href={`/${tenantSlug}/settings/users-roles?tab=users`}
                         >
                             <ArrowLeftCircleIcon className="mr-2 h-4 w-4 text-blue-600" />{' '}
-                            Back
-                        </Link>
+                            {t("Back")}</Link>
                     </Button>
                 </div>
 
@@ -85,15 +85,14 @@ export default function EditUser({
                                 htmlFor="name"
                                 className="text-xs font-semibold"
                             >
-                                Full Name
-                            </Label>
+                                {t("Full Name")}</Label>
                             <Input
                                 id="name"
                                 value={data.name}
                                 onChange={(e) =>
                                     setData('name', e.target.value)
                                 }
-                                placeholder="Full Name"
+                                placeholder={t("Full Name")}
                                 required
                                 className="h-10 rounded-xl border-border bg-background text-xs"
                             />
@@ -109,8 +108,7 @@ export default function EditUser({
                                 htmlFor="email"
                                 className="text-xs font-semibold"
                             >
-                                Email Address
-                            </Label>
+                                {t("Email Address")}</Label>
                             <Input
                                 id="email"
                                 type="email"
@@ -118,7 +116,7 @@ export default function EditUser({
                                 onChange={(e) =>
                                     setData('email', e.target.value)
                                 }
-                                placeholder="email@company.com"
+                                placeholder={t("email@company.com")}
                                 required
                                 className="h-10 rounded-xl border-border bg-background text-xs"
                             />
@@ -134,14 +132,13 @@ export default function EditUser({
                                 htmlFor="role"
                                 className="text-xs font-semibold"
                             >
-                                Role
-                            </Label>
+                                {t("Role")}</Label>
                             <Select
                                 value={data.role}
                                 onValueChange={(val) => setData('role', val)}
                             >
                                 <SelectTrigger className="h-10 rounded-xl border-border bg-background text-xs">
-                                    <SelectValue placeholder="Select Role" />
+                                    <SelectValue placeholder={t("Select Role")} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {roles.map((r) => (
@@ -165,12 +162,9 @@ export default function EditUser({
                         <div className="space-y-4 rounded-xl border border-border bg-muted/30 p-4">
                             <div>
                                 <Label className="text-xs font-bold text-foreground">
-                                    Change Password (Optional)
-                                </Label>
+                                    {t("Change Password (Optional)")}</Label>
                                 <p className="text-[11px] text-muted-foreground">
-                                    Leave blank if you do not want to change the
-                                    password.
-                                </p>
+                                    {t("Leave blank if you do not want to change the password.")}</p>
                             </div>
 
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -179,15 +173,14 @@ export default function EditUser({
                                         htmlFor="password"
                                         className="text-[11px] font-semibold"
                                     >
-                                        New Password
-                                    </Label>
+                                        {t("New Password")}</Label>
                                     <PasswordInput
                                         id="password"
                                         value={data.password}
                                         onChange={(e) =>
                                             setData('password', e.target.value)
                                         }
-                                        placeholder="••••••••"
+                                        placeholder={t("••••••••")}
                                         className="h-10 rounded-xl border-border bg-background text-xs"
                                     />
                                     {errors.password && (
@@ -202,8 +195,7 @@ export default function EditUser({
                                         htmlFor="password_confirmation"
                                         className="text-[11px] font-semibold"
                                     >
-                                        Confirm New Password
-                                    </Label>
+                                        {t("Confirm New Password")}</Label>
                                     <PasswordInput
                                         id="password_confirmation"
                                         value={data.password_confirmation}
@@ -213,7 +205,7 @@ export default function EditUser({
                                                 e.target.value,
                                             )
                                         }
-                                        placeholder="••••••••"
+                                        placeholder={t("••••••••")}
                                         className="h-10 rounded-xl border-border bg-background text-xs"
                                     />
                                 </div>
@@ -227,7 +219,7 @@ export default function EditUser({
                                 disabled={processing}
                             >
                                 <Save className="h-4 w-4" />
-                                {processing ? 'Updating...' : 'Update Member'}
+                                {processing ? t("Updating...") : t("Update Member")}
                             </Button>
                             <Button
                                 asChild
@@ -237,8 +229,7 @@ export default function EditUser({
                                 <Link
                                     href={`/${tenantSlug}/settings/users-roles?tab=users`}
                                 >
-                                    Cancel
-                                </Link>
+                                    {t("Cancel")}</Link>
                             </Button>
                         </div>
                     </form>
@@ -250,8 +241,8 @@ export default function EditUser({
 
 EditUser.layout = {
     breadcrumbs: [
-        { title: 'Settings', href: '#' },
-        { title: 'User & Roles', href: '#' },
-        { title: 'Edit Member', href: '#' },
+        { title: "Settings", href: '#' },
+        { title: "User & Roles", href: '#' },
+        { title: "Edit Member", href: '#' },
     ],
 };

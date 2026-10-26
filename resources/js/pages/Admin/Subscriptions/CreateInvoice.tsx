@@ -1,7 +1,8 @@
 import React from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
-import { PageHeader } from '@/components/page-header';
+import { PageHeader } from '@/components/page-header';import { useTranslation } from '@/context/language-context';
+
 import { ArrowLeft, Save, RotateCcw } from 'lucide-react';
 
 interface Tenant {
@@ -21,6 +22,7 @@ interface Props {
 }
 
 export default function CreateInvoice({ tenants, plans }: Props) {
+    const { t } = useTranslation();
     const { data, setData, post, processing, errors, reset } = useForm({
         tenant_id: '',
         plan_id: '',
@@ -47,17 +49,16 @@ export default function CreateInvoice({ tenants, plans }: Props) {
 
     return (
         <>
-            <Head title="Create Manual Invoice" />
+            <Head title={t("Create Manual Invoice")} />
 
             <div className="space-y-6 p-4 sm:p-6">
                 <PageHeader
-                    title="Create Manual Invoice"
-                    description="Issue custom or plan-based billing invoices directly to a tenant."
+                    title={t("Create Manual Invoice")}
+                    description={t("Issue custom or plan-based billing invoices directly to a tenant.")}
                     renderAction={
                         <Button asChild variant="outline" size="sm" className="h-9 gap-1.5 border-border text-xs">
                             <Link href="/admin/subscriptions">
-                                <ArrowLeft className="h-4 w-4" /> Back
-                            </Link>
+                                <ArrowLeft className="h-4 w-4" /> {t("Back")}</Link>
                         </Button>
                     }
                 />
@@ -69,14 +70,14 @@ export default function CreateInvoice({ tenants, plans }: Props) {
                                 {/* Tenant Selector */}
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-semibold text-foreground">
-                                        Tenant Organization <span className="text-red-500">*</span>
+                                        {t("Tenant Organization")}{' '}<span className="text-red-500">{t("*")}</span>
                                     </label>
                                     <select
                                         value={data.tenant_id}
                                         onChange={(e) => setData('tenant_id', e.target.value)}
                                         className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-600"
                                     >
-                                        <option value="">-- Select Tenant --</option>
+                                        <option value="">{t("-- Select Tenant --")}</option>
                                         {tenants.map((t) => (
                                             <option key={t.id} value={t.id}>
                                                 {t.name}
@@ -89,18 +90,16 @@ export default function CreateInvoice({ tenants, plans }: Props) {
                                 {/* Plan Selector */}
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-semibold text-foreground">
-                                        Plan Tier (Optional)
-                                    </label>
+                                        {t("Plan Tier (Optional)")}</label>
                                     <select
                                         value={data.plan_id}
                                         onChange={(e) => handlePlanChange(e.target.value)}
                                         className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-600"
                                     >
-                                        <option value="">-- Select Plan Tier --</option>
+                                        <option value="">{t("-- Select Plan Tier --")}</option>
                                         {plans.map((p) => (
                                             <option key={p.id} value={p.id}>
-                                                {p.name} (Rp {Number(p.price).toLocaleString('id-ID')})
-                                            </option>
+                                                {p.name} {t("(Rp")}{' '}{Number(p.price).toLocaleString('id-ID')}{t(")")}</option>
                                         ))}
                                     </select>
                                     {errors.plan_id && <span className="text-[11px] text-red-500">{errors.plan_id}</span>}
@@ -109,13 +108,13 @@ export default function CreateInvoice({ tenants, plans }: Props) {
                                 {/* Amount */}
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-semibold text-foreground">
-                                        Invoice Amount (IDR) <span className="text-red-500">*</span>
+                                        {t("Invoice Amount (IDR)")}{' '}<span className="text-red-500">{t("*")}</span>
                                     </label>
                                     <input
                                         type="number"
                                         value={data.amount}
                                         onChange={(e) => setData('amount', e.target.value)}
-                                        placeholder="750000"
+                                        placeholder={t("750000")}
                                         className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-600"
                                     />
                                     {errors.amount && <span className="text-[11px] text-red-500">{errors.amount}</span>}
@@ -124,7 +123,7 @@ export default function CreateInvoice({ tenants, plans }: Props) {
                                 {/* Due Date */}
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-semibold text-foreground">
-                                        Due Date <span className="text-red-500">*</span>
+                                        {t("Due Date")}{' '}<span className="text-red-500">{t("*")}</span>
                                     </label>
                                     <input
                                         type="date"
@@ -137,12 +136,12 @@ export default function CreateInvoice({ tenants, plans }: Props) {
 
                                 {/* Notes */}
                                 <div className="space-y-1.5 md:col-span-2">
-                                    <label className="text-xs font-semibold text-foreground">Notes / Instructions</label>
+                                    <label className="text-xs font-semibold text-foreground">{t("Notes / Instructions")}</label>
                                     <textarea
                                         value={data.notes}
                                         onChange={(e) => setData('notes', e.target.value)}
                                         rows={3}
-                                        placeholder="Add notes for this invoice..."
+                                        placeholder={t("Add notes for this invoice...")}
                                         className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-600"
                                     />
                                     {errors.notes && <span className="text-[11px] text-red-500">{errors.notes}</span>}
@@ -159,15 +158,14 @@ export default function CreateInvoice({ tenants, plans }: Props) {
                                 onClick={() => reset()}
                                 className="h-9 gap-1.5 border-border text-xs"
                             >
-                                <RotateCcw className="h-3.5 w-3.5" /> Reset
-                            </Button>
+                                <RotateCcw className="h-3.5 w-3.5" /> {t("Reset")}</Button>
                             <Button
                                 type="submit"
                                 size="sm"
                                 disabled={processing}
                                 className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700"
                             >
-                                <Save className="mr-1.5 h-4 w-4" /> {processing ? 'Issuing...' : 'Issue Invoice'}
+                                <Save className="mr-1.5 h-4 w-4" /> {processing ? t("Issuing...") : t("Issue Invoice")}
                             </Button>
                         </div>
                     </form>
@@ -179,8 +177,8 @@ export default function CreateInvoice({ tenants, plans }: Props) {
 
 CreateInvoice.layout = {
     breadcrumbs: [
-        { title: 'Admin', href: '#' },
-        { title: 'Subscriptions Management', href: '/admin/subscriptions' },
-        { title: 'Create Invoice', href: '#' },
+        { title: "Admin", href: '#' },
+        { title: "Subscriptions Management", href: '/admin/subscriptions' },
+        { title: "Create Invoice", href: '#' },
     ],
 };

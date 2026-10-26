@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PageHeader } from '@/components/page-header';
+import { useTranslation } from '@/context/language-context';
 import { usePermission } from '@/utils/permission';
 import type { OutboundManifest } from '@/types/outbound';
 import { CreateShippingModal } from './components/CreateShippingModal';
@@ -24,6 +25,7 @@ interface OutboundIndexProps {
 }
 
 export default function Index({ manifests: initialManifests }: OutboundIndexProps) {
+    const { t } = useTranslation();
     const { current_tenant, auth } = usePage().props as any;
     const { can } = usePermission();
     const [manifests] = useState<OutboundManifest[]>(initialManifests || []);
@@ -57,12 +59,12 @@ export default function Index({ manifests: initialManifests }: OutboundIndexProp
 
     return (
         <>
-            <Head title="Outbound Management (Pengiriman Barang)" />
+            <Head title={t("Outbound Management (Pengiriman Barang)")} />
 
             <div className="space-y-6 p-4 sm:p-6">
                 <PageHeader
-                    title="Outbound Management"
-                    description="Kelola transaksi pengiriman barang (SO/Surat Jalan), zone picking rak, verifikasi packing, dan penyerahan armada."
+                    title={t("Outbound Management")}
+                    description={t("Kelola transaksi pengiriman barang (SO/Surat Jalan), zone picking rak, verifikasi packing, dan penyerahan armada.")}
                     renderAction={
                         <div className="flex items-center gap-2.5 flex-wrap">
                             <div className="h-9 px-3 bg-muted/60 border border-border rounded-xl flex items-center gap-2 text-xs font-semibold text-foreground">
@@ -76,7 +78,7 @@ export default function Index({ manifests: initialManifests }: OutboundIndexProp
                                     className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-4 h-9 rounded-xl shadow-md gap-1.5 cursor-pointer"
                                 >
                                     <Plus className="w-4 h-4" />
-                                    <span>Inisiasi Outbound SO</span>
+                                    <span>{t("Inisiasi Outbound SO")}</span>
                                 </Button>
                             )}
                         </div>
@@ -88,8 +90,7 @@ export default function Index({ manifests: initialManifests }: OutboundIndexProp
                     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between h-32 text-card-foreground">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-medium text-muted-foreground">
-                                Ready to Pick
-                            </span>
+                                {t("Ready to Pick")}</span>
                             <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center">
                                 <Clock className="w-4 h-4" />
                             </div>
@@ -97,19 +98,17 @@ export default function Index({ manifests: initialManifests }: OutboundIndexProp
                         <div>
                             <div className="text-3xl font-bold text-foreground tracking-tight">
                                 {readyCount}{' '}
-                                <span className="text-xs font-normal text-muted-foreground">SO Order</span>
+                                <span className="text-xs font-normal text-muted-foreground">{t("SO Order")}</span>
                             </div>
                             <div className="text-xs text-amber-600 dark:text-amber-400 font-medium mt-1">
-                                Siap di-ambil dari Rak
-                            </div>
+                                {t("Siap di-ambil dari Rak")}</div>
                         </div>
                     </div>
 
                     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between h-32 text-card-foreground">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-medium text-muted-foreground">
-                                Proses Packing Area
-                            </span>
+                                {t("Proses Packing Area")}</span>
                             <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                                 <Truck className="w-4 h-4" />
                             </div>
@@ -117,19 +116,17 @@ export default function Index({ manifests: initialManifests }: OutboundIndexProp
                         <div>
                             <div className="text-3xl font-bold text-foreground tracking-tight">
                                 {packingCount}{' '}
-                                <span className="text-xs font-normal text-muted-foreground">Paket</span>
+                                <span className="text-xs font-normal text-muted-foreground">{t("Paket")}</span>
                             </div>
                             <div className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1">
-                                Verifikasi Scanner &amp; Kardus
-                            </div>
+                                {t("Verifikasi Scanner & Kardus")}</div>
                         </div>
                     </div>
 
                     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between h-32 text-card-foreground">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-medium text-muted-foreground">
-                                Dispatched (Surat Jalan)
-                            </span>
+                                {t("Dispatched (Surat Jalan)")}</span>
                             <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                                 <CheckCircle2 className="w-4 h-4" />
                             </div>
@@ -137,31 +134,28 @@ export default function Index({ manifests: initialManifests }: OutboundIndexProp
                         <div>
                             <div className="text-3xl font-bold text-foreground tracking-tight">
                                 {dispatchedCount}{' '}
-                                <span className="text-xs font-normal text-muted-foreground">Armada</span>
+                                <span className="text-xs font-normal text-muted-foreground">{t("Armada")}</span>
                             </div>
                             <div className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1">
-                                Berangkat &amp; Stok Terpotong
-                            </div>
+                                {t("Berangkat & Stok Terpotong")}</div>
                         </div>
                     </div>
 
                     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between h-32 text-card-foreground">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-medium text-muted-foreground">
-                                Shipping Dock Status
-                            </span>
+                                {t("Shipping Dock Status")}</span>
                             <div className="w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center">
                                 <FileText className="w-4 h-4" />
                             </div>
                         </div>
                         <div>
                             <div className="text-3xl font-bold text-foreground tracking-tight">
-                                Live{' '}
-                                <span className="text-xs font-normal text-muted-foreground">Active</span>
+                                {t("Live")}{' '}
+                                <span className="text-xs font-normal text-muted-foreground">{t("Active")}</span>
                             </div>
                             <div className="text-xs text-purple-600 dark:text-purple-400 font-medium mt-1">
-                                Gate Dock Outbound Ops
-                            </div>
+                                {t("Gate Dock Outbound Ops")}</div>
                         </div>
                     </div>
                 </div>
@@ -173,7 +167,7 @@ export default function Index({ manifests: initialManifests }: OutboundIndexProp
                             <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
                             <Input
                                 type="text"
-                                placeholder="Cari Kode SO, Customer, No. Polisi..."
+                                placeholder={t("Cari Kode SO, Customer, No. Polisi...")}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="pl-9 bg-muted/50 border-input text-xs"
@@ -190,8 +184,7 @@ export default function Index({ manifests: initialManifests }: OutboundIndexProp
                                         : 'text-muted-foreground hover:text-foreground'
                                 }`}
                             >
-                                Semua ({manifests.length})
-                            </button>
+                                {t("Semua (")}{manifests.length}{t(")")}</button>
                             <button
                                 type="button"
                                 onClick={() => setStatusFilter('READY_TO_PICK')}
@@ -201,8 +194,7 @@ export default function Index({ manifests: initialManifests }: OutboundIndexProp
                                         : 'text-muted-foreground hover:text-foreground'
                                 }`}
                             >
-                                Picking ({readyCount})
-                            </button>
+                                {t("Picking (")}{readyCount}{t(")")}</button>
                             <button
                                 type="button"
                                 onClick={() => setStatusFilter('PACKING')}
@@ -212,8 +204,7 @@ export default function Index({ manifests: initialManifests }: OutboundIndexProp
                                         : 'text-muted-foreground hover:text-foreground'
                                 }`}
                             >
-                                Packing ({packingCount})
-                            </button>
+                                {t("Packing (")}{packingCount}{t(")")}</button>
                             <button
                                 type="button"
                                 onClick={() => setStatusFilter('DISPATCHED')}
@@ -223,8 +214,7 @@ export default function Index({ manifests: initialManifests }: OutboundIndexProp
                                         : 'text-muted-foreground hover:text-foreground'
                                 }`}
                             >
-                                Terkirim ({dispatchedCount})
-                            </button>
+                                {t("Terkirim (")}{dispatchedCount}{t(")")}</button>
                         </div>
                     </div>
 
@@ -233,13 +223,13 @@ export default function Index({ manifests: initialManifests }: OutboundIndexProp
                         <table className="w-full text-left border-collapse text-xs">
                             <thead className="bg-muted/40 text-muted-foreground font-semibold border-b border-border">
                                 <tr>
-                                    <th className="py-3.5 px-5 whitespace-nowrap">Kode Shipping SO</th>
-                                    <th className="py-3.5 px-5 whitespace-nowrap">Customer &amp; Gudang</th>
-                                    <th className="py-3.5 px-5 whitespace-nowrap">Armada &amp; Supir</th>
-                                    <th className="py-3.5 px-5 whitespace-nowrap">Shipping Dock</th>
-                                    <th className="py-3.5 px-5 text-right whitespace-nowrap">Progress Packing</th>
-                                    <th className="py-3.5 px-5 text-center whitespace-nowrap">Status Outbound</th>
-                                    <th className="py-3.5 px-5 text-center whitespace-nowrap">Aksi</th>
+                                    <th className="py-3.5 px-5 whitespace-nowrap">{t("Kode Shipping SO")}</th>
+                                    <th className="py-3.5 px-5 whitespace-nowrap">{t("Customer & Gudang")}</th>
+                                    <th className="py-3.5 px-5 whitespace-nowrap">{t("Armada & Supir")}</th>
+                                    <th className="py-3.5 px-5 whitespace-nowrap">{t("Shipping Dock")}</th>
+                                    <th className="py-3.5 px-5 text-right whitespace-nowrap">{t("Progress Packing")}</th>
+                                    <th className="py-3.5 px-5 text-center whitespace-nowrap">{t("Status Outbound")}</th>
+                                    <th className="py-3.5 px-5 text-center whitespace-nowrap">{t("Aksi")}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border text-foreground">
@@ -251,7 +241,7 @@ export default function Index({ manifests: initialManifests }: OutboundIndexProp
                                                     {item.manifest_code}
                                                 </div>
                                                 <div className="text-[11px] text-muted-foreground font-mono">
-                                                    {item.created_at || 'Hari ini'}
+                                                    {item.created_at || t("Hari ini")}
                                                 </div>
                                             </td>
                                             <td className="py-4 px-5">
@@ -260,18 +250,17 @@ export default function Index({ manifests: initialManifests }: OutboundIndexProp
                                                     <span>{item.customer_name}</span>
                                                 </div>
                                                 <div className="text-[11px] text-muted-foreground">
-                                                    Gudang: {item.warehouse_name}
+                                                    {t("Gudang:")}{' '}{item.warehouse_name}
                                                 </div>
                                             </td>
                                             <td className="py-4 px-5">
                                                 <div className="font-mono font-semibold text-foreground flex items-center gap-1.5">
                                                     <Truck className="w-3.5 h-3.5 text-muted-foreground" />
                                                     <span>{item.vehicle_no}</span>
-                                                    <span className="text-muted-foreground font-normal font-sans">({item.vehicle_type})</span>
+                                                    <span className="text-muted-foreground font-normal font-sans">{t("(")}{item.vehicle_type}{t(")")}</span>
                                                 </div>
                                                 <div className="text-[11px] text-muted-foreground">
-                                                    Kurir: {item.driver_name} ({item.driver_phone})
-                                                </div>
+                                                    {t("Kurir:")}{' '}{item.driver_name} {t("(")}{item.driver_phone}{t(")")}</div>
                                             </td>
                                             <td className="py-4 px-5">
                                                 <span className="px-2.5 py-1 bg-muted/60 border border-border rounded-xl font-mono font-bold text-foreground">
@@ -280,11 +269,9 @@ export default function Index({ manifests: initialManifests }: OutboundIndexProp
                                             </td>
                                             <td className="py-4 px-5 text-right font-mono">
                                                 <div className="font-bold text-foreground">
-                                                    {item.packed_units} / {item.total_so_units} Unit
-                                                </div>
+                                                    {item.packed_units} {t("/")}{' '}{item.total_so_units} {t("Unit")}</div>
                                                 <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-                                                    {item.progress_percentage}% Verifikasi
-                                                </div>
+                                                    {item.progress_percentage}{t("% Verifikasi")}</div>
                                             </td>
                                             <td className="py-4 px-5 text-center">
                                                 <span
@@ -314,7 +301,7 @@ export default function Index({ manifests: initialManifests }: OutboundIndexProp
                                                     className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs h-8 px-3 rounded-xl shadow-sm gap-1.5"
                                                 >
                                                     <Link href={`/${tenantSlug}/transactions/outbound/${item.manifest_code}`}>
-                                                        <span>{item.status === 'DISPATCHED' ? 'Lihat Details' : 'Kelola Outbound'}</span>
+                                                        <span>{item.status === 'DISPATCHED' ? t("Lihat Details") : t("Kelola Outbound")}</span>
                                                         <ArrowRight className="w-3.5 h-3.5" />
                                                     </Link>
                                                 </Button>
@@ -329,11 +316,9 @@ export default function Index({ manifests: initialManifests }: OutboundIndexProp
                                                     <FileText className="w-6 h-6 stroke-1.5" />
                                                 </div>
                                                 <p className="text-sm font-semibold text-foreground">
-                                                    Belum Ada Manifest Outbound
-                                                </p>
+                                                    {t("Belum Ada Manifest Outbound")}</p>
                                                 <p className="text-xs text-muted-foreground leading-relaxed">
-                                                    Belum ada pengiriman barang terdaftar di database gudang ini. Klik tombol <strong className="text-foreground font-semibold">"+ Inisiasi Outbound SO"</strong> di atas untuk membuat sesi pengiriman baru.
-                                                </p>
+                                                    {t("Belum ada pengiriman barang terdaftar di database gudang ini. Klik tombol")}{' '}<strong className="text-foreground font-semibold">{t("\"+ Inisiasi Outbound SO\"")}</strong> {t("di atas untuk membuat sesi pengiriman baru.")}</p>
                                             </div>
                                         </td>
                                     </tr>
@@ -354,7 +339,7 @@ export default function Index({ manifests: initialManifests }: OutboundIndexProp
 
 Index.layout = {
     breadcrumbs: [
-        { title: 'Transaction', href: '#' },
-        { title: 'Outbound Management (Daftar Pengiriman)', href: '#' },
+        { title: "Transaction", href: '#' },
+        { title: "Outbound Management (Daftar Pengiriman)", href: '#' },
     ],
 };

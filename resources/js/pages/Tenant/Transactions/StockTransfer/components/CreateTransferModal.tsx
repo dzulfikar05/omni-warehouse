@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { ArrowRightLeft, AlertCircle, Loader2, Package, ArrowRight, Plus, Trash2, AlertTriangle, Layers } from 'lucide-react';
+import { useTranslation } from '@/context/language-context';
 import { LocationOption, SkuOption, WarehouseOption } from '@/types/stock_transfer';
 
 interface TransferItemRow {
@@ -40,6 +41,7 @@ export const CreateTransferModal: React.FC<CreateTransferModalProps> = ({
     locations,
     skus,
 }) => {
+    const { t } = useTranslation();
     const { data, setData, post, processing, errors, reset } = useForm({
         items: [
             {
@@ -182,12 +184,12 @@ export const CreateTransferModal: React.FC<CreateTransferModalProps> = ({
                                 <Layers className="w-4.5 h-4.5" />
                             </div>
                             <div>
-                                <h3 className="text-sm font-bold leading-tight">Buat Mutasi Transfer Stok</h3>
-                                <p className="text-[11px] text-stone-500 dark:text-stone-400 font-normal">Mendukung mutasi 1 barang maupun batch multi-item sekaligus</p>
+                                <h3 className="text-sm font-bold leading-tight">{t("Buat Mutasi Transfer Stok")}</h3>
+                                <p className="text-[11px] text-stone-500 dark:text-stone-400 font-normal">{t("Mendukung mutasi 1 barang maupun batch multi-item sekaligus")}</p>
                             </div>
                         </DialogTitle>
                         <span className="text-xs font-mono font-bold px-3 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900 mr-8">
-                            {data.items.length} {data.items.length === 1 ? 'Item' : 'Batch Items'}
+                            {data.items.length} {data.items.length === 1 ? t("Item") : t("Batch Items")}
                         </span>
                     </div>
 
@@ -232,7 +234,7 @@ export const CreateTransferModal: React.FC<CreateTransferModalProps> = ({
                                                 <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-mono">
                                                     {index + 1}
                                                 </span>
-                                                Item Mutasi #{index + 1}
+                                                {t("Item Mutasi #")}{index + 1}
                                             </span>
 
                                             {data.items.length > 1 && (
@@ -242,7 +244,7 @@ export const CreateTransferModal: React.FC<CreateTransferModalProps> = ({
                                                     className="text-stone-400 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                                                 >
                                                     <Trash2 className="w-3.5 h-3.5" />
-                                                    <span>Hapus</span>
+                                                    <span>{t("Hapus")}</span>
                                                 </button>
                                             )}
                                         </div>
@@ -251,20 +253,19 @@ export const CreateTransferModal: React.FC<CreateTransferModalProps> = ({
                                             {/* Select SKU (Col 5) */}
                                             <div className="lg:col-span-5 space-y-1">
                                                 <Label className="text-[11px] font-semibold text-stone-500 dark:text-stone-400">
-                                                    Pilih Produk / SKU <span className="text-rose-500">*</span>
+                                                    {t("Pilih Produk / SKU")}{' '}<span className="text-rose-500">{t("*")}</span>
                                                 </Label>
                                                 <Select
                                                     value={rowItem.sku_id}
                                                     onValueChange={(val) => handleItemChange(index, 'sku_id', val)}
                                                 >
                                                     <SelectTrigger className="w-full bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-xl h-9 px-3 text-xs text-stone-900 dark:text-stone-100 cursor-pointer">
-                                                        <SelectValue placeholder="Pilih SKU barang..." />
+                                                        <SelectValue placeholder={t("Pilih SKU barang...")} />
                                                     </SelectTrigger>
                                                     <SelectContent className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 max-h-56">
                                                         {skus.map((sku) => (
                                                             <SelectItem key={sku.id} value={String(sku.id)} className="text-xs">
-                                                                <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{sku.code}</span> — {sku.name} (Stok: {sku.current_stock})
-                                                            </SelectItem>
+                                                                <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{sku.code}</span> {t("—")}{' '}{sku.name} {t("(Stok:")}{' '}{sku.current_stock}{t(")")}</SelectItem>
                                                         ))}
                                                     </SelectContent>
                                                 </Select>
@@ -273,24 +274,24 @@ export const CreateTransferModal: React.FC<CreateTransferModalProps> = ({
                                             {/* Select Origin Location (Col 3) */}
                                             <div className="lg:col-span-3 space-y-1">
                                                 <Label className="text-[11px] font-semibold text-stone-500 dark:text-stone-400">
-                                                    Rak Asal <span className="text-rose-500">*</span>
+                                                    {t("Rak Asal")}{' '}<span className="text-rose-500">{t("*")}</span>
                                                 </Label>
                                                 <Select
                                                     value={rowItem.from_location_id}
                                                     onValueChange={(val) => handleItemChange(index, 'from_location_id', val)}
                                                 >
                                                     <SelectTrigger className="w-full bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-xl h-9 px-3 text-xs text-stone-900 dark:text-stone-100 cursor-pointer">
-                                                        <SelectValue placeholder="Pilih Rak Asal..." />
+                                                        <SelectValue placeholder={t("Pilih Rak Asal...")} />
                                                     </SelectTrigger>
                                                     <SelectContent className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 max-h-48">
                                                         {originOptions.length > 0 ? (
                                                             originOptions.map((loc) => (
                                                                 <SelectItem key={loc.location_id} value={String(loc.location_id)} className="text-xs">
-                                                                    <span className="font-mono font-bold">{loc.code}</span> — Stok: {loc.quantity}
+                                                                    <span className="font-mono font-bold">{loc.code}</span> {t("— Stok:")}{' '}{loc.quantity}
                                                                 </SelectItem>
                                                             ))
                                                         ) : (
-                                                            <div className="p-2 text-xs text-stone-500">Pilih SKU yang memiliki stok dahulu.</div>
+                                                            <div className="p-2 text-xs text-stone-500">{t("Pilih SKU yang memiliki stok dahulu.")}</div>
                                                         )}
                                                     </SelectContent>
                                                 </Select>
@@ -299,20 +300,19 @@ export const CreateTransferModal: React.FC<CreateTransferModalProps> = ({
                                             {/* Select Destination Location (Col 3) */}
                                             <div className="lg:col-span-3 space-y-1">
                                                 <Label className="text-[11px] font-semibold text-stone-500 dark:text-stone-400">
-                                                    Rak Tujuan <span className="text-rose-500">*</span>
+                                                    {t("Rak Tujuan")}{' '}<span className="text-rose-500">{t("*")}</span>
                                                 </Label>
                                                 <Select
                                                     value={rowItem.to_location_id}
                                                     onValueChange={(val) => handleItemChange(index, 'to_location_id', val)}
                                                 >
                                                     <SelectTrigger className="w-full bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-xl h-9 px-3 text-xs text-stone-900 dark:text-stone-100 cursor-pointer">
-                                                        <SelectValue placeholder="Pilih Rak Tujuan..." />
+                                                        <SelectValue placeholder={t("Pilih Rak Tujuan...")} />
                                                     </SelectTrigger>
                                                     <SelectContent className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 max-h-48">
                                                         {destOptions.map((loc) => (
                                                             <SelectItem key={loc.id} value={String(loc.id)} className="text-xs">
-                                                                <span className="font-mono font-bold">{loc.code}</span> ({loc.name})
-                                                            </SelectItem>
+                                                                <span className="font-mono font-bold">{loc.code}</span> {t("(")}{loc.name}{t(")")}</SelectItem>
                                                         ))}
                                                     </SelectContent>
                                                 </Select>
@@ -321,7 +321,7 @@ export const CreateTransferModal: React.FC<CreateTransferModalProps> = ({
                                             {/* Quantity Input (Col 1) */}
                                             <div className="lg:col-span-1 space-y-1">
                                                 <Label className="text-[11px] font-semibold text-stone-500 dark:text-stone-400">
-                                                    Qty <span className="text-rose-500">*</span>
+                                                    {t("Qty")}{' '}<span className="text-rose-500">{t("*")}</span>
                                                 </Label>
                                                 <Input
                                                     type="number"
@@ -341,7 +341,7 @@ export const CreateTransferModal: React.FC<CreateTransferModalProps> = ({
                                             <div className="flex items-center justify-between text-[11px] pt-2 border-t border-stone-200/60 dark:border-stone-800/60">
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-stone-500 dark:text-stone-400 font-mono">
-                                                        Stok Tersedia: <strong className="text-blue-600 dark:text-blue-400 font-bold">{availableStock} pcs</strong>
+                                                        {t("Stok Tersedia:")}{' '}<strong className="text-blue-600 dark:text-blue-400 font-bold">{availableStock} {t("pcs")}</strong>
                                                     </span>
                                                     {rowItem.to_location_id && (
                                                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-stone-200/60 dark:bg-stone-800 text-[10px] font-mono font-semibold text-stone-700 dark:text-stone-300">
@@ -353,8 +353,7 @@ export const CreateTransferModal: React.FC<CreateTransferModalProps> = ({
                                                 </div>
                                                 {isExceeding && (
                                                     <span className="text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1">
-                                                        <AlertCircle className="w-3 h-3" /> Qty melebihi stok rak asal!
-                                                    </span>
+                                                        <AlertCircle className="w-3 h-3" /> {t("Qty melebihi stok rak asal!")}</span>
                                                 )}
                                             </div>
                                         )}
@@ -370,17 +369,16 @@ export const CreateTransferModal: React.FC<CreateTransferModalProps> = ({
                             className="w-full py-2.5 rounded-xl border border-dashed border-blue-300 dark:border-blue-800 bg-blue-50/40 dark:bg-blue-950/20 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-blue-600 dark:text-blue-400 text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer"
                         >
                             <Plus className="w-4 h-4" />
-                            <span>Tambah Item Baru ke Batch Mutasi</span>
+                            <span>{t("Tambah Item Baru ke Batch Mutasi")}</span>
                         </button>
 
                         {/* Notes */}
                         <div className="space-y-1.5 pt-2">
                             <Label htmlFor="notes" className="text-xs font-semibold uppercase text-stone-500 dark:text-stone-400">
-                                Catatan / Alasan Transfer Batch (Opsional)
-                            </Label>
+                                {t("Catatan / Alasan Transfer Batch (Opsional)")}</Label>
                             <Textarea
                                 id="notes"
-                                placeholder="Contoh: Replenishment rak picking bulanan untuk seluruh barang snack..."
+                                placeholder={t("Contoh: Replenishment rak picking bulanan untuk seluruh barang snack...")}
                                 value={data.notes}
                                 onChange={(e) => setData('notes', e.target.value)}
                                 className="bg-stone-50 dark:bg-stone-800/80 border border-stone-200 dark:border-stone-700 rounded-xl text-xs text-stone-900 dark:text-stone-100 min-h-[60px] focus:border-blue-600"
@@ -395,8 +393,7 @@ export const CreateTransferModal: React.FC<CreateTransferModalProps> = ({
                                 disabled={processing}
                                 className="h-10 px-4 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0"
                             >
-                                Batal
-                            </button>
+                                {t("Batal")}</button>
                             <button
                                 type="submit"
                                 disabled={processing}
@@ -405,12 +402,12 @@ export const CreateTransferModal: React.FC<CreateTransferModalProps> = ({
                                 {processing ? (
                                     <>
                                         <Loader2 className="w-4 h-4 animate-spin" />
-                                        <span>Memproses...</span>
+                                        <span>{t("Memproses...")}</span>
                                     </>
                                 ) : (
                                     <>
                                         <ArrowRightLeft className="w-4 h-4" />
-                                        <span>Proses Mutasi Batch ({data.items.length} SKU)</span>
+                                        <span>{t("Proses Mutasi Batch (")}{data.items.length} {t("SKU)")}</span>
                                     </>
                                 )}
                             </button>
@@ -430,9 +427,8 @@ export const CreateTransferModal: React.FC<CreateTransferModalProps> = ({
                                 </div>
                                 <div>
                                     <AlertDialogTitle className="text-sm font-bold text-stone-900 dark:text-stone-100 leading-tight">
-                                        Konfirmasi Relokasi Batch ({data.items.length} SKU)
-                                    </AlertDialogTitle>
-                                    <p className="text-xs text-stone-400 dark:text-stone-500 mt-0.5">Semua pergerakan stok akan diproses dalam satu dokumen transaksi.</p>
+                                        {t("Konfirmasi Relokasi Batch (")}{data.items.length} {t("SKU)")}</AlertDialogTitle>
+                                    <p className="text-xs text-stone-400 dark:text-stone-500 mt-0.5">{t("Semua pergerakan stok akan diproses dalam satu dokumen transaksi.")}</p>
                                 </div>
                             </div>
                         </AlertDialogHeader>
@@ -455,8 +451,7 @@ export const CreateTransferModal: React.FC<CreateTransferModalProps> = ({
                                         <ArrowRight className="w-3 h-3 text-stone-400" />
                                         <span className="font-bold text-blue-600 dark:text-blue-400">{toLoc?.code}</span>
                                         <span className="ml-2 font-black text-xs text-stone-900 dark:text-stone-100 bg-stone-200 dark:bg-stone-700 px-1.5 py-0.5 rounded">
-                                            {item.quantity} pcs
-                                        </span>
+                                            {item.quantity} {t("pcs")}</span>
                                     </div>
                                 </div>
                             );
@@ -465,8 +460,7 @@ export const CreateTransferModal: React.FC<CreateTransferModalProps> = ({
 
                     <div className="px-6 py-3 bg-stone-50 dark:bg-stone-950 border-t border-stone-100 dark:border-stone-800">
                         <AlertDialogDescription className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
-                            Pastikan fisik seluruh barang yang terdaftar di atas sudah diverifikasi oleh operator. Eksekusi batch transfer sekarang?
-                        </AlertDialogDescription>
+                            {t("Pastikan fisik seluruh barang yang terdaftar di atas sudah diverifikasi oleh operator. Eksekusi batch transfer sekarang?")}</AlertDialogDescription>
                     </div>
 
                     <AlertDialogFooter className="px-6 py-4 flex flex-row items-center gap-2.5">
@@ -476,8 +470,7 @@ export const CreateTransferModal: React.FC<CreateTransferModalProps> = ({
                             onClick={() => setIsConfirmOpen(false)}
                             className="flex-1 h-10 rounded-xl font-semibold text-xs border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800/60 text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors disabled:opacity-50 cursor-pointer"
                         >
-                            Batal
-                        </button>
+                            {t("Batal")}</button>
                         <button
                             type="button"
                             onClick={() => executeTransfer()}
@@ -487,12 +480,12 @@ export const CreateTransferModal: React.FC<CreateTransferModalProps> = ({
                             {processing ? (
                                 <>
                                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                    <span>Memproses...</span>
+                                    <span>{t("Memproses...")}</span>
                                 </>
                             ) : (
                                 <>
                                     <ArrowRightLeft className="w-3.5 h-3.5" />
-                                    <span>Eksekusi Batch Mutasi</span>
+                                    <span>{t("Eksekusi Batch Mutasi")}</span>
                                 </>
                             )}
                         </button>

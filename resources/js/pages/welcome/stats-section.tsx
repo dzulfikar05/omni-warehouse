@@ -1,10 +1,12 @@
-import React from 'react';
+import React from 'react';import { useTranslation } from '@/context/language-context';
+
 
 export default function StatsSection() {
+    const { t } = useTranslation();
     const stats = [
-        { value: '10,000+', label: 'SKUs managed per tenant' },
-        { value: '< 50ms', label: 'Avg. stock query latency' },
-        { value: '99.9%', label: 'Platform uptime guaranteed' },
+        { value: '10,000+', label: t("SKUs managed per tenant") },
+        { value: '< 50ms', label: t("Avg. stock query latency") },
+        { value: '99.9%', label: t("Platform uptime guaranteed") },
     ];
 
     return (

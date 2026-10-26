@@ -11,7 +11,8 @@ import {
     User,
     Users,
     X,
-} from 'lucide-react';
+} from 'lucide-react';import { useTranslation } from '@/context/language-context';
+
 
 interface CreateShippingModalProps {
     isOpen: boolean;
@@ -29,6 +30,7 @@ export const CreateShippingModal: React.FC<CreateShippingModalProps> = ({
     isOpen,
     onClose,
 }) => {
+    const { t } = useTranslation();
     const { current_tenant, auth } = usePage().props as any;
 
     const currentPathSlug = window.location.pathname.split('/')[1];
@@ -176,11 +178,9 @@ export const CreateShippingModal: React.FC<CreateShippingModalProps> = ({
                         </div>
                         <div>
                             <h3 className="text-sm font-bold text-foreground tracking-tight">
-                                Inisiasi Pengiriman Outbound SO Baru
-                            </h3>
+                                {t("Inisiasi Pengiriman Outbound SO Baru")}</h3>
                             <p className="text-xs text-muted-foreground mt-0.5">
-                                Tarik data Sales Order (SO) &amp; alokasi item untuk Mobile Picker Gudang
-                            </p>
+                                {t("Tarik data Sales Order (SO) & alokasi item untuk Mobile Picker Gudang")}</p>
                         </div>
                     </div>
                     <button
@@ -198,8 +198,8 @@ export const CreateShippingModal: React.FC<CreateShippingModalProps> = ({
                     <div className="grid grid-cols-2 gap-3">
                         <div className="flex flex-col gap-1.5">
                             <label className="font-semibold text-foreground flex items-center gap-1.5">
-                                <span>Pilih Dokumen SO</span>
-                                <span className="text-[10px] bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">Auto-Load</span>
+                                <span>{t("Pilih Dokumen SO")}</span>
+                                <span className="text-[10px] bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">{t("Auto-Load")}</span>
                             </label>
                             <div className="relative">
                                 <select
@@ -207,25 +207,25 @@ export const CreateShippingModal: React.FC<CreateShippingModalProps> = ({
                                     onChange={(e) => handleSoChange(e.target.value)}
                                     className="w-full h-9 pl-3 pr-8 bg-muted/50 hover:bg-muted border border-input rounded-lg text-foreground font-mono font-bold outline-none cursor-pointer appearance-none"
                                 >
-                                    <option value="SO-2026-001">SO-2026-001 (Toko Rejeki)</option>
-                                    <option value="SO-2026-002">SO-2026-002 (Kedai Cap Enak)</option>
-                                    <option value="SO-2026-003">SO-2026-003 (CV Gemilang)</option>
+                                    <option value="SO-2026-001">{t("SO-2026-001 (Toko Rejeki)")}</option>
+                                    <option value="SO-2026-002">{t("SO-2026-002 (Kedai Cap Enak)")}</option>
+                                    <option value="SO-2026-003">{t("SO-2026-003 (CV Gemilang)")}</option>
                                 </select>
                                 <ChevronDown className="w-3.5 h-3.5 text-muted-foreground absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                             </div>
                         </div>
 
                         <div className="flex flex-col gap-1.5">
-                            <label className="font-semibold text-foreground">Pintu Shipping Dock</label>
+                            <label className="font-semibold text-foreground">{t("Pintu Shipping Dock")}</label>
                             <div className="relative">
                                 <select
                                     value={dockBay}
                                     onChange={(e) => setDockBay(e.target.value)}
                                     className="w-full h-9 pl-3 pr-8 bg-muted/50 hover:bg-muted border border-input rounded-lg text-foreground font-mono font-bold outline-none cursor-pointer appearance-none"
                                 >
-                                    <option value="DOCK-OUT-01">Pintu Depan / DOCK-01 (Default)</option>
-                                    <option value="DOCK-OUT-02">DOCK-OUT-02 (Zona Container 20FT)</option>
-                                    <option value="DOCK-OUT-03">DOCK-OUT-03 (Zona Truck Wingbox)</option>
+                                    <option value="DOCK-OUT-01">{t("Pintu Depan / DOCK-01 (Default)")}</option>
+                                    <option value="DOCK-OUT-02">{t("DOCK-OUT-02 (Zona Container 20FT)")}</option>
+                                    <option value="DOCK-OUT-03">{t("DOCK-OUT-03 (Zona Truck Wingbox)")}</option>
                                 </select>
                                 <ChevronDown className="w-3.5 h-3.5 text-muted-foreground absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                             </div>
@@ -234,7 +234,7 @@ export const CreateShippingModal: React.FC<CreateShippingModalProps> = ({
 
                     {/* Customer Name */}
                     <div className="flex flex-col gap-1.5">
-                        <label className="font-semibold text-foreground">Nama Pelanggan / Customer (Otomatis Terisi)</label>
+                        <label className="font-semibold text-foreground">{t("Nama Pelanggan / Customer (Otomatis Terisi)")}</label>
                         <div className="relative">
                             <input
                                 type="text"
@@ -250,17 +250,17 @@ export const CreateShippingModal: React.FC<CreateShippingModalProps> = ({
                     <div className="border border-border rounded-xl p-3 bg-muted/30 flex flex-col gap-2.5">
                         <div className="flex items-center justify-between">
                             <div>
-                                <span className="font-bold text-foreground block">Daftar Barang Wajib Pick (Auto-Loaded)</span>
-                                <span className="text-[11px] text-muted-foreground">Barang yang harus diambil Petugas Mobile Picker di rak gudang</span>
+                                <span className="font-bold text-foreground block">{t("Daftar Barang Wajib Pick (Auto-Loaded)")}</span>
+                                <span className="text-[11px] text-muted-foreground">{t("Barang yang harus diambil Petugas Mobile Picker di rak gudang")}</span>
                             </div>
                             <button
                                 type="button"
                                 onClick={handleAddPickRow}
                                 className="h-7 px-2.5 bg-muted hover:bg-muted/80 text-foreground border border-input rounded-lg text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-colors"
-                                title="Tambah barang ekstra/bonus promo customer"
+                                title={t("Tambah barang ekstra/bonus promo customer")}
                             >
                                 <Plus className="w-3.5 h-3.5 text-blue-600" />
-                                <span>+ Bonus Customer (Opsional)</span>
+                                <span>{t("+ Bonus Customer (Opsional)")}</span>
                             </button>
                         </div>
 
@@ -297,7 +297,7 @@ export const CreateShippingModal: React.FC<CreateShippingModalProps> = ({
                                             min={1}
                                             value={item.pick_qty}
                                             onChange={(e) => handleQtyChange(item.id, parseInt(e.target.value) || 1)}
-                                            placeholder="Qty"
+                                            placeholder={t("Qty")}
                                             className="w-full h-7 px-1.5 bg-background border border-input rounded text-center font-bold text-[11px] text-foreground"
                                         />
                                     </div>
@@ -318,13 +318,13 @@ export const CreateShippingModal: React.FC<CreateShippingModalProps> = ({
                     {/* Armada Grid */}
                     <div className="grid grid-cols-2 gap-3">
                         <div className="flex flex-col gap-1.5">
-                            <label className="font-semibold text-foreground">No. Polisi Armada</label>
+                            <label className="font-semibold text-foreground">{t("No. Polisi Armada")}</label>
                             <div className="relative">
                                 <input
                                     type="text"
                                     value={vehicleNo}
                                     onChange={(e) => setVehicleNo(e.target.value)}
-                                    placeholder="Cth: B 9901 KLS"
+                                    placeholder={t("Cth: B 9901 KLS")}
                                     className="w-full h-9 pl-9 pr-3 bg-muted/50 hover:bg-card focus:bg-card border border-input focus:border-blue-600 rounded-lg text-foreground font-mono font-bold uppercase outline-none transition-all"
                                 />
                                 <Truck className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
@@ -332,12 +332,12 @@ export const CreateShippingModal: React.FC<CreateShippingModalProps> = ({
                         </div>
 
                         <div className="flex flex-col gap-1.5">
-                            <label className="font-semibold text-foreground">Jenis Kendaraan / Ekspedisi</label>
+                            <label className="font-semibold text-foreground">{t("Jenis Kendaraan / Ekspedisi")}</label>
                             <input
                                 type="text"
                                 value={vehicleType}
                                 onChange={(e) => setVehicleType(e.target.value)}
-                                placeholder="Cth: Blind Van, Wingbox"
+                                placeholder={t("Cth: Blind Van, Wingbox")}
                                 className="w-full h-9 px-3 bg-muted/50 hover:bg-card focus:bg-card border border-input focus:border-blue-600 rounded-lg text-foreground font-medium outline-none transition-all"
                             />
                         </div>
@@ -346,13 +346,13 @@ export const CreateShippingModal: React.FC<CreateShippingModalProps> = ({
                     {/* Driver Grid */}
                     <div className="grid grid-cols-2 gap-3">
                         <div className="flex flex-col gap-1.5">
-                            <label className="font-semibold text-foreground">Nama Kurir / Driver</label>
+                            <label className="font-semibold text-foreground">{t("Nama Kurir / Driver")}</label>
                             <div className="relative">
                                 <input
                                     type="text"
                                     value={driverName}
                                     onChange={(e) => setDriverName(e.target.value)}
-                                    placeholder="Nama supir pengirim..."
+                                    placeholder={t("Nama supir pengirim...")}
                                     className="w-full h-9 pl-9 pr-3 bg-muted/50 hover:bg-card focus:bg-card border border-input focus:border-blue-600 rounded-lg text-foreground font-medium outline-none transition-all"
                                 />
                                 <User className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
@@ -360,12 +360,12 @@ export const CreateShippingModal: React.FC<CreateShippingModalProps> = ({
                         </div>
 
                         <div className="flex flex-col gap-1.5">
-                            <label className="font-semibold text-foreground">No. HP Kurir</label>
+                            <label className="font-semibold text-foreground">{t("No. HP Kurir")}</label>
                             <input
                                 type="text"
                                 value={driverPhone}
                                 onChange={(e) => setDriverPhone(e.target.value)}
-                                placeholder="Cth: 0812-3456-7890"
+                                placeholder={t("Cth: 0812-3456-7890")}
                                 className="w-full h-9 px-3 bg-muted/50 hover:bg-card focus:bg-card border border-input focus:border-blue-600 rounded-lg text-foreground font-mono outline-none transition-all"
                             />
                         </div>
@@ -378,14 +378,13 @@ export const CreateShippingModal: React.FC<CreateShippingModalProps> = ({
                             onClick={onClose}
                             className="h-9 px-4 bg-card hover:bg-muted border border-border rounded-xl text-xs font-semibold text-foreground transition-all cursor-pointer"
                         >
-                            Batal
-                        </button>
+                            {t("Batal")}</button>
                         <button
                             type="submit"
                             className="h-9 px-5 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-2 cursor-pointer"
                         >
                             <PackageCheck className="w-4 h-4" />
-                            <span>Terbitkan Manifest Outbound</span>
+                            <span>{t("Terbitkan Manifest Outbound")}</span>
                         </button>
                     </div>
                 </form>

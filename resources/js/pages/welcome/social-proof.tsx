@@ -1,4 +1,5 @@
-import React from 'react';
+import React from 'react';import { useTranslation } from '@/context/language-context';
+
 
 // Simulate realistic testimonials from warehouse decision makers
 const testimonials = [
@@ -23,27 +24,27 @@ const testimonials = [
 ];
 
 export default function SocialProof() {
+    const { t } = useTranslation();
+
     return (
         <section className="py-20 px-6 border-t border-slate-100 bg-slate-50/50 dark:bg-slate-950 dark:border-slate-800/80 transition-colors duration-300">
             <div className="max-w-6xl mx-auto">
                 {/* Section header */}
                 <div className="text-center mb-14">
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-[#2B7FFF] dark:text-blue-400 mb-3">Dipakai di Lapangan</p>
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-[#2B7FFF] dark:text-blue-400 mb-3">{t("Dipakai di Lapangan")}</p>
                     <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-                        Dipercaya oleh 50+ gudang distribusi di Indonesia
-                    </h2>
+                        {t("Dipercaya oleh 50+ gudang distribusi di Indonesia")}</h2>
                     <p className="text-slate-500 dark:text-slate-400 text-sm mt-3 max-w-md mx-auto">
-                        Dari depot FMCG, gudang fashion, hingga 3PL fulfillment center.
-                    </p>
+                        {t("Dari depot FMCG, gudang fashion, hingga 3PL fulfillment center.")}</p>
                 </div>
 
                 {/* Metrics bar */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-14">
                     {[
-                        { value: '99.4%', label: 'Rata-rata akurasi stok' },
-                        { value: '−62%', label: 'Waktu stock opname' },
-                        { value: '10 jt+', label: 'Transaksi stok/bulan' },
-                        { value: '< 1 hari', label: 'Waktu implementasi' },
+                        { value: '99.4%', label: t("Rata-rata akurasi stok") },
+                        { value: '−62%', label: t("Waktu stock opname") },
+                        { value: '10 jt+', label: t("Transaksi stok/bulan") },
+                        { value: '< 1 hari', label: t("Waktu implementasi") },
                     ].map((m, i) => (
                         <div key={i} className="bg-white dark:bg-slate-900/60 rounded-2xl border border-slate-100 dark:border-slate-800 p-5 text-center">
                             <div className={`text-2xl font-black ${i % 2 === 0 ? 'text-[#2B7FFF] dark:text-blue-400' : 'text-slate-900 dark:text-white'}`}>
@@ -56,20 +57,20 @@ export default function SocialProof() {
 
                 {/* Testimonials */}
                 <div className="grid md:grid-cols-3 gap-5">
-                    {testimonials.map((t, i) => (
+                    {testimonials.map((testimonial, i) => (
                         <div key={i} className="bg-white dark:bg-slate-900/60 rounded-2xl border border-slate-100 dark:border-slate-800/80 p-6 flex flex-col gap-4">
                             {/* Quote mark */}
                             <span className="text-4xl leading-none font-black text-slate-100 dark:text-slate-800 select-none">&ldquo;</span>
                             <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed -mt-3 flex-1">
-                                {t.quote}
+                                {testimonial.quote}
                             </p>
                             <div className="flex items-center gap-3 pt-2 border-t border-slate-100 dark:border-slate-800/80">
                                 <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-[11px] font-black shrink-0 bg-[#2B7FFF] dark:bg-blue-600">
-                                    {t.initial}
+                                    {testimonial.initial}
                                 </div>
                                 <div>
-                                    <p className="text-xs font-bold text-slate-900 dark:text-slate-100">{t.name}</p>
-                                    <p className="text-[10px] text-slate-400 dark:text-slate-500">{t.role}</p>
+                                    <p className="text-xs font-bold text-slate-900 dark:text-slate-100">{testimonial.name}</p>
+                                    <p className="text-[10px] text-slate-400 dark:text-slate-500">{testimonial.role}</p>
                                 </div>
                             </div>
                         </div>

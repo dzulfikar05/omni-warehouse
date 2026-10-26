@@ -14,6 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PageHeader } from '@/components/page-header';
+import { useTranslation } from '@/context/language-context';
 import { usePermission } from '@/utils/permission';
 import { CreateManifestModal } from './components/CreateManifestModal';
 
@@ -40,6 +41,7 @@ interface InboundIndexProps {
 }
 
 export default function Index({ manifests: initialManifests }: InboundIndexProps) {
+    const { t } = useTranslation();
     const { current_tenant, auth } = usePage().props as any;
     const { can } = usePermission();
     const [manifests] = useState<ManifestItem[]>(initialManifests || []);
@@ -74,12 +76,12 @@ export default function Index({ manifests: initialManifests }: InboundIndexProps
 
     return (
         <>
-            <Head title="Inbound Management (Penerimaan Barang)" />
+            <Head title={t("Inbound Management (Penerimaan Barang)")} />
 
             <div className="space-y-6 p-4 sm:p-6">
                 <PageHeader
-                    title="Inbound Management"
-                    description="Kelola transaksi penerimaan PO, alokasi unloading dock, dan verifikasi bongkar muat gudang."
+                    title={t("Inbound Management")}
+                    description={t("Kelola transaksi penerimaan PO, alokasi unloading dock, dan verifikasi bongkar muat gudang.")}
                     renderAction={
                         <div className="flex items-center gap-2.5 flex-wrap">
                             <div className="h-9 px-3 bg-muted/60 border border-border rounded-xl flex items-center gap-2 text-xs font-semibold text-foreground">
@@ -93,7 +95,7 @@ export default function Index({ manifests: initialManifests }: InboundIndexProps
                                     className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-4 h-9 rounded-xl shadow-md gap-1.5 cursor-pointer"
                                 >
                                     <Plus className="w-4 h-4" />
-                                    <span>Inisiasi Penerimaan PO</span>
+                                    <span>{t("Inisiasi Penerimaan PO")}</span>
                                 </Button>
                             )}
                         </div>
@@ -105,8 +107,7 @@ export default function Index({ manifests: initialManifests }: InboundIndexProps
                     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between h-32 text-card-foreground">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-medium text-muted-foreground">
-                                Sesi Receiving Aktif
-                            </span>
+                                {t("Sesi Receiving Aktif")}</span>
                             <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center">
                                 <Clock className="w-4 h-4" />
                             </div>
@@ -114,19 +115,17 @@ export default function Index({ manifests: initialManifests }: InboundIndexProps
                         <div>
                             <div className="text-3xl font-bold text-foreground tracking-tight">
                                 {receivingCount}{' '}
-                                <span className="text-xs font-normal text-muted-foreground">Manifest</span>
+                                <span className="text-xs font-normal text-muted-foreground">{t("Manifest")}</span>
                             </div>
                             <div className="text-xs text-amber-600 dark:text-amber-400 font-medium mt-1">
-                                Pembongkaran di Loading Dock
-                            </div>
+                                {t("Pembongkaran di Loading Dock")}</div>
                         </div>
                     </div>
 
                     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between h-32 text-card-foreground">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-medium text-muted-foreground">
-                                Antrean Waiting Dock
-                            </span>
+                                {t("Antrean Waiting Dock")}</span>
                             <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                                 <Truck className="w-4 h-4" />
                             </div>
@@ -134,19 +133,17 @@ export default function Index({ manifests: initialManifests }: InboundIndexProps
                         <div>
                             <div className="text-3xl font-bold text-foreground tracking-tight">
                                 {draftCount}{' '}
-                                <span className="text-xs font-normal text-muted-foreground">Truk</span>
+                                <span className="text-xs font-normal text-muted-foreground">{t("Truk")}</span>
                             </div>
                             <div className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1">
-                                Menunggu penetapan Dock Bay
-                            </div>
+                                {t("Menunggu penetapan Dock Bay")}</div>
                         </div>
                     </div>
 
                     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between h-32 text-card-foreground">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-medium text-muted-foreground">
-                                Inbound Selesai (Closed)
-                            </span>
+                                {t("Inbound Selesai (Closed)")}</span>
                             <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                                 <CheckCircle2 className="w-4 h-4" />
                             </div>
@@ -154,19 +151,17 @@ export default function Index({ manifests: initialManifests }: InboundIndexProps
                         <div>
                             <div className="text-3xl font-bold text-foreground tracking-tight">
                                 {closedCount}{' '}
-                                <span className="text-xs font-normal text-muted-foreground">Dokumen</span>
+                                <span className="text-xs font-normal text-muted-foreground">{t("Dokumen")}</span>
                             </div>
                             <div className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1">
-                                Stok resmi bertambah di DB
-                            </div>
+                                {t("Stok resmi bertambah di DB")}</div>
                         </div>
                     </div>
 
                     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between h-32 text-card-foreground">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-medium text-muted-foreground">
-                                Total Volume PO
-                            </span>
+                                {t("Total Volume PO")}</span>
                             <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
                                 <FileText className="w-4 h-4" />
                             </div>
@@ -174,11 +169,10 @@ export default function Index({ manifests: initialManifests }: InboundIndexProps
                         <div>
                             <div className="text-3xl font-bold text-foreground tracking-tight">
                                 {totalPoUnitsAll}{' '}
-                                <span className="text-xs font-normal text-muted-foreground">Unit</span>
+                                <span className="text-xs font-normal text-muted-foreground">{t("Unit")}</span>
                             </div>
                             <div className="text-xs text-muted-foreground mt-1">
-                                Alokasi penerimaan gudang
-                            </div>
+                                {t("Alokasi penerimaan gudang")}</div>
                         </div>
                     </div>
                 </div>
@@ -193,7 +187,7 @@ export default function Index({ manifests: initialManifests }: InboundIndexProps
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Cari Kode PO, Supplier, No. Polisi Armada, atau Supir..."
+                                placeholder={t("Cari Kode PO, Supplier, No. Polisi Armada, atau Supir...")}
                                 className="pl-9 h-9 text-xs border-border bg-background rounded-xl"
                             />
                         </div>
@@ -208,8 +202,7 @@ export default function Index({ manifests: initialManifests }: InboundIndexProps
                                         : 'text-muted-foreground hover:text-foreground'
                                 }`}
                             >
-                                Semua ({manifests.length})
-                            </button>
+                                {t("Semua (")}{manifests.length}{t(")")}</button>
                             <button
                                 type="button"
                                 onClick={() => setStatusFilter('RECEIVING')}
@@ -219,8 +212,7 @@ export default function Index({ manifests: initialManifests }: InboundIndexProps
                                         : 'text-muted-foreground hover:text-foreground'
                                 }`}
                             >
-                                Receiving ({receivingCount})
-                            </button>
+                                {t("Receiving (")}{receivingCount}{t(")")}</button>
                             <button
                                 type="button"
                                 onClick={() => setStatusFilter('DRAFT')}
@@ -230,8 +222,7 @@ export default function Index({ manifests: initialManifests }: InboundIndexProps
                                         : 'text-muted-foreground hover:text-foreground'
                                 }`}
                             >
-                                Draft ({draftCount})
-                            </button>
+                                {t("Draft (")}{draftCount}{t(")")}</button>
                             <button
                                 type="button"
                                 onClick={() => setStatusFilter('CLOSED')}
@@ -241,8 +232,7 @@ export default function Index({ manifests: initialManifests }: InboundIndexProps
                                         : 'text-muted-foreground hover:text-foreground'
                                 }`}
                             >
-                                Selesai ({closedCount})
-                            </button>
+                                {t("Selesai (")}{closedCount}{t(")")}</button>
                         </div>
                     </div>
 
@@ -251,13 +241,13 @@ export default function Index({ manifests: initialManifests }: InboundIndexProps
                         <table className="w-full text-left border-collapse text-xs">
                             <thead className="bg-muted/40 text-muted-foreground font-semibold border-b border-border">
                                 <tr>
-                                    <th className="py-3.5 px-5 whitespace-nowrap">Kode Manifest PO</th>
-                                    <th className="py-3.5 px-5 whitespace-nowrap">Supplier &amp; Gudang</th>
-                                    <th className="py-3.5 px-5 whitespace-nowrap">Armada &amp; Supir</th>
-                                    <th className="py-3.5 px-5 whitespace-nowrap">Dock Assigned</th>
-                                    <th className="py-3.5 px-5 text-right whitespace-nowrap">Progress Fisik</th>
-                                    <th className="py-3.5 px-5 text-center whitespace-nowrap">Status Manifest</th>
-                                    <th className="py-3.5 px-5 text-center whitespace-nowrap">Aksi</th>
+                                    <th className="py-3.5 px-5 whitespace-nowrap">{t("Kode Manifest PO")}</th>
+                                    <th className="py-3.5 px-5 whitespace-nowrap">{t("Supplier & Gudang")}</th>
+                                    <th className="py-3.5 px-5 whitespace-nowrap">{t("Armada & Supir")}</th>
+                                    <th className="py-3.5 px-5 whitespace-nowrap">{t("Dock Assigned")}</th>
+                                    <th className="py-3.5 px-5 text-right whitespace-nowrap">{t("Progress Fisik")}</th>
+                                    <th className="py-3.5 px-5 text-center whitespace-nowrap">{t("Status Manifest")}</th>
+                                    <th className="py-3.5 px-5 text-center whitespace-nowrap">{t("Aksi")}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border text-foreground">
@@ -278,18 +268,17 @@ export default function Index({ manifests: initialManifests }: InboundIndexProps
                                                     <span>{item.supplier_name}</span>
                                                 </div>
                                                 <div className="text-[11px] text-muted-foreground">
-                                                    Gudang: {item.warehouse_name}
+                                                    {t("Gudang:")}{' '}{item.warehouse_name}
                                                 </div>
                                             </td>
                                             <td className="py-4 px-5">
                                                 <div className="font-mono font-semibold text-foreground flex items-center gap-1.5">
                                                     <Truck className="w-3.5 h-3.5 text-muted-foreground" />
                                                     <span>{item.vehicle_no}</span>
-                                                    <span className="text-muted-foreground font-normal font-sans">({item.vehicle_type})</span>
+                                                    <span className="text-muted-foreground font-normal font-sans">{t("(")}{item.vehicle_type}{t(")")}</span>
                                                 </div>
                                                 <div className="text-[11px] text-muted-foreground">
-                                                    Sopir: {item.driver_name} ({item.driver_phone})
-                                                </div>
+                                                    {t("Sopir:")}{' '}{item.driver_name} {t("(")}{item.driver_phone}{t(")")}</div>
                                             </td>
                                             <td className="py-4 px-5">
                                                 <span className="px-2.5 py-1 bg-muted/60 border border-border rounded-xl font-mono font-bold text-foreground">
@@ -298,11 +287,9 @@ export default function Index({ manifests: initialManifests }: InboundIndexProps
                                             </td>
                                             <td className="py-4 px-5 text-right font-mono">
                                                 <div className="font-bold text-foreground">
-                                                    {item.good_units + item.damaged_units} / {item.total_po_units} Unit
-                                                </div>
+                                                    {item.good_units + item.damaged_units} {t("/")}{' '}{item.total_po_units} {t("Unit")}</div>
                                                 <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-                                                    {item.progress_percentage}% Tervalidasi
-                                                </div>
+                                                    {item.progress_percentage}{t("% Tervalidasi")}</div>
                                             </td>
                                             <td className="py-4 px-5 text-center">
                                                 <span
@@ -332,7 +319,7 @@ export default function Index({ manifests: initialManifests }: InboundIndexProps
                                                     className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs h-8 px-3 rounded-xl shadow-sm gap-1.5"
                                                 >
                                                     <Link href={`/${tenantSlug}/transactions/inbound/${item.manifest_code}`}>
-                                                        <span>{item.status === 'CLOSED' ? 'Lihat Details' : 'Kelola Bongkar'}</span>
+                                                        <span>{item.status === 'CLOSED' ? t("Lihat Details") : t("Kelola Bongkar")}</span>
                                                         <ArrowRight className="w-3.5 h-3.5" />
                                                     </Link>
                                                 </Button>
@@ -347,11 +334,9 @@ export default function Index({ manifests: initialManifests }: InboundIndexProps
                                                     <FileText className="w-6 h-6 stroke-1.5" />
                                                 </div>
                                                 <p className="text-sm font-semibold text-foreground">
-                                                    Belum Ada Manifest Inbound
-                                                </p>
+                                                    {t("Belum Ada Manifest Inbound")}</p>
                                                 <p className="text-xs text-muted-foreground leading-relaxed">
-                                                    Belum ada transaksi penerimaan terdaftar di database gudang ini. Klik tombol <strong className="text-foreground font-semibold">"+ Inisiasi Penerimaan PO"</strong> di atas untuk membuat sesi baru.
-                                                </p>
+                                                    {t("Belum ada transaksi penerimaan terdaftar di database gudang ini. Klik tombol")}{' '}<strong className="text-foreground font-semibold">{t("\"+ Inisiasi Penerimaan PO\"")}</strong> {t("di atas untuk membuat sesi baru.")}</p>
                                             </div>
                                         </td>
                                     </tr>
@@ -372,7 +357,7 @@ export default function Index({ manifests: initialManifests }: InboundIndexProps
 
 Index.layout = {
     breadcrumbs: [
-        { title: 'Transaction', href: '#' },
-        { title: 'Inbound Management (Daftar Manifest)', href: '#' },
+        { title: "Transaction", href: '#' },
+        { title: "Inbound Management (Daftar Manifest)", href: '#' },
     ],
 };

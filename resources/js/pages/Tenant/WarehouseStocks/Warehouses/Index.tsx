@@ -19,6 +19,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Warehouse as WarehouseIcon, Plus, FileText, FileSpreadsheet, CheckCircle2, XCircle } from 'lucide-react';
+import { useTranslation } from '@/context/language-context';
 import { usePermission } from '@/utils/permission';
 
 interface Warehouse {
@@ -55,6 +56,7 @@ interface WarehouseIndexProps {
 }
 
 export default function Index({ warehouses, summary, filters }: WarehouseIndexProps) {
+    const { t } = useTranslation();
     const { flash, current_tenant, auth } = usePage().props as any;
     const { can } = usePermission();
 
@@ -174,22 +176,22 @@ export default function Index({ warehouses, summary, filters }: WarehouseIndexPr
     const canExport = can('tenant.warehouses.export') || can('warehouses.export');
 
     const tableHeaders: Array<string | HeaderConfig> = [
-        { label: 'KODE GUDANG', sortField: 'code' },
-        { label: 'NAMA WAREHOUSE', sortField: 'name' },
+        { label: t("KODE GUDANG"), sortField: 'code' },
+        { label: t("NAMA WAREHOUSE"), sortField: 'name' },
         'ALAMAT / DESKRIPSI',
-        { label: 'TANGGAL DIBUAT', sortField: 'created_at' },
-        { label: 'STATUS', sortField: 'is_active' },
+        { label: t("TANGGAL DIBUAT"), sortField: 'created_at' },
+        { label: t("STATUS"), sortField: 'is_active' },
         'ACTIONS',
     ];
 
     return (
         <>
-            <Head title="Warehouse Management" />
+            <Head title={t("Warehouse Management")} />
 
             <div className="space-y-6 p-4 sm:p-6">
                 <PageHeader
-                    title="Warehouse Management"
-                    description="Kelola data master gudang, lokasi penyimpanan fisik, serta fasilitas penampungan stok."
+                    title={t("Warehouse Management")}
+                    description={t("Kelola data master gudang, lokasi penyimpanan fisik, serta fasilitas penampungan stok.")}
                     renderAction={
                         <div className="flex items-center gap-2">
                             {canExport && (
@@ -200,23 +202,20 @@ export default function Index({ warehouses, summary, filters }: WarehouseIndexPr
                                         onClick={handleExportPdf}
                                         className="h-9 gap-1.5 border-border text-xs"
                                     >
-                                        <FileText size={15} className="text-red-500" /> Export PDF
-                                    </Button>
+                                        <FileText size={15} className="text-red-500" /> {t("Export PDF")}</Button>
                                     <Button
                                         variant="outline"
                                         size="sm"
                                         onClick={handleExportExcel}
                                         className="h-9 gap-1.5 border-border text-xs"
                                     >
-                                        <FileSpreadsheet size={15} className="text-emerald-500" /> Export Excel
-                                    </Button>
+                                        <FileSpreadsheet size={15} className="text-emerald-500" /> {t("Export Excel")}</Button>
                                 </>
                             )}
                             {canCreate && (
                                 <Button asChild className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700">
                                     <Link href={`/${tenantSlug}/warehouses/create`}>
-                                        <Plus className="mr-1.5 h-4 w-4" /> Add Warehouse
-                                    </Link>
+                                        <Plus className="mr-1.5 h-4 w-4" /> {t("Add Warehouse")}</Link>
                                 </Button>
                             )}
                         </div>
@@ -227,7 +226,7 @@ export default function Index({ warehouses, summary, filters }: WarehouseIndexPr
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Total Warehouses</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Total Warehouses")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-foreground">
                                 {summary?.total_warehouses ?? warehouses.total ?? 0}
                             </h3>
@@ -239,7 +238,7 @@ export default function Index({ warehouses, summary, filters }: WarehouseIndexPr
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Active Warehouses</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Active Warehouses")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-foreground">
                                 {summary?.active_warehouses ?? 0}
                             </h3>
@@ -251,7 +250,7 @@ export default function Index({ warehouses, summary, filters }: WarehouseIndexPr
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Inactive Warehouses</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Inactive Warehouses")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-foreground">
                                 {summary?.inactive_warehouses ?? 0}
                             </h3>
@@ -271,13 +270,13 @@ export default function Index({ warehouses, summary, filters }: WarehouseIndexPr
                     <FilterDropdown onApply={handleApplyFilter} onReset={handleResetFilter}>
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <Label className="text-xs font-semibold">Status Operasional</Label>
+                                <Label className="text-xs font-semibold">{t("Status Operasional")}</Label>
                                 <Select value={tempIsActive} onValueChange={setTempIsActive}>
-                                    <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="All Status" /></SelectTrigger>
+                                    <SelectTrigger className="h-9 text-xs"><SelectValue placeholder={t("All Status")} /></SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Status</SelectItem>
-                                        <SelectItem value="1">Active</SelectItem>
-                                        <SelectItem value="0">Inactive</SelectItem>
+                                        <SelectItem value="all">{t("All Status")}</SelectItem>
+                                        <SelectItem value="1">{t("Active")}</SelectItem>
+                                        <SelectItem value="0">{t("Inactive")}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -309,7 +308,7 @@ export default function Index({ warehouses, summary, filters }: WarehouseIndexPr
                                             : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/50 dark:text-rose-400'
                                     }
                                 >
-                                    {item.is_active ? 'Active' : 'Inactive'}
+                                    {item.is_active ? t("Active") : t("Inactive")}
                                 </Badge>
                             </TableCell>
                             <TableCell className="text-right">
@@ -333,7 +332,7 @@ export default function Index({ warehouses, summary, filters }: WarehouseIndexPr
 
 Index.layout = {
     breadcrumbs: [
-        { title: 'Warehouse & Stocks', href: '#' },
-        { title: 'Warehouses', href: '#' },
+        { title: "Warehouse & Stocks", href: '#' },
+        { title: "Warehouses", href: '#' },
     ],
 };

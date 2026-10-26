@@ -1,6 +1,7 @@
 import React from 'react';
 import { Head } from '@inertiajs/react';
-import { PageHeader } from '@/components/page-header';
+import { PageHeader } from '@/components/page-header';import { useTranslation } from '@/context/language-context';
+
 import SkuForm from './components/SkuForm';
 
 interface Product { id: number; name: string; }
@@ -13,14 +14,15 @@ interface Props {
 }
 
 export default function Create({ tenant_slug, products, units }: Props) {
+    const { t } = useTranslation();
     return (
         <>
-            <Head title="Tambah SKU Baru" />
+            <Head title={t("Tambah SKU Baru")} />
 
             <div className="space-y-6 p-4 sm:p-6 font-sans">
                 <PageHeader
-                    title="Tambah SKU Baru"
-                    description="Buat varian baru untuk produk inventory beserta acuan HPP dan barcode."
+                    title={t("Tambah SKU Baru")}
+                    description={t("Buat varian baru untuk produk inventory beserta acuan HPP dan barcode.")}
                 />
 
                 <div className="rounded-2xl border border-border bg-card p-6 shadow-sm text-card-foreground">
@@ -38,8 +40,8 @@ export default function Create({ tenant_slug, products, units }: Props) {
 
 Create.layout = {
     breadcrumbs: [
-        { title: 'Inventory Management', href: '#' },
-        { title: 'Master SKU', href: '#' },
-        { title: 'Tambah SKU', href: '#' },
+        { title: "Inventory Management", href: '#' },
+        { title: "Master SKU", href: '#' },
+        { title: "Tambah SKU", href: '#' },
     ],
 };
