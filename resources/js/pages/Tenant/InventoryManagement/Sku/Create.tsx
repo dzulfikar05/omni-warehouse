@@ -9,7 +9,8 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@/components/ui/select';
+} from '@/components/ui/select';import { useTranslation } from '@/context/language-context';
+
 import { ArrowLeftCircleIcon, Save } from 'lucide-react';
 
 interface Product {
@@ -29,6 +30,7 @@ interface CreateProps {
 }
 
 export default function SkuCreate({ products, units }: CreateProps) {
+    const { t } = useTranslation();
     const { current_tenant, auth } = usePage().props as any;
     const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
@@ -50,23 +52,20 @@ export default function SkuCreate({ products, units }: CreateProps) {
 
     return (
         <>
-            <Head title="Tambah SKU Baru" />
+            <Head title={t("Tambah SKU Baru")} />
 
             <div className="space-y-6 p-4 sm:p-6 font-sans">
                 {/* Header Header */}
                 <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-6 shadow-sm text-card-foreground">
                     <div>
                         <h2 className="text-xl font-bold tracking-tight">
-                            Tambah SKU Baru
-                        </h2>
+                            {t("Tambah SKU Baru")}</h2>
                         <p className="mt-0.5 text-xs text-muted-foreground">
-                            Buat varian Stock Keeping Unit baru untuk item persediaan gudang.
-                        </p>
+                            {t("Buat varian Stock Keeping Unit baru untuk item persediaan gudang.")}</p>
                     </div>
                     <Button asChild variant="outline" className="rounded-xl border-border">
                         <Link href={`/${tenantSlug}/inventory/skus`}>
-                            <ArrowLeftCircleIcon className="mr-2 h-4 w-4 text-blue-600" /> Back
-                        </Link>
+                            <ArrowLeftCircleIcon className="mr-2 h-4 w-4 text-blue-600" /> {t("Back")}</Link>
                     </Button>
                 </div>
 
@@ -77,14 +76,14 @@ export default function SkuCreate({ products, units }: CreateProps) {
                             {/* Product Select */}
                             <div className="space-y-1.5">
                                 <Label htmlFor="product_id" className="text-xs font-semibold">
-                                    Produk Induk <span className="text-red-500">*</span>
+                                    {t("Produk Induk")}{' '}<span className="text-red-500">{t("*")}</span>
                                 </Label>
                                 <Select
                                     value={data.product_id}
                                     onValueChange={(val) => setData('product_id', val)}
                                 >
                                     <SelectTrigger className="h-10 text-xs border-border bg-background rounded-xl">
-                                        <SelectValue placeholder="Pilih Produk" />
+                                        <SelectValue placeholder={t("Pilih Produk")} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {products.map((product) => (
@@ -102,20 +101,19 @@ export default function SkuCreate({ products, units }: CreateProps) {
                             {/* Unit Select */}
                             <div className="space-y-1.5">
                                 <Label htmlFor="unit_id" className="text-xs font-semibold">
-                                    Satuan (Unit) <span className="text-red-500">*</span>
+                                    {t("Satuan (Unit)")}{' '}<span className="text-red-500">{t("*")}</span>
                                 </Label>
                                 <Select
                                     value={data.unit_id}
                                     onValueChange={(val) => setData('unit_id', val)}
                                 >
                                     <SelectTrigger className="h-10 text-xs border-border bg-background rounded-xl">
-                                        <SelectValue placeholder="Pilih Satuan" />
+                                        <SelectValue placeholder={t("Pilih Satuan")} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {units.map((unit) => (
                                             <SelectItem key={unit.id} value={String(unit.id)}>
-                                                {unit.name} ({unit.symbol})
-                                            </SelectItem>
+                                                {unit.name} {t("(")}{unit.symbol}{t(")")}</SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
@@ -129,13 +127,13 @@ export default function SkuCreate({ products, units }: CreateProps) {
                             {/* SKU Code */}
                             <div className="space-y-1.5">
                                 <Label htmlFor="sku_code" className="text-xs font-semibold">
-                                    Kode SKU <span className="text-red-500">*</span>
+                                    {t("Kode SKU")}{' '}<span className="text-red-500">{t("*")}</span>
                                 </Label>
                                 <Input
                                     id="sku_code"
                                     value={data.sku_code}
                                     onChange={(e) => setData('sku_code', e.target.value)}
-                                    placeholder="misal: SKU-APP-001"
+                                    placeholder={t("misal: SKU-APP-001")}
                                     required
                                     className="h-10 text-xs border-border bg-background rounded-xl font-mono"
                                 />
@@ -147,13 +145,12 @@ export default function SkuCreate({ products, units }: CreateProps) {
                             {/* Barcode */}
                             <div className="space-y-1.5">
                                 <Label htmlFor="barcode" className="text-xs font-semibold">
-                                    Barcode / EAN-13
-                                </Label>
+                                    {t("Barcode / EAN-13")}</Label>
                                 <Input
                                     id="barcode"
                                     value={data.barcode}
                                     onChange={(e) => setData('barcode', e.target.value)}
-                                    placeholder="misal: 8991234567890"
+                                    placeholder={t("misal: 8991234567890")}
                                     className="h-10 text-xs border-border bg-background rounded-xl font-mono"
                                 />
                                 {errors.barcode && (
@@ -165,7 +162,7 @@ export default function SkuCreate({ products, units }: CreateProps) {
                         {/* Base Cost */}
                         <div className="space-y-1.5">
                             <Label htmlFor="base_cost" className="text-xs font-semibold">
-                                Harga Modal / Base Cost (Rp) <span className="text-red-500">*</span>
+                                {t("Harga Modal / Base Cost (Rp)")}{' '}<span className="text-red-500">{t("*")}</span>
                             </Label>
                             <Input
                                 id="base_cost"
@@ -173,7 +170,7 @@ export default function SkuCreate({ products, units }: CreateProps) {
                                 min="0"
                                 value={data.base_cost}
                                 onChange={(e) => setData('base_cost', e.target.value)}
-                                placeholder="0"
+                                placeholder={t("0")}
                                 required
                                 className="h-10 text-xs border-border bg-background rounded-xl font-mono"
                             />
@@ -186,8 +183,7 @@ export default function SkuCreate({ products, units }: CreateProps) {
                             {/* Current Stock */}
                             <div className="space-y-1.5">
                                 <Label htmlFor="current_stock" className="text-xs font-semibold">
-                                    Stok Awal
-                                </Label>
+                                    {t("Stok Awal")}</Label>
                                 <Input
                                     id="current_stock"
                                     type="number"
@@ -204,8 +200,7 @@ export default function SkuCreate({ products, units }: CreateProps) {
                             {/* Min Stock */}
                             <div className="space-y-1.5">
                                 <Label htmlFor="min_stock" className="text-xs font-semibold">
-                                    Stok Minimum (Batas Peringatan)
-                                </Label>
+                                    {t("Stok Minimum (Batas Peringatan)")}</Label>
                                 <Input
                                     id="min_stock"
                                     type="number"
@@ -228,10 +223,10 @@ export default function SkuCreate({ products, units }: CreateProps) {
                                 className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-6 py-2.5 rounded-xl shadow-md shadow-blue-600/20 flex items-center gap-2"
                             >
                                 <Save className="h-4 w-4" />
-                                {processing ? 'Saving...' : 'Save SKU'}
+                                {processing ? t("Saving...") : t("Save SKU")}
                             </Button>
                             <Button asChild variant="ghost" className="rounded-xl text-xs">
-                                <Link href={`/${tenantSlug}/inventory/skus`}>Cancel</Link>
+                                <Link href={`/${tenantSlug}/inventory/skus`}>{t("Cancel")}</Link>
                             </Button>
                         </div>
                     </form>
@@ -243,8 +238,8 @@ export default function SkuCreate({ products, units }: CreateProps) {
 
 SkuCreate.layout = {
     breadcrumbs: [
-        { title: 'Inventory Management', href: '#' },
-        { title: 'Master SKU', href: '#' },
-        { title: 'Tambah SKU', href: '#' },
+        { title: "Inventory Management", href: '#' },
+        { title: "Master SKU", href: '#' },
+        { title: "Tambah SKU", href: '#' },
     ],
 };

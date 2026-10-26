@@ -1,7 +1,8 @@
 import { Link, useForm } from '@inertiajs/react';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/input';import { useTranslation } from '@/context/language-context';
+
 
 interface Category {
     id?: number;
@@ -20,6 +21,7 @@ export default function CategoryForm({
     category,
     mode,
 }: Props) {
+    const { t } = useTranslation();
     const isEdit = mode === 'edit';
 
     const form = useForm({
@@ -47,8 +49,7 @@ export default function CategoryForm({
                     htmlFor="name"
                     className="text-sm font-medium text-foreground"
                 >
-                    Category Name
-                </label>
+                    {t("Category Name")}</label>
 
                 <Input
                     id="name"
@@ -57,7 +58,7 @@ export default function CategoryForm({
                     onChange={(e) =>
                         form.setData('name', e.target.value)
                     }
-                    placeholder="Enter category name"
+                    placeholder={t("Enter category name")}
                 />
 
                 {form.errors.name && (
@@ -73,8 +74,7 @@ export default function CategoryForm({
                     htmlFor="desc"
                     className="text-sm font-medium text-foreground"
                 >
-                    Description
-                </label>
+                    {t("Description")}</label>
 
                 <Input
                     id="desc"
@@ -83,7 +83,7 @@ export default function CategoryForm({
                     onChange={(e) =>
                         form.setData('desc', e.target.value)
                     }
-                    placeholder="Enter category description (optional)"
+                    placeholder={t("Enter category description (optional)")}
                 />
 
                 {form.errors.desc && (
@@ -99,13 +99,12 @@ export default function CategoryForm({
                     <Link
                         href={`/${tenant_slug}/inventory/categories`}
                     >
-                        Cancel
-                    </Link>
+                        {t("Cancel")}</Link>
                 </Button>
 
                 <Button type="submit" disabled={form.processing}>
                     {form.processing
-                        ? 'Saving...'
+                        ? t("Saving...")
                         : isEdit
                           ? 'Update Category'
                           : 'Create Category'}

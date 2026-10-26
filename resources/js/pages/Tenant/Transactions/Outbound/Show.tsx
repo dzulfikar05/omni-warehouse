@@ -22,6 +22,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PageHeader } from '@/components/page-header';
+import { useTranslation } from '@/context/language-context';
 import type { OutboundItem, OutboundManifest } from '@/types/outbound';
 import { DispatchCommitModal } from './components/DispatchCommitModal';
 import { HoldShippingModal } from './components/HoldShippingModal';
@@ -34,6 +35,7 @@ interface OutboundShowProps {
 }
 
 export default function Show({ manifest: initialManifest, items: initialItems }: OutboundShowProps) {
+    const { t } = useTranslation();
     const { current_tenant, auth } = usePage().props as any;
     const [manifest, setManifest] = useState<OutboundManifest>(initialManifest);
     const [items, setItems] = useState<OutboundItem[]>(initialItems || []);
@@ -180,17 +182,16 @@ export default function Show({ manifest: initialManifest, items: initialItems }:
                             <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1.5 flex-wrap">
                                 <span className="flex items-center gap-1.5 font-semibold text-foreground">
                                     <Users className="w-3.5 h-3.5 text-muted-foreground" />
-                                    {manifest.customer_name || 'Customer General'}
+                                    {manifest.customer_name || t("Customer General")}
                                 </span>
-                                <span>•</span>
+                                <span>{t("•")}</span>
                                 <span className="font-mono">
-                                    SO: <strong>{manifest.so_number || manifest.manifest_code}</strong>
+                                    {t("SO:")}{' '}<strong>{manifest.so_number || manifest.manifest_code}</strong>
                                 </span>
-                                <span>•</span>
+                                <span>{t("•")}</span>
                                 <span className="flex items-center gap-1 font-mono">
                                     <Truck className="w-3.5 h-3.5 text-muted-foreground" />
-                                    {manifest.vehicle_no || '-'} ({manifest.vehicle_type || '-'})
-                                </span>
+                                    {manifest.vehicle_no || '-'} {t("(")}{manifest.vehicle_type || '-'}{t(")")}</span>
                             </div>
                         </div>
                     </div>
@@ -199,7 +200,7 @@ export default function Show({ manifest: initialManifest, items: initialItems }:
                     <div className="flex items-center gap-2 flex-wrap">
                         <div className="h-9 px-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center gap-2 text-xs font-semibold">
                             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <span>Mobile Operator Sync Ready</span>
+                            <span>{t("Mobile Operator Sync Ready")}</span>
                         </div>
 
                         <Button
@@ -209,7 +210,7 @@ export default function Show({ manifest: initialManifest, items: initialItems }:
                             className="bg-card hover:bg-muted border-border text-foreground font-semibold text-xs h-9 px-3.5 rounded-xl gap-1.5 cursor-pointer"
                         >
                             <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                            <span>Surat Jalan</span>
+                            <span>{t("Surat Jalan")}</span>
                         </Button>
 
                         <Button
@@ -219,7 +220,7 @@ export default function Show({ manifest: initialManifest, items: initialItems }:
                             className="bg-card hover:bg-muted border-border text-foreground font-semibold text-xs h-9 px-3.5 rounded-xl gap-1.5 cursor-pointer"
                         >
                             <PauseCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                            <span>Hold Sesi</span>
+                            <span>{t("Hold Sesi")}</span>
                         </Button>
 
                         <Button
@@ -229,7 +230,7 @@ export default function Show({ manifest: initialManifest, items: initialItems }:
                             className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs h-9 px-4 rounded-xl shadow-md gap-1.5 cursor-pointer"
                         >
                             <CheckSquare className="w-4 h-4" />
-                            <span>Submit Pengiriman</span>
+                            <span>{t("Submit Pengiriman")}</span>
                         </Button>
                     </div>
                 </div>
@@ -245,11 +246,9 @@ export default function Show({ manifest: initialManifest, items: initialItems }:
                                 </div>
                                 <div>
                                     <h3 className="text-sm font-bold text-foreground">
-                                        Scan Barcode / SKU Item Outbound
-                                    </h3>
+                                        {t("Scan Barcode / SKU Item Outbound")}</h3>
                                     <p className="text-xs text-muted-foreground">
-                                        Arahkan barcode scanner ke kemasan kardus/SKU saat verifikasi packing
-                                    </p>
+                                        {t("Arahkan barcode scanner ke kemasan kardus/SKU saat verifikasi packing")}</p>
                                 </div>
                             </div>
                         </div>
@@ -258,7 +257,7 @@ export default function Show({ manifest: initialManifest, items: initialItems }:
                             <div className="relative flex-1">
                                 <Input
                                     type="text"
-                                    placeholder="Scan EAN-13 / SKU Barcode item di meja packing..."
+                                    placeholder={t("Scan EAN-13 / SKU Barcode item di meja packing...")}
                                     value={barcodeInput}
                                     onChange={(e) => setBarcodeInput(e.target.value)}
                                     className="pl-9 bg-muted/50 border-input text-xs font-mono h-10 rounded-xl focus:bg-card"
@@ -270,8 +269,7 @@ export default function Show({ manifest: initialManifest, items: initialItems }:
                                 type="submit"
                                 className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-10 px-5 rounded-xl cursor-pointer"
                             >
-                                Validate Scan
-                            </Button>
+                                {t("Validate Scan")}</Button>
                         </form>
                     </div>
 
@@ -279,11 +277,9 @@ export default function Show({ manifest: initialManifest, items: initialItems }:
                     <div className="bg-card border border-border rounded-2xl p-5 shadow-xs text-card-foreground flex flex-col justify-between">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-medium text-muted-foreground">
-                                Progress Verifikasi Packing
-                            </span>
+                                {t("Progress Verifikasi Packing")}</span>
                             <span className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400">
-                                {manifest.progress_percentage}%
-                            </span>
+                                {manifest.progress_percentage}{t("%")}</span>
                         </div>
 
                         <div className="w-full bg-muted/60 h-2.5 rounded-full overflow-hidden my-2">
@@ -295,11 +291,10 @@ export default function Show({ manifest: initialManifest, items: initialItems }:
 
                         <div className="flex items-center justify-between text-xs pt-1">
                             <span className="text-muted-foreground">
-                                Target Total: <strong className="text-foreground">{manifest.total_so_units} Unit</strong>
+                                {t("Target Total:")}{' '}<strong className="text-foreground">{manifest.total_so_units} {t("Unit")}</strong>
                             </span>
                             <span className="text-emerald-600 dark:text-emerald-400 font-bold">
-                                {manifest.packed_units} Packed
-                            </span>
+                                {manifest.packed_units} {t("Packed")}</span>
                         </div>
                     </div>
                 </div>
@@ -309,11 +304,9 @@ export default function Show({ manifest: initialManifest, items: initialItems }:
                     <div className="p-4 border-b border-border flex items-center justify-between gap-4 flex-wrap">
                         <div className="flex items-center gap-2">
                             <h3 className="text-sm font-bold text-foreground">
-                                Daftar SKU &amp; Zone Picking Rak
-                            </h3>
+                                {t("Daftar SKU & Zone Picking Rak")}</h3>
                             <span className="px-2 py-0.5 bg-muted/60 text-muted-foreground text-xs font-mono font-bold rounded-md">
-                                {items.length} SKU
-                            </span>
+                                {items.length} {t("SKU")}</span>
                         </div>
 
                         <div className="flex items-center gap-1 bg-muted/40 p-1 rounded-xl border border-border">
@@ -325,8 +318,7 @@ export default function Show({ manifest: initialManifest, items: initialItems }:
                                         : 'text-muted-foreground hover:text-foreground'
                                 }`}
                             >
-                                Semua
-                            </button>
+                                {t("Semua")}</button>
                             <button
                                 onClick={() => setFilterStatus('picking')}
                                 className={`px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer ${
@@ -335,8 +327,7 @@ export default function Show({ manifest: initialManifest, items: initialItems }:
                                         : 'text-muted-foreground hover:text-foreground'
                                 }`}
                             >
-                                Picking
-                            </button>
+                                {t("Picking")}</button>
                             <button
                                 onClick={() => setFilterStatus('packed')}
                                 className={`px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer ${
@@ -345,8 +336,7 @@ export default function Show({ manifest: initialManifest, items: initialItems }:
                                         : 'text-muted-foreground hover:text-foreground'
                                 }`}
                             >
-                                Packed
-                            </button>
+                                {t("Packed")}</button>
                         </div>
                     </div>
 
@@ -354,14 +344,14 @@ export default function Show({ manifest: initialManifest, items: initialItems }:
                         <table className="w-full text-left text-xs">
                             <thead className="bg-muted/40 text-muted-foreground font-semibold border-b border-border">
                                 <tr>
-                                    <th className="py-3 px-5 whitespace-nowrap">SKU &amp; Barcode</th>
-                                    <th className="py-3 px-5 whitespace-nowrap">Nama Produk</th>
-                                    <th className="py-3 px-5 whitespace-nowrap">Lokasi Rak Asal</th>
-                                    <th className="py-3 px-5 text-right whitespace-nowrap">Target SO</th>
-                                    <th className="py-3 px-5 text-right whitespace-nowrap">Diambil (Picked)</th>
-                                    <th className="py-3 px-5 text-right whitespace-nowrap">Packed</th>
-                                    <th className="py-3 px-5 text-center whitespace-nowrap">Status</th>
-                                    <th className="py-3 px-5 text-center whitespace-nowrap">Aksi</th>
+                                    <th className="py-3 px-5 whitespace-nowrap">{t("SKU & Barcode")}</th>
+                                    <th className="py-3 px-5 whitespace-nowrap">{t("Nama Produk")}</th>
+                                    <th className="py-3 px-5 whitespace-nowrap">{t("Lokasi Rak Asal")}</th>
+                                    <th className="py-3 px-5 text-right whitespace-nowrap">{t("Target SO")}</th>
+                                    <th className="py-3 px-5 text-right whitespace-nowrap">{t("Diambil (Picked)")}</th>
+                                    <th className="py-3 px-5 text-right whitespace-nowrap">{t("Packed")}</th>
+                                    <th className="py-3 px-5 text-center whitespace-nowrap">{t("Status")}</th>
+                                    <th className="py-3 px-5 text-center whitespace-nowrap">{t("Aksi")}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border text-foreground">
@@ -379,7 +369,7 @@ export default function Show({ manifest: initialManifest, items: initialItems }:
                                             <td className="py-3.5 px-5">
                                                 <div className="font-semibold text-foreground">{item.product_name}</div>
                                                 <div className="text-[11px] text-muted-foreground">
-                                                    {item.category} • Batch: {item.batch_no}
+                                                    {item.category} {t("• Batch:")}{' '}{item.batch_no}
                                                 </div>
                                             </td>
                                             <td className="py-3.5 px-5">
@@ -418,16 +408,14 @@ export default function Show({ manifest: initialManifest, items: initialItems }:
                                                     onClick={() => setSelectedItemForDrawer(item)}
                                                     className="h-8 px-3 text-xs font-semibold bg-card hover:bg-muted border-border cursor-pointer"
                                                 >
-                                                    Detail Packing
-                                                </Button>
+                                                    {t("Detail Packing")}</Button>
                                             </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
                                         <td colSpan={8} className="py-10 text-center text-muted-foreground">
-                                            Belum ada item terdaftar pada workspace outbound ini.
-                                        </td>
+                                            {t("Belum ada item terdaftar pada workspace outbound ini.")}</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -469,8 +457,8 @@ export default function Show({ manifest: initialManifest, items: initialItems }:
 
 Show.layout = {
     breadcrumbs: [
-        { title: 'Transaction', href: '#' },
-        { title: 'Outbound Management', href: '#' },
-        { title: 'Workspace Pengiriman', href: '#' },
+        { title: "Transaction", href: '#' },
+        { title: "Outbound Management", href: '#' },
+        { title: "Workspace Pengiriman", href: '#' },
     ],
 };

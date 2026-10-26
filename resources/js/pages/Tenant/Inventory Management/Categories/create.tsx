@@ -1,25 +1,25 @@
 import { Head } from '@inertiajs/react';
 
-import CategoryForm from './components/CategoryForm';
+import CategoryForm from './components/CategoryForm';import { useTranslation } from '@/context/language-context';
+
 
 interface Props {
     tenant_slug: string;
 }
 
 export default function Create({ tenant_slug }: Props) {
+    const { t } = useTranslation();
     return (
         <>
-            <Head title="Add Category" />
+            <Head title={t("Add Category")} />
 
             <div className="space-y-6 p-4">
                 <div>
                     <h1 className="text-2xl font-bold text-foreground">
-                        Add Category
-                    </h1>
+                        {t("Add Category")}</h1>
 
                     <p className="mt-1 text-sm text-muted-foreground">
-                        Create a new category for your inventory.
-                    </p>
+                        {t("Create a new category for your inventory.")}</p>
                 </div>
 
                 <div className="rounded-lg border border-border bg-card p-6 shadow-md">
@@ -35,8 +35,8 @@ export default function Create({ tenant_slug }: Props) {
 
 Create.layout = {
     breadcrumbs: [
-        { title: 'Inventory Management', href: '/categories' },
-        { title: 'Categories', href: '/categories' },
-        { title: 'Add Category', href: '#' },
+        { title: "Inventory Management", href: '/categories' },
+        { title: "Categories", href: '/categories' },
+        { title: "Add Category", href: '#' },
     ],
 };

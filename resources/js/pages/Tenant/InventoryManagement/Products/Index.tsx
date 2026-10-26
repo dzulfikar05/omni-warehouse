@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { debounce } from 'lodash';
+import { useTranslation } from '@/context/language-context';
 import { usePermission } from '@/utils/permission';
 import {
     Plus,
@@ -72,6 +73,7 @@ interface IndexProps {
 }
 
 export default function ProductIndex({ products, stats, categories, filters }: IndexProps) {
+    const { t } = useTranslation();
     const { flash, current_tenant, auth } = usePage().props as any;
     const { can } = usePermission();
 
@@ -157,22 +159,22 @@ export default function ProductIndex({ products, stats, categories, filters }: I
     const canCreate = can('tenant.products.create') || can('products.create');
 
     const tableHeaders: Array<string | HeaderConfig> = [
-        { label: 'ID PRODUK', sortField: 'id' },
-        { label: 'NAMA PRODUK', sortField: 'name' },
-        { label: 'KATEGORI', sortField: 'category_id' },
-        { label: 'STATUS', sortField: 'status' },
-        { label: 'TANGGAL DIBUAT', sortField: 'created_at' },
+        { label: t("ID PRODUK"), sortField: 'id' },
+        { label: t("NAMA PRODUK"), sortField: 'name' },
+        { label: t("KATEGORI"), sortField: 'category_id' },
+        { label: t("STATUS"), sortField: 'status' },
+        { label: t("TANGGAL DIBUAT"), sortField: 'created_at' },
         'ACTIONS',
     ];
 
     return (
         <>
-            <Head title="Master Produk" />
+            <Head title={t("Master Produk")} />
 
             <div className="space-y-6 p-4 font-sans sm:p-6">
                 <PageHeader
-                    title="Katalog Produk"
-                    description="Kelola kelompok barang induk, kategori persediaan, serta pengelompokan varian SKU."
+                    title={t("Katalog Produk")}
+                    description={t("Kelola kelompok barang induk, kategori persediaan, serta pengelompokan varian SKU.")}
                     renderAction={
                         <div className="flex items-center gap-2">
                             {canExport && (
@@ -183,24 +185,21 @@ export default function ProductIndex({ products, stats, categories, filters }: I
                                         onClick={handleExportPdf}
                                         className="h-9 gap-1.5 border-border text-xs"
                                     >
-                                        <FileText size={15} className="text-red-500" /> Export PDF
-                                    </Button>
+                                        <FileText size={15} className="text-red-500" /> {t("Export PDF")}</Button>
                                     <Button
                                         variant="outline"
                                         size="sm"
                                         onClick={handleExportExcel}
                                         className="h-9 gap-1.5 border-border text-xs"
                                     >
-                                        <FileSpreadsheet size={15} className="text-emerald-500" /> Export Excel
-                                    </Button>
+                                        <FileSpreadsheet size={15} className="text-emerald-500" /> {t("Export Excel")}</Button>
                                 </>
                             )}
 
                             {canCreate && (
                                 <Button asChild className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700">
                                     <Link href={`/${tenantSlug}/inventory/products/create`}>
-                                        <Plus className="mr-1.5 h-4 w-4" /> Add Product
-                                    </Link>
+                                        <Plus className="mr-1.5 h-4 w-4" /> {t("Add Product")}</Link>
                                 </Button>
                             )}
                         </div>
@@ -211,9 +210,9 @@ export default function ProductIndex({ products, stats, categories, filters }: I
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Total Item Produk</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Total Item Produk")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-foreground">{totalProducts}</h3>
-                            <p className="mt-0.5 text-[11px] text-muted-foreground">Produk Induk</p>
+                            <p className="mt-0.5 text-[11px] text-muted-foreground">{t("Produk Induk")}</p>
                         </div>
                         <div className="rounded-xl bg-blue-50 p-3 text-blue-600 dark:bg-blue-950/50">
                             <Package size={22} />
@@ -222,9 +221,9 @@ export default function ProductIndex({ products, stats, categories, filters }: I
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Produk Aktif</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Produk Aktif")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-foreground">{activeProducts}</h3>
-                            <p className="mt-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">Siap Dijual</p>
+                            <p className="mt-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">{t("Siap Dijual")}</p>
                         </div>
                         <div className="rounded-xl bg-emerald-50 p-3 text-emerald-600 dark:bg-emerald-950/50">
                             <CheckCircle2 size={22} />
@@ -233,9 +232,9 @@ export default function ProductIndex({ products, stats, categories, filters }: I
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Status Draft</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Status Draft")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-amber-600 dark:text-amber-400">{draftProducts}</h3>
-                            <p className="mt-0.5 text-[11px] font-medium text-amber-600 dark:text-amber-400">Perlu Review</p>
+                            <p className="mt-0.5 text-[11px] font-medium text-amber-600 dark:text-amber-400">{t("Perlu Review")}</p>
                         </div>
                         <div className="rounded-xl bg-amber-50 p-3 text-amber-600 dark:bg-amber-950/50">
                             <Clock size={22} />
@@ -244,9 +243,9 @@ export default function ProductIndex({ products, stats, categories, filters }: I
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Total Varian SKU</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Total Varian SKU")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-foreground">{totalSkusCount}</h3>
-                            <p className="mt-0.5 text-[11px] text-muted-foreground">Terhubung</p>
+                            <p className="mt-0.5 text-[11px] text-muted-foreground">{t("Terhubung")}</p>
                         </div>
                         <div className="rounded-xl bg-indigo-50 p-3 text-indigo-600 dark:bg-indigo-950/50">
                             <Layers size={22} />
@@ -280,13 +279,13 @@ export default function ProductIndex({ products, stats, categories, filters }: I
                     >
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <Label className="text-xs font-semibold">Kategori Produk</Label>
+                                <Label className="text-xs font-semibold">{t("Kategori Produk")}</Label>
                                 <Select value={categoryId} onValueChange={setCategoryId}>
                                     <SelectTrigger className="h-9 text-xs">
-                                        <SelectValue placeholder="Semua Kategori" />
+                                        <SelectValue placeholder={t("Semua Kategori")} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">Semua Kategori</SelectItem>
+                                        <SelectItem value="all">{t("Semua Kategori")}</SelectItem>
                                         {categories.map((c) => (
                                             <SelectItem key={c.id} value={String(c.id)}>
                                                 {c.name}
@@ -297,16 +296,16 @@ export default function ProductIndex({ products, stats, categories, filters }: I
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-xs font-semibold">Status Produk</Label>
+                                <Label className="text-xs font-semibold">{t("Status Produk")}</Label>
                                 <Select value={status} onValueChange={setStatus}>
                                     <SelectTrigger className="h-9 text-xs">
-                                        <SelectValue placeholder="Semua Status" />
+                                        <SelectValue placeholder={t("Semua Status")} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">Semua Status</SelectItem>
-                                        <SelectItem value="active">Active</SelectItem>
-                                        <SelectItem value="inactive">Inactive</SelectItem>
-                                        <SelectItem value="draft">Draft</SelectItem>
+                                        <SelectItem value="all">{t("Semua Status")}</SelectItem>
+                                        <SelectItem value="active">{t("Active")}</SelectItem>
+                                        <SelectItem value="inactive">{t("Inactive")}</SelectItem>
+                                        <SelectItem value="draft">{t("Draft")}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -325,7 +324,7 @@ export default function ProductIndex({ products, stats, categories, filters }: I
                     renderRow={(product: ProductItem) => (
                         <>
                             <TableCell className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400">
-                                PRD-00{product.id}
+                                {t("PRD-00")}{product.id}
                             </TableCell>
 
                             <TableCell className="text-xs font-bold text-foreground">
@@ -348,7 +347,7 @@ export default function ProductIndex({ products, stats, categories, filters }: I
                                             : 'border border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-950/40 dark:text-gray-400'
                                     }`}
                                 >
-                                    {product.status ? product.status.toUpperCase() : 'ACTIVE'}
+                                    {product.status ? product.status.toUpperCase() : t("ACTIVE")}
                                 </span>
                             </TableCell>
 
@@ -377,7 +376,7 @@ export default function ProductIndex({ products, stats, categories, filters }: I
 
 ProductIndex.layout = {
     breadcrumbs: [
-        { title: 'Inventory Management', href: '#' },
-        { title: 'Products', href: '#' },
+        { title: "Inventory Management", href: '#' },
+        { title: "Products", href: '#' },
     ],
 };

@@ -1,14 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { Button } from '@/components/ui/button';
-import { MoreHorizontal, LucideEye, Pencil, Trash } from 'lucide-react';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { LucideEye, Pencil, Trash } from 'lucide-react';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -20,6 +11,15 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useTranslation } from '@/context/language-context';
 
 interface ActionButtonProps {
     label: string; // Nama data (misal: "Admin", "User A")
@@ -42,17 +42,19 @@ export function ActionButton({
     canEdit = false,
     canDelete = false,
 }: ActionButtonProps) {
+    const { t } = useTranslation();
+
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">Action</Button>
+                <Button variant="outline" size="sm">{t('Action')}</Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-[160px]">
 
                 {canShow && showUrl && (
                     <DropdownMenuItem asChild>
                         <Link href={showUrl} className="flex cursor-pointer items-center">
-                            <LucideEye className="mr-2 h-4 w-4" /> View Details
+                            <LucideEye className="mr-2 h-4 w-4" /> {t('View Details')}
                         </Link>
                     </DropdownMenuItem>
                 )}
@@ -61,16 +63,18 @@ export function ActionButton({
                     <DropdownMenuItem
                         asChild={!!editUrl}
                         onSelect={() => {
-                            if (onEdit) onEdit();
+                            if (onEdit) {
+onEdit();
+}
                         }}
                     >
                         {editUrl ? (
                             <Link href={editUrl} className="flex cursor-pointer items-center">
-                                <Pencil className="mr-2 h-4 w-4" /> Edit Data
+                                <Pencil className="mr-2 h-4 w-4" /> {t('Edit Data')}
                             </Link>
                         ) : (
                             <div className="flex cursor-pointer items-center w-full">
-                                <Pencil className="mr-2 h-4 w-4" /> Edit Data
+                                <Pencil className="mr-2 h-4 w-4" /> {t('Edit Data')}
                             </div>
                         )}
                     </DropdownMenuItem>
@@ -85,23 +89,24 @@ export function ActionButton({
                                 onSelect={(e) => e.preventDefault()}
                                 className="cursor-pointer text-red-600 focus:text-red-600"
                             >
-                                <Trash className="mr-2 h-4 w-4 text-red-600" /> Delete
+                                <Trash className="mr-2 h-4 w-4 text-red-600" /> {t('Delete')}
                             </DropdownMenuItem>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                             <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Data?</AlertDialogTitle>
+                                <AlertDialogTitle>{t('Delete Data?')}</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                    Are you sure you want to delete <strong>{label}</strong>? This action cannot be undone.
+                                    {t('Are you sure you want to delete')}{' '}
+                                    <strong>{label}</strong>? {t('This action cannot be undone.')}
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogCancel>{t('Cancel')}</AlertDialogCancel>
                                 <AlertDialogAction
                                     onClick={onDelete}
                                     className="bg-red-600 text-white hover:bg-red-700"
                                 >
-                                    Delete
+                                    {t('Delete')}
                                 </AlertDialogAction>
                             </AlertDialogFooter>
                         </AlertDialogContent>

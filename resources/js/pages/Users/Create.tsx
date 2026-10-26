@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/page-header';
 import { ArrowLeft, Save, RotateCcw } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';import { useTranslation } from '@/context/language-context';
+
 
 interface Role {
     id: number;
@@ -13,6 +14,7 @@ interface Role {
 }
 
 export default function Create({ roles }: { roles: Role[] }) {
+    const { t } = useTranslation();
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         email: '',
@@ -28,17 +30,16 @@ export default function Create({ roles }: { roles: Role[] }) {
 
     return (
         <>
-            <Head title="Create New Central User" />
+            <Head title={t("Create New Central User")} />
 
             <div className="space-y-6 p-4 sm:p-6">
                 <PageHeader
-                    title="Create New Central User"
-                    description="Add a new administrator account to manage central system platform operations."
+                    title={t("Create New Central User")}
+                    description={t("Add a new administrator account to manage central system platform operations.")}
                     renderAction={
                         <Button asChild variant="outline" size="sm" className="h-9 gap-1.5 border-border text-xs">
                             <Link href="/users">
-                                <ArrowLeft className="h-4 w-4" /> Back
-                            </Link>
+                                <ArrowLeft className="h-4 w-4" /> {t("Back")}</Link>
                         </Button>
                     }
                 />
@@ -48,35 +49,35 @@ export default function Create({ roles }: { roles: Role[] }) {
                         <div className="space-y-6 p-6 border-b border-border">
                             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                                 <div className="space-y-1.5">
-                                    <Label htmlFor="name" className="text-xs font-semibold">Name <span className="text-red-500">*</span></Label>
+                                    <Label htmlFor="name" className="text-xs font-semibold">{t("Name")}{' '}<span className="text-red-500">{t("*")}</span></Label>
                                     <Input
                                         id="name"
                                         value={data.name}
                                         onChange={(e) => setData('name', e.target.value)}
-                                        placeholder="Full Name"
+                                        placeholder={t("Full Name")}
                                         className="h-9 text-xs"
                                     />
                                     {errors.name && <span className="text-[11px] text-red-500">{errors.name}</span>}
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <Label htmlFor="email" className="text-xs font-semibold">Email Address <span className="text-red-500">*</span></Label>
+                                    <Label htmlFor="email" className="text-xs font-semibold">{t("Email Address")}{' '}<span className="text-red-500">{t("*")}</span></Label>
                                     <Input
                                         id="email"
                                         type="email"
                                         value={data.email}
                                         onChange={(e) => setData('email', e.target.value)}
-                                        placeholder="admin@example.com"
+                                        placeholder={t("admin@example.com")}
                                         className="h-9 text-xs"
                                     />
                                     {errors.email && <span className="text-[11px] text-red-500">{errors.email}</span>}
                                 </div>
 
                                 <div className="space-y-1.5 md:col-span-2">
-                                    <Label htmlFor="role" className="text-xs font-semibold">Assigned System Role <span className="text-red-500">*</span></Label>
+                                    <Label htmlFor="role" className="text-xs font-semibold">{t("Assigned System Role")}{' '}<span className="text-red-500">{t("*")}</span></Label>
                                     <Select onValueChange={(value) => setData('role', value)}>
                                         <SelectTrigger className="h-9 w-full text-xs">
-                                            <SelectValue placeholder="-- Select Role --" />
+                                            <SelectValue placeholder={t("-- Select Role --")} />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {roles.map((role) => (
@@ -90,26 +91,26 @@ export default function Create({ roles }: { roles: Role[] }) {
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <Label htmlFor="password" className="text-xs font-semibold">Password <span className="text-red-500">*</span></Label>
+                                    <Label htmlFor="password" className="text-xs font-semibold">{t("Password")}{' '}<span className="text-red-500">{t("*")}</span></Label>
                                     <Input
                                         id="password"
                                         type="password"
                                         value={data.password}
                                         onChange={(e) => setData('password', e.target.value)}
-                                        placeholder="••••••••"
+                                        placeholder={t("••••••••")}
                                         className="h-9 text-xs"
                                     />
                                     {errors.password && <span className="text-[11px] text-red-500">{errors.password}</span>}
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <Label htmlFor="password_confirmation" className="text-xs font-semibold">Confirm Password <span className="text-red-500">*</span></Label>
+                                    <Label htmlFor="password_confirmation" className="text-xs font-semibold">{t("Confirm Password")}{' '}<span className="text-red-500">{t("*")}</span></Label>
                                     <Input
                                         id="password_confirmation"
                                         type="password"
                                         value={data.password_confirmation}
                                         onChange={(e) => setData('password_confirmation', e.target.value)}
-                                        placeholder="••••••••"
+                                        placeholder={t("••••••••")}
                                         className="h-9 text-xs"
                                     />
                                 </div>
@@ -125,15 +126,14 @@ export default function Create({ roles }: { roles: Role[] }) {
                                 onClick={() => reset()}
                                 className="h-9 gap-1.5 border-border text-xs"
                             >
-                                <RotateCcw className="h-3.5 w-3.5" /> Reset
-                            </Button>
+                                <RotateCcw className="h-3.5 w-3.5" /> {t("Reset")}</Button>
                             <Button
                                 type="submit"
                                 size="sm"
                                 disabled={processing}
                                 className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700"
                             >
-                                <Save className="mr-1.5 h-4 w-4" /> {processing ? 'Saving...' : 'Save User'}
+                                <Save className="mr-1.5 h-4 w-4" /> {processing ? t("Saving...") : t("Save User")}
                             </Button>
                         </div>
                     </form>
@@ -145,7 +145,7 @@ export default function Create({ roles }: { roles: Role[] }) {
 
 Create.layout = {
     breadcrumbs: [
-        { title: 'Users Management', href: '/users' },
-        { title: 'Create User', href: '#' },
+        { title: "Users Management", href: '/users' },
+        { title: "Create User", href: '#' },
     ],
 };

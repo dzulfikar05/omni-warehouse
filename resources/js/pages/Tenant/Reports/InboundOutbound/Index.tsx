@@ -19,6 +19,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { ArrowDownRight, ArrowUpRight, Clock, FileText, FileSpreadsheet, PackageCheck } from 'lucide-react';
+import { useTranslation } from '@/context/language-context';
 import { usePermission } from '@/utils/permission';
 
 interface Warehouse {
@@ -63,6 +64,7 @@ interface InboundOutboundProps {
 }
 
 export default function Index({ reports, summary, warehouses, categories, filters }: InboundOutboundProps) {
+    const { t } = useTranslation();
     const { flash, current_tenant, auth } = usePage().props as any;
     const { can } = usePermission();
 
@@ -199,24 +201,24 @@ export default function Index({ reports, summary, warehouses, categories, filter
     const canExport = can('tenant.inbound_outbound.export') || can('inbound_outbound.export');
 
     const tableHeaders: Array<string | HeaderConfig> = [
-        { label: 'DATE', sortField: 'created_at' },
-        { label: 'TRANSACTION REF', sortField: 'transaction_id' },
-        { label: 'FLOW TYPE', sortField: 'transaction_type' },
+        { label: t("DATE"), sortField: 'created_at' },
+        { label: t("TRANSACTION REF"), sortField: 'transaction_id' },
+        { label: t("FLOW TYPE"), sortField: 'transaction_type' },
         'CONTACT',
-        { label: 'SKU CODE', sortField: 'sku_id' },
-        { label: 'PRODUCT NAME', sortField: 'product_name' },
-        { label: 'QTY', sortField: 'quantity' },
-        { label: 'STATUS', sortField: 'status' },
+        { label: t("SKU CODE"), sortField: 'sku_id' },
+        { label: t("PRODUCT NAME"), sortField: 'product_name' },
+        { label: t("QTY"), sortField: 'quantity' },
+        { label: t("STATUS"), sortField: 'status' },
     ];
 
     return (
         <>
-            <Head title="Inbound / Outbound Summary" />
+            <Head title={t("Inbound / Outbound Summary")} />
 
             <div className="space-y-6 p-4 sm:p-6">
                 <PageHeader
-                    title="Inbound / Outbound Report"
-                    description="Real-time transaction flow tracking received goods and outbound fulfillment."
+                    title={t("Inbound / Outbound Report")}
+                    description={t("Real-time transaction flow tracking received goods and outbound fulfillment.")}
                     renderAction={
                         <div className="flex items-center gap-2">
                             {canExport && (
@@ -227,16 +229,14 @@ export default function Index({ reports, summary, warehouses, categories, filter
                                         onClick={handleExportPdf}
                                         className="h-9 gap-1.5 border-red-200 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
                                     >
-                                        <FileText size={15} /> Export PDF
-                                    </Button>
+                                        <FileText size={15} /> {t("Export PDF")}</Button>
                                     <Button
                                         variant="outline"
                                         size="sm"
                                         onClick={handleExportExcel}
                                         className="h-9 gap-1.5 border-emerald-200 text-xs text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
                                     >
-                                        <FileSpreadsheet size={15} /> Export Excel
-                                    </Button>
+                                        <FileSpreadsheet size={15} /> {t("Export Excel")}</Button>
                                 </>
                             )}
                         </div>
@@ -247,7 +247,7 @@ export default function Index({ reports, summary, warehouses, categories, filter
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Total Received Units</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Total Received Units")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                                 {summary.total_received_units.toLocaleString()}
                             </h3>
@@ -259,7 +259,7 @@ export default function Index({ reports, summary, warehouses, categories, filter
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Total Dispatch Units</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Total Dispatch Units")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-rose-600 dark:text-rose-400">
                                 {summary.total_dispatch_units.toLocaleString()}
                             </h3>
@@ -271,7 +271,7 @@ export default function Index({ reports, summary, warehouses, categories, filter
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Open Inbound POs</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Open Inbound POs")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-amber-600 dark:text-amber-400">
                                 {summary.open_inbound_pos}
                             </h3>
@@ -283,7 +283,7 @@ export default function Index({ reports, summary, warehouses, categories, filter
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Open Outbound Orders</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Open Outbound Orders")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-blue-600 dark:text-blue-400">
                                 {summary.open_outbound_pos}
                             </h3>
@@ -303,11 +303,11 @@ export default function Index({ reports, summary, warehouses, categories, filter
                     <FilterDropdown onApply={handleApplyFilter} onReset={handleResetFilter}>
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <Label className="text-xs font-semibold">Warehouse</Label>
+                                <Label className="text-xs font-semibold">{t("Warehouse")}</Label>
                                 <Select value={tempWarehouse} onValueChange={setTempWarehouse}>
-                                    <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="All Warehouse" /></SelectTrigger>
+                                    <SelectTrigger className="h-9 text-xs"><SelectValue placeholder={t("All Warehouse")} /></SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Warehouse</SelectItem>
+                                        <SelectItem value="all">{t("All Warehouse")}</SelectItem>
                                         {warehouses?.map((w) => (
                                             <SelectItem key={w.id} value={w.id.toString()}>{w.name}</SelectItem>
                                         ))}
@@ -316,11 +316,11 @@ export default function Index({ reports, summary, warehouses, categories, filter
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-xs font-semibold">Category</Label>
+                                <Label className="text-xs font-semibold">{t("Category")}</Label>
                                 <Select value={tempCategory} onValueChange={setTempCategory}>
-                                    <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="All Category" /></SelectTrigger>
+                                    <SelectTrigger className="h-9 text-xs"><SelectValue placeholder={t("All Category")} /></SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Category</SelectItem>
+                                        <SelectItem value="all">{t("All Category")}</SelectItem>
                                         {categories?.map((c) => (
                                             <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
                                         ))}
@@ -329,21 +329,21 @@ export default function Index({ reports, summary, warehouses, categories, filter
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-xs font-semibold">Transaction Status</Label>
+                                <Label className="text-xs font-semibold">{t("Transaction Status")}</Label>
                                 <Select value={tempStatus} onValueChange={setTempStatus}>
-                                    <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="All Status" /></SelectTrigger>
+                                    <SelectTrigger className="h-9 text-xs"><SelectValue placeholder={t("All Status")} /></SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Status</SelectItem>
-                                        <SelectItem value="completed">Completed</SelectItem>
-                                        <SelectItem value="pending">Pending</SelectItem>
-                                        <SelectItem value="canceled">Canceled</SelectItem>
+                                        <SelectItem value="all">{t("All Status")}</SelectItem>
+                                        <SelectItem value="completed">{t("Completed")}</SelectItem>
+                                        <SelectItem value="pending">{t("Pending")}</SelectItem>
+                                        <SelectItem value="canceled">{t("Canceled")}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
 
                             <div className="grid grid-cols-2 gap-2">
                                 <div className="space-y-1">
-                                    <Label className="text-xs font-semibold">Date From</Label>
+                                    <Label className="text-xs font-semibold">{t("Date From")}</Label>
                                     <Input
                                         type="date"
                                         value={tempDateFrom}
@@ -352,7 +352,7 @@ export default function Index({ reports, summary, warehouses, categories, filter
                                     />
                                 </div>
                                 <div className="space-y-1">
-                                    <Label className="text-xs font-semibold">Date To</Label>
+                                    <Label className="text-xs font-semibold">{t("Date To")}</Label>
                                     <Input
                                         type="date"
                                         value={tempDateTo}
@@ -378,12 +378,12 @@ export default function Index({ reports, summary, warehouses, categories, filter
                         const contact = item.transaction?.supplier?.name || item.transaction?.customer?.name || '-';
 
                         const rawStatus = (item.transaction?.status || 'completed').toLowerCase();
-                        let statusBadge = <Badge className="bg-blue-600 text-white hover:bg-blue-700">Completed</Badge>;
+                        let statusBadge = <Badge className="bg-blue-600 text-white hover:bg-blue-700">{t("Completed")}</Badge>;
 
                         if (rawStatus === 'pending') {
-                            statusBadge = <Badge className="bg-amber-500 text-white hover:bg-amber-600">Pending</Badge>;
+                            statusBadge = <Badge className="bg-amber-500 text-white hover:bg-amber-600">{t("Pending")}</Badge>;
                         } else if (rawStatus === 'canceled' || rawStatus === 'cancelled') {
-                            statusBadge = <Badge className="bg-rose-600 text-white hover:bg-rose-700">Canceled</Badge>;
+                            statusBadge = <Badge className="bg-rose-600 text-white hover:bg-rose-700">{t("Canceled")}</Badge>;
                         }
 
                         return (
@@ -395,7 +395,7 @@ export default function Index({ reports, summary, warehouses, categories, filter
                                 <TableCell>
                                     <span className={`inline-flex items-center gap-1 text-xs font-semibold ${isInbound ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                                         {isInbound ? <ArrowDownRight className="h-3.5 w-3.5" /> : <ArrowUpRight className="h-3.5 w-3.5" />}
-                                        {isInbound ? 'Inbound' : 'Outbound'}
+                                        {isInbound ? t("Inbound") : t("Outbound")}
                                     </span>
                                 </TableCell>
                                 <TableCell className="text-xs text-muted-foreground">{contact}</TableCell>
@@ -416,7 +416,7 @@ export default function Index({ reports, summary, warehouses, categories, filter
 
 Index.layout = {
     breadcrumbs: [
-        { title: 'Reports', href: '#' },
-        { title: 'Inbound / Outbound', href: '#' },
+        { title: "Reports", href: '#' },
+        { title: "Inbound / Outbound", href: '#' },
     ],
 };

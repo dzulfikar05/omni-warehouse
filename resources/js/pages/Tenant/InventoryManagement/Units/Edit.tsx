@@ -2,7 +2,8 @@ import React, { FormEvent } from 'react';
 import { Head, useForm, usePage, Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Label } from '@/components/ui/label';import { useTranslation } from '@/context/language-context';
+
 import { ArrowLeftCircleIcon, Save } from 'lucide-react';
 import { UnitItem } from './Index';
 
@@ -11,6 +12,7 @@ interface EditProps {
 }
 
 export default function UnitEdit({ unit }: EditProps) {
+    const { t } = useTranslation();
     const { current_tenant, auth } = usePage().props as any;
     const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
@@ -34,16 +36,14 @@ export default function UnitEdit({ unit }: EditProps) {
                 <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-6 shadow-sm text-card-foreground">
                     <div>
                         <h2 className="text-xl font-bold tracking-tight">
-                            Edit Unit: <span className="text-blue-600">{unit.name}</span>
+                            {t("Edit Unit:")}{' '}<span className="text-blue-600">{unit.name}</span>
                         </h2>
                         <p className="mt-0.5 text-xs text-muted-foreground">
-                            Update unit name or measurement symbol notation.
-                        </p>
+                            {t("Update unit name or measurement symbol notation.")}</p>
                     </div>
                     <Button asChild variant="outline" className="rounded-xl border-border">
                         <Link href={`/${tenantSlug}/inventory/units`}>
-                            <ArrowLeftCircleIcon className="mr-2 h-4 w-4 text-blue-600" /> Back
-                        </Link>
+                            <ArrowLeftCircleIcon className="mr-2 h-4 w-4 text-blue-600" /> {t("Back")}</Link>
                     </Button>
                 </div>
 
@@ -53,7 +53,7 @@ export default function UnitEdit({ unit }: EditProps) {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-1.5">
                                 <Label htmlFor="name" className="text-xs font-semibold">
-                                    Unit Name <span className="text-red-500">*</span>
+                                    {t("Unit Name")}{' '}<span className="text-red-500">{t("*")}</span>
                                 </Label>
                                 <Input
                                     id="name"
@@ -69,7 +69,7 @@ export default function UnitEdit({ unit }: EditProps) {
 
                             <div className="space-y-1.5">
                                 <Label htmlFor="symbol" className="text-xs font-semibold">
-                                    Unit Symbol <span className="text-red-500">*</span>
+                                    {t("Unit Symbol")}{' '}<span className="text-red-500">{t("*")}</span>
                                 </Label>
                                 <Input
                                     id="symbol"
@@ -91,10 +91,10 @@ export default function UnitEdit({ unit }: EditProps) {
                                 className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-6 py-2.5 rounded-xl shadow-md shadow-blue-600/20 flex items-center gap-2"
                             >
                                 <Save className="h-4 w-4" />
-                                {processing ? 'Updating...' : 'Update'}
+                                {processing ? t("Updating...") : t("Update")}
                             </Button>
                             <Button asChild variant="ghost" className="rounded-xl text-xs">
-                                <Link href={`/${tenantSlug}/inventory/units`}>Cancel</Link>
+                                <Link href={`/${tenantSlug}/inventory/units`}>{t("Cancel")}</Link>
                             </Button>
                         </div>
                     </form>
@@ -106,8 +106,8 @@ export default function UnitEdit({ unit }: EditProps) {
 
 UnitEdit.layout = {
     breadcrumbs: [
-        { title: 'Inventory Management', href: '#' },
-        { title: 'Units', href: '#' },
-        { title: 'Edit Unit', href: '#' },
+        { title: "Inventory Management", href: '#' },
+        { title: "Units", href: '#' },
+        { title: "Edit Unit", href: '#' },
     ],
 };

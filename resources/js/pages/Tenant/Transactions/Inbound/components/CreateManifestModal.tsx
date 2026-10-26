@@ -10,7 +10,8 @@ import {
     Truck,
     User,
     X,
-} from 'lucide-react';
+} from 'lucide-react';import { useTranslation } from '@/context/language-context';
+
 
 interface CreateManifestModalProps {
     isOpen: boolean;
@@ -28,6 +29,7 @@ export const CreateManifestModal: React.FC<CreateManifestModalProps> = ({
     isOpen,
     onClose,
 }) => {
+    const { t } = useTranslation();
     const { current_tenant, auth } = usePage().props as any;
 
     const currentPathSlug = window.location.pathname.split('/')[1];
@@ -160,11 +162,9 @@ export const CreateManifestModal: React.FC<CreateManifestModalProps> = ({
                         </div>
                         <div>
                             <h3 className="text-sm font-bold text-foreground tracking-tight">
-                                Inisiasi Manifest Inbound PO Baru
-                            </h3>
+                                {t("Inisiasi Manifest Inbound PO Baru")}</h3>
                             <p className="text-xs text-muted-foreground mt-0.5">
-                                Tarik data PO resmi &amp; registrasi kedatangan armada supplier
-                            </p>
+                                {t("Tarik data PO resmi & registrasi kedatangan armada supplier")}</p>
                         </div>
                     </div>
                     <button
@@ -182,8 +182,8 @@ export const CreateManifestModal: React.FC<CreateManifestModalProps> = ({
                     <div className="grid grid-cols-2 gap-3">
                         <div className="flex flex-col gap-1.5">
                             <label className="font-semibold text-foreground flex items-center gap-1.5">
-                                <span>Pilih Dokumen PO</span>
-                                <span className="text-[10px] bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">Auto-Load</span>
+                                <span>{t("Pilih Dokumen PO")}</span>
+                                <span className="text-[10px] bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">{t("Auto-Load")}</span>
                             </label>
                             <div className="relative">
                                 <select
@@ -191,25 +191,25 @@ export const CreateManifestModal: React.FC<CreateManifestModalProps> = ({
                                     onChange={(e) => handlePoChange(e.target.value)}
                                     className="w-full h-9 pl-3 pr-8 bg-muted/50 hover:bg-muted border border-input rounded-lg text-foreground font-mono font-bold outline-none cursor-pointer appearance-none"
                                 >
-                                    <option value="PO-2026-001">PO-2026-001 (PT Indofood)</option>
-                                    <option value="PO-2026-002">PO-2026-002 (PT Mayora)</option>
-                                    <option value="PO-2026-003">PO-2026-003 (PT Unilever)</option>
+                                    <option value="PO-2026-001">{t("PO-2026-001 (PT Indofood)")}</option>
+                                    <option value="PO-2026-002">{t("PO-2026-002 (PT Mayora)")}</option>
+                                    <option value="PO-2026-003">{t("PO-2026-003 (PT Unilever)")}</option>
                                 </select>
                                 <ChevronDown className="w-3.5 h-3.5 text-muted-foreground absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                             </div>
                         </div>
 
                         <div className="flex flex-col gap-1.5">
-                            <label className="font-semibold text-foreground">Pintu Dock Unloading</label>
+                            <label className="font-semibold text-foreground">{t("Pintu Dock Unloading")}</label>
                             <div className="relative">
                                 <select
                                     value={dockBay}
                                     onChange={(e) => setDockBay(e.target.value)}
                                     className="w-full h-9 pl-3 pr-8 bg-muted/50 hover:bg-muted border border-input rounded-lg text-foreground font-mono font-bold outline-none cursor-pointer appearance-none"
                                 >
-                                    <option value="BAY-01">Pintu Depan / BAY-01 (Default)</option>
-                                    <option value="BAY-02">BAY-02 (Zona Fast-Moving)</option>
-                                    <option value="BAY-03">BAY-03 (Zona High Density)</option>
+                                    <option value="BAY-01">{t("Pintu Depan / BAY-01 (Default)")}</option>
+                                    <option value="BAY-02">{t("BAY-02 (Zona Fast-Moving)")}</option>
+                                    <option value="BAY-03">{t("BAY-03 (Zona High Density)")}</option>
                                 </select>
                                 <ChevronDown className="w-3.5 h-3.5 text-muted-foreground absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                             </div>
@@ -218,7 +218,7 @@ export const CreateManifestModal: React.FC<CreateManifestModalProps> = ({
 
                     {/* Supplier Name */}
                     <div className="flex flex-col gap-1.5">
-                        <label className="font-semibold text-foreground">Pemasok / Supplier (Otomatis Terisi)</label>
+                        <label className="font-semibold text-foreground">{t("Pemasok / Supplier (Otomatis Terisi)")}</label>
                         <div className="relative">
                             <input
                                 type="text"
@@ -233,13 +233,13 @@ export const CreateManifestModal: React.FC<CreateManifestModalProps> = ({
                     {/* Armada Grid */}
                     <div className="grid grid-cols-2 gap-3">
                         <div className="flex flex-col gap-1.5">
-                            <label className="font-semibold text-foreground">No. Polisi Armada</label>
+                            <label className="font-semibold text-foreground">{t("No. Polisi Armada")}</label>
                             <div className="relative">
                                 <input
                                     type="text"
                                     value={vehicleNo}
                                     onChange={(e) => setVehicleNo(e.target.value)}
-                                    placeholder="Cth: B 9382 UXZ"
+                                    placeholder={t("Cth: B 9382 UXZ")}
                                     className="w-full h-9 pl-9 pr-3 bg-muted/50 hover:bg-card focus:bg-card border border-input focus:border-blue-600 rounded-lg text-foreground font-mono font-bold uppercase outline-none transition-all"
                                 />
                                 <Truck className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
@@ -247,12 +247,12 @@ export const CreateManifestModal: React.FC<CreateManifestModalProps> = ({
                         </div>
 
                         <div className="flex flex-col gap-1.5">
-                            <label className="font-semibold text-foreground">Jenis Kendaraan</label>
+                            <label className="font-semibold text-foreground">{t("Jenis Kendaraan")}</label>
                             <input
                                 type="text"
                                 value={vehicleType}
                                 onChange={(e) => setVehicleType(e.target.value)}
-                                placeholder="Cth: Wingbox 20T, Box Container"
+                                placeholder={t("Cth: Wingbox 20T, Box Container")}
                                 className="w-full h-9 px-3 bg-muted/50 hover:bg-card focus:bg-card border border-input focus:border-blue-600 rounded-lg text-foreground font-medium outline-none transition-all"
                             />
                         </div>
@@ -262,17 +262,17 @@ export const CreateManifestModal: React.FC<CreateManifestModalProps> = ({
                     <div className="border border-border rounded-xl p-3 bg-muted/30 flex flex-col gap-2.5">
                         <div className="flex items-center justify-between">
                             <div>
-                                <span className="font-bold text-foreground block">Daftar Barang Acuan PO (Auto-Loaded)</span>
-                                <span className="text-[11px] text-muted-foreground">Admin tidak perlu ngetik manual, cukup verifikasi kuantitas</span>
+                                <span className="font-bold text-foreground block">{t("Daftar Barang Acuan PO (Auto-Loaded)")}</span>
+                                <span className="text-[11px] text-muted-foreground">{t("Admin tidak perlu ngetik manual, cukup verifikasi kuantitas")}</span>
                             </div>
                             <button
                                 type="button"
                                 onClick={handleAddSkuRow}
                                 className="h-7 px-2.5 bg-muted hover:bg-muted/80 text-foreground border border-input rounded-lg text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-colors"
-                                title="Tambah barang sampel/bonus dari supplier"
+                                title={t("Tambah barang sampel/bonus dari supplier")}
                             >
                                 <Plus className="w-3.5 h-3.5 text-blue-600" />
-                                <span>+ Barang Ekstra (Opsional)</span>
+                                <span>{t("+ Barang Ekstra (Opsional)")}</span>
                             </button>
                         </div>
 
@@ -309,7 +309,7 @@ export const CreateManifestModal: React.FC<CreateManifestModalProps> = ({
                                             min={1}
                                             value={item.po_qty}
                                             onChange={(e) => handleQtyChange(item.id, parseInt(e.target.value) || 1)}
-                                            placeholder="Qty"
+                                            placeholder={t("Qty")}
                                             className="w-full h-7 px-1.5 bg-background border border-input rounded text-center font-bold text-[11px] text-foreground"
                                         />
                                     </div>
@@ -334,14 +334,12 @@ export const CreateManifestModal: React.FC<CreateManifestModalProps> = ({
                             onClick={onClose}
                             className="h-9 px-4 rounded-xl border border-border bg-card hover:bg-muted text-foreground font-semibold cursor-pointer transition-colors"
                         >
-                            Batal
-                        </button>
+                            {t("Batal")}</button>
                         <button
                             type="submit"
                             className="h-9 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-md cursor-pointer transition-all"
                         >
-                            Inisiasi Manifest PO
-                        </button>
+                            {t("Inisiasi Manifest PO")}</button>
                     </div>
                 </form>
             </div>

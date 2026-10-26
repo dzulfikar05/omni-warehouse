@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from '@inertiajs/react';
 import { Check, Sparkles, ArrowRight, ShieldCheck } from 'lucide-react';
-import { Plan } from './types';
+import { Plan } from './types';import { useTranslation } from '@/context/language-context';
+
 
 interface PricingSectionProps {
     plans?: Plan[];
@@ -60,6 +61,7 @@ const FALLBACK_PLANS: Plan[] = [
 ];
 
 export default function PricingSection({ plans = [] }: PricingSectionProps) {
+    const { t } = useTranslation();
     const [billingAnnual, setBillingAnnual] = useState(false);
 
     const displayPlans = plans && plans.length >= 3 ? plans : FALLBACK_PLANS;
@@ -87,11 +89,9 @@ export default function PricingSection({ plans = [] }: PricingSectionProps) {
                 {/* Header */}
                 <div className="text-center max-w-2xl mx-auto mb-12">
                     <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
-                        Pilih Paket yang Sesuai dengan Skala Gudang Anda
-                    </h2>
+                        {t("Pilih Paket yang Sesuai dengan Skala Gudang Anda")}</h2>
                     <p className="text-slate-500 dark:text-slate-400 text-sm md:text-base mt-3 leading-relaxed">
-                        Mulai dari 1 depot hingga puluhan hub distribusi. Tanpa kontrak tersembunyi, batalkan kapan saja.
-                    </p>
+                        {t("Mulai dari 1 depot hingga puluhan hub distribusi. Tanpa kontrak tersembunyi, batalkan kapan saja.")}</p>
                 </div>
 
                 {/* Sleek Segmented Toggle pill wrapper */}
@@ -106,8 +106,7 @@ export default function PricingSection({ plans = [] }: PricingSectionProps) {
                                     : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
                             }`}
                         >
-                            Tagihan Bulanan
-                        </button>
+                            {t("Tagihan Bulanan")}</button>
                         <button
                             type="button"
                             onClick={() => setBillingAnnual(true)}
@@ -117,7 +116,7 @@ export default function PricingSection({ plans = [] }: PricingSectionProps) {
                                     : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
                             }`}
                         >
-                            <span>Tagihan Tahunan</span>
+                            <span>{t("Tagihan Tahunan")}</span>
                             <span
                                 className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md uppercase tracking-wide transition-colors ${
                                     billingAnnual
@@ -125,8 +124,7 @@ export default function PricingSection({ plans = [] }: PricingSectionProps) {
                                         : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400'
                                 }`}
                             >
-                                Hemat 20%
-                            </span>
+                                {t("Hemat 20%")}</span>
                         </button>
                     </div>
                 </div>
@@ -150,7 +148,7 @@ export default function PricingSection({ plans = [] }: PricingSectionProps) {
                                 {isPopular && (
                                     <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#2B7FFF] to-blue-600 text-white text-[11px] font-extrabold uppercase tracking-widest px-4 py-1.5 rounded-full shadow-lg shadow-blue-500/30 flex items-center gap-1.5 whitespace-nowrap">
                                         <Sparkles size={13} className="text-blue-200" />
-                                        <span>Paling Populer</span>
+                                        <span>{t("Paling Populer")}</span>
                                     </div>
                                 )}
 
@@ -163,12 +161,11 @@ export default function PricingSection({ plans = [] }: PricingSectionProps) {
                                             </h3>
                                             {isPopular && (
                                                 <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-blue-50 text-[#2B7FFF] border border-blue-100 dark:bg-blue-950/60 dark:text-blue-400 dark:border-blue-800/80">
-                                                    Rekomendasi Tim
-                                                </span>
+                                                    {t("Rekomendasi Tim")}</span>
                                             )}
                                         </div>
                                         <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed min-h-[36px]">
-                                            {plan.desc || 'Solusi efisien untuk optimalisasi inventaris.'}
+                                            {plan.desc || t("Solusi efisien untuk optimalisasi inventaris.")}
                                         </p>
                                     </div>
 
@@ -177,11 +174,9 @@ export default function PricingSection({ plans = [] }: PricingSectionProps) {
                                         {isEnterprise ? (
                                             <div>
                                                 <div className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                                                    Custom
-                                                </div>
+                                                    {t("Custom")}</div>
                                                 <div className="text-xs text-slate-400 dark:text-slate-500 mt-1.5 font-medium">
-                                                    Sesuai jumlah lokasi gudang & kebutuhan SLA
-                                                </div>
+                                                    {t("Sesuai jumlah lokasi gudang & kebutuhan SLA")}</div>
                                             </div>
                                         ) : (
                                             <div>
@@ -191,11 +186,10 @@ export default function PricingSection({ plans = [] }: PricingSectionProps) {
                                                     </span>
                                                 </div>
                                                 <div className="text-xs text-slate-400 dark:text-slate-500 mt-1.5 font-medium flex items-center gap-1.5">
-                                                    <span>/ bulan</span>
+                                                    <span>{t("/ bulan")}</span>
                                                     {billingAnnual && (
                                                         <span className="text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded">
-                                                            ditagih tahunan
-                                                        </span>
+                                                            {t("ditagih tahunan")}</span>
                                                     )}
                                                 </div>
                                             </div>
@@ -205,8 +199,7 @@ export default function PricingSection({ plans = [] }: PricingSectionProps) {
                                     {/* Feature Items */}
                                     <div className="mb-8 flex-1">
                                         <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-4">
-                                            Fitur Termasuk:
-                                        </p>
+                                            {t("Fitur Termasuk:")}</p>
                                         <ul className="space-y-3.5">
                                             {plan.features && plan.features.length > 0 ? (
                                                 plan.features.map((feature) => (
@@ -228,8 +221,7 @@ export default function PricingSection({ plans = [] }: PricingSectionProps) {
                                                 ))
                                             ) : (
                                                 <li className="text-xs text-slate-400 dark:text-slate-500">
-                                                    Fitur standar gudang aktif.
-                                                </li>
+                                                    {t("Fitur standar gudang aktif.")}</li>
                                             )}
                                         </ul>
                                     </div>
@@ -245,7 +237,7 @@ export default function PricingSection({ plans = [] }: PricingSectionProps) {
                                                 : 'bg-slate-100 text-slate-900 hover:bg-slate-200 hover:text-slate-900 border border-slate-200/80 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-700'
                                         }`}
                                     >
-                                        <span>{isEnterprise ? 'Hubungi Tim Sales' : 'Mulai 14 Hari Gratis'}</span>
+                                        <span>{isEnterprise ? t("Hubungi Tim Sales") : t("Mulai 14 Hari Gratis")}</span>
                                         <ArrowRight size={14} />
                                     </Link>
                                 </div>
@@ -258,12 +250,11 @@ export default function PricingSection({ plans = [] }: PricingSectionProps) {
                 <div className="mt-12 text-center flex flex-col sm:flex-row items-center justify-center gap-6 text-xs text-slate-400 dark:text-slate-500">
                     <span className="flex items-center gap-1.5">
                         <ShieldCheck size={15} className="text-emerald-500 dark:text-emerald-400" />
-                        Tanpa Kartu Kredit di Awal
-                    </span>
-                    <span className="hidden sm:inline text-slate-300 dark:text-slate-700">•</span>
-                    <span>Uji Coba Gratis 14 Hari Penuh</span>
-                    <span className="hidden sm:inline text-slate-300 dark:text-slate-700">•</span>
-                    <span>Dukungan Migration Data Gudang Gratis</span>
+                        {t("Tanpa Kartu Kredit di Awal")}</span>
+                    <span className="hidden sm:inline text-slate-300 dark:text-slate-700">{t("•")}</span>
+                    <span>{t("Uji Coba Gratis 14 Hari Penuh")}</span>
+                    <span className="hidden sm:inline text-slate-300 dark:text-slate-700">{t("•")}</span>
+                    <span>{t("Dukungan Migration Data Gudang Gratis")}</span>
                 </div>
             </div>
         </section>

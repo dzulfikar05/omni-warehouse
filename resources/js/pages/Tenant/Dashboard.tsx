@@ -1,5 +1,6 @@
 import React from 'react';
 import { Head, usePage, Link } from '@inertiajs/react';
+import { useTranslation } from '@/context/language-context';
 import { usePermission } from '@/utils/permission';
 import {
     Building2,
@@ -67,6 +68,7 @@ export default function TenantDashboard({
     lowStockAlerts = [],
     recentMovements = [],
 }: DashboardProps) {
+    const { t } = useTranslation();
     const { current_tenant, auth } = usePage().props as any;
     const { can } = usePermission();
 
@@ -99,10 +101,9 @@ export default function TenantDashboard({
                             System Live Operations
                         </div> */}
                         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-                            Welcome back, {auth?.user?.name}! 👋
-                        </h1>
+                            {t("Welcome back,")}{' '}{auth?.user?.name}{t("! 👋")}</h1>
                         <p className="text-xs sm:text-sm text-blue-100/90 mt-1">
-                            Connected Organization: <span className="font-bold underline decoration-blue-300 underline-offset-2">{current_tenant?.name}</span>
+                            {t("Connected Organization:")}{' '}<span className="font-bold underline decoration-blue-300 underline-offset-2">{current_tenant?.name}</span>
                         </p>
                     </div>
                     <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shrink-0 shadow-inner">
@@ -115,13 +116,12 @@ export default function TenantDashboard({
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div className="bg-card p-5 rounded-2xl border border-border shadow-sm hover:shadow-md transition-shadow flex items-center justify-between">
                             <div>
-                                <p className="text-[11px] text-muted-foreground font-bold tracking-wider uppercase">TOTAL PRODUCTS</p>
+                                <p className="text-[11px] text-muted-foreground font-bold tracking-wider uppercase">{t("TOTAL PRODUCTS")}</p>
                                 <h3 className="text-2xl font-extrabold mt-1 text-foreground">
-                                    {stats?.total_products ?? 0} <span className="text-xs font-normal text-muted-foreground">Items</span>
+                                    {stats?.total_products ?? 0} <span className="text-xs font-normal text-muted-foreground">{t("Items")}</span>
                                 </h3>
                                 <p className="text-[11px] text-blue-600 dark:text-blue-400 font-medium mt-1 flex items-center gap-1">
-                                    Master Catalog
-                                </p>
+                                    {t("Master Catalog")}</p>
                             </div>
                             <div className="p-3 bg-blue-50 text-blue-600 rounded-xl dark:bg-blue-950/60 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50">
                                 <Package size={22} />
@@ -130,13 +130,12 @@ export default function TenantDashboard({
 
                         <div className="bg-card p-5 rounded-2xl border border-border shadow-sm hover:shadow-md transition-shadow flex items-center justify-between">
                             <div>
-                                <p className="text-[11px] text-muted-foreground font-bold tracking-wider uppercase">TOTAL SKUS</p>
+                                <p className="text-[11px] text-muted-foreground font-bold tracking-wider uppercase">{t("TOTAL SKUS")}</p>
                                 <h3 className="text-2xl font-extrabold mt-1 text-foreground">
-                                    {stats?.total_skus ?? 0} <span className="text-xs font-normal text-muted-foreground">Variants</span>
+                                    {stats?.total_skus ?? 0} <span className="text-xs font-normal text-muted-foreground">{t("Variants")}</span>
                                 </h3>
                                 <p className="text-[11px] text-indigo-600 dark:text-indigo-400 font-medium mt-1 flex items-center gap-1">
-                                    Active Inventory Lines
-                                </p>
+                                    {t("Active Inventory Lines")}</p>
                             </div>
                             <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl dark:bg-indigo-950/60 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/50">
                                 <Boxes size={22} />
@@ -145,13 +144,12 @@ export default function TenantDashboard({
 
                         <div className="bg-card p-5 rounded-2xl border border-border shadow-sm hover:shadow-md transition-shadow flex items-center justify-between">
                             <div>
-                                <p className="text-[11px] text-muted-foreground font-bold tracking-wider uppercase">STOCK IN (MONTH)</p>
+                                <p className="text-[11px] text-muted-foreground font-bold tracking-wider uppercase">{t("STOCK IN (MONTH)")}</p>
                                 <h3 className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">
-                                    +{(stats?.stock_in_this_month ?? 0).toLocaleString()}
+                                    {t("+")}{(stats?.stock_in_this_month ?? 0).toLocaleString()}
                                 </h3>
                                 <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-1 flex items-center gap-1">
-                                    Received Inbound Items
-                                </p>
+                                    {t("Received Inbound Items")}</p>
                             </div>
                             <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/50">
                                 <ArrowDownLeft size={22} />
@@ -160,13 +158,12 @@ export default function TenantDashboard({
 
                         <div className="bg-card p-5 rounded-2xl border border-border shadow-sm hover:shadow-md transition-shadow flex items-center justify-between">
                             <div>
-                                <p className="text-[11px] text-muted-foreground font-bold tracking-wider uppercase">STOCK OUT (MONTH)</p>
+                                <p className="text-[11px] text-muted-foreground font-bold tracking-wider uppercase">{t("STOCK OUT (MONTH)")}</p>
                                 <h3 className="text-2xl font-extrabold text-rose-600 dark:text-rose-400 mt-1">
-                                    -{(stats?.stock_out_this_month ?? 0).toLocaleString()}
+                                    {t("-")}{(stats?.stock_out_this_month ?? 0).toLocaleString()}
                                 </h3>
                                 <p className="text-[11px] text-rose-600 dark:text-rose-400 font-medium mt-1 flex items-center gap-1">
-                                    Dispatched Outbound Items
-                                </p>
+                                    {t("Dispatched Outbound Items")}</p>
                             </div>
                             <div className="p-3 bg-rose-50 text-rose-600 rounded-xl dark:bg-rose-950/60 dark:text-rose-400 border border-rose-100 dark:border-rose-900/50">
                                 <ArrowUpRight size={22} />
@@ -182,16 +179,13 @@ export default function TenantDashboard({
                         <div className="lg:col-span-2 bg-card p-5 rounded-2xl border border-border shadow-sm flex flex-col justify-between space-y-4">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-sm font-bold flex items-center gap-2 text-foreground">
-                                    <TrendingUp className="text-blue-600 w-4 h-4" /> Stock Flow Trend (Last 6 Months)
-                                </h2>
+                                    <TrendingUp className="text-blue-600 w-4 h-4" /> {t("Stock Flow Trend (Last 6 Months)")}</h2>
                                 {hasTrendData && (
                                     <div className="flex items-center gap-3 text-xs">
                                         <span className="flex items-center gap-1.5 font-semibold text-emerald-600 dark:text-emerald-400">
-                                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Stock In
-                                        </span>
+                                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> {t("Stock In")}</span>
                                         <span className="flex items-center gap-1.5 font-semibold text-rose-600 dark:text-rose-400">
-                                            <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Stock Out
-                                        </span>
+                                            <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span> {t("Stock Out")}</span>
                                     </div>
                                 )}
                             </div>
@@ -211,7 +205,7 @@ export default function TenantDashboard({
                                                         className="w-3 sm:w-5 bg-emerald-500 hover:bg-emerald-600 rounded-t-md transition-all group relative cursor-pointer"
                                                     >
                                                         <span className="absolute -top-7 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-[10px] font-bold px-2 py-0.5 rounded-md shadow-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-border z-10">
-                                                            In: {item.in}
+                                                            {t("In:")}{' '}{item.in}
                                                         </span>
                                                     </div>
                                                     {/* Bar Stock Out */}
@@ -220,7 +214,7 @@ export default function TenantDashboard({
                                                         className="w-3 sm:w-5 bg-rose-500 hover:bg-rose-600 rounded-t-md transition-all group relative cursor-pointer"
                                                     >
                                                         <span className="absolute -top-7 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-[10px] font-bold px-2 py-0.5 rounded-md shadow-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-border z-10">
-                                                            Out: {item.out}
+                                                            {t("Out:")}{' '}{item.out}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -237,10 +231,9 @@ export default function TenantDashboard({
                                     <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400 flex items-center justify-center mb-2">
                                         <BarChart3 size={20} />
                                     </div>
-                                    <h4 className="text-xs font-bold text-foreground">No Stock Movement Data</h4>
+                                    <h4 className="text-xs font-bold text-foreground">{t("No Stock Movement Data")}</h4>
                                     <p className="text-[11px] text-muted-foreground max-w-xs mt-1">
-                                        Stock flow trends will automatically appear once inbound or outbound transactions take place.
-                                    </p>
+                                        {t("Stock flow trends will automatically appear once inbound or outbound transactions take place.")}</p>
                                 </div>
                             )}
                         </div>
@@ -250,15 +243,14 @@ export default function TenantDashboard({
                     {can('tenant.dashboard.inbound_outbound_chart') && (
                         <div className="bg-card p-5 rounded-2xl border border-border shadow-sm flex flex-col justify-between space-y-4">
                             <h2 className="text-sm font-bold flex items-center gap-2 text-foreground">
-                                <PieChart className="w-4 h-4 text-indigo-600" /> Transaction Status Breakdown
-                            </h2>
+                                <PieChart className="w-4 h-4 text-indigo-600" /> {t("Transaction Status Breakdown")}</h2>
 
                             {comparison && totalTransactions > 0 ? (
                                 <div className="space-y-4 my-auto">
                                     <div>
                                         <div className="flex justify-between text-xs font-semibold mb-1">
-                                            <span className="text-emerald-600 dark:text-emerald-400">Inbound Completed</span>
-                                            <span className="font-mono text-foreground">{comparison.inbound.completed} Docs</span>
+                                            <span className="text-emerald-600 dark:text-emerald-400">{t("Inbound Completed")}</span>
+                                            <span className="font-mono text-foreground">{comparison.inbound.completed} {t("Docs")}</span>
                                         </div>
                                         <div className="w-full bg-muted h-2.5 rounded-full overflow-hidden">
                                             <div
@@ -272,8 +264,8 @@ export default function TenantDashboard({
 
                                     <div>
                                         <div className="flex justify-between text-xs font-semibold mb-1">
-                                            <span className="text-emerald-500 dark:text-emerald-300">Inbound Pending</span>
-                                            <span className="font-mono text-foreground">{comparison.inbound.pending} Docs</span>
+                                            <span className="text-emerald-500 dark:text-emerald-300">{t("Inbound Pending")}</span>
+                                            <span className="font-mono text-foreground">{comparison.inbound.pending} {t("Docs")}</span>
                                         </div>
                                         <div className="w-full bg-muted h-2.5 rounded-full overflow-hidden">
                                             <div
@@ -287,8 +279,8 @@ export default function TenantDashboard({
 
                                     <div>
                                         <div className="flex justify-between text-xs font-semibold mb-1">
-                                            <span className="text-rose-600 dark:text-rose-400">Outbound Completed</span>
-                                            <span className="font-mono text-foreground">{comparison.outbound.completed} Docs</span>
+                                            <span className="text-rose-600 dark:text-rose-400">{t("Outbound Completed")}</span>
+                                            <span className="font-mono text-foreground">{comparison.outbound.completed} {t("Docs")}</span>
                                         </div>
                                         <div className="w-full bg-muted h-2.5 rounded-full overflow-hidden">
                                             <div
@@ -302,8 +294,8 @@ export default function TenantDashboard({
 
                                     <div>
                                         <div className="flex justify-between text-xs font-semibold mb-1">
-                                            <span className="text-rose-500 dark:text-rose-300">Outbound Pending</span>
-                                            <span className="font-mono text-foreground">{comparison.outbound.pending} Docs</span>
+                                            <span className="text-rose-500 dark:text-rose-300">{t("Outbound Pending")}</span>
+                                            <span className="font-mono text-foreground">{comparison.outbound.pending} {t("Docs")}</span>
                                         </div>
                                         <div className="w-full bg-muted h-2.5 rounded-full overflow-hidden">
                                             <div
@@ -321,15 +313,14 @@ export default function TenantDashboard({
                                     <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400 flex items-center justify-center mb-2">
                                         <PieChart size={20} />
                                     </div>
-                                    <h4 className="text-xs font-bold text-foreground">No Transactions Created</h4>
+                                    <h4 className="text-xs font-bold text-foreground">{t("No Transactions Created")}</h4>
                                     <p className="text-[11px] text-muted-foreground max-w-xs mt-1">
-                                        Inbound and outbound document status metrics will be tracked here.
-                                    </p>
+                                        {t("Inbound and outbound document status metrics will be tracked here.")}</p>
                                 </div>
                             )}
 
                             <div className="p-3 bg-muted/40 rounded-xl text-center text-xs text-muted-foreground border border-border">
-                                Total Monitored: <strong className="text-foreground font-mono">{totalTransactions} Documents</strong>
+                                {t("Total Monitored:")}{' '}<strong className="text-foreground font-mono">{totalTransactions} {t("Documents")}</strong>
                             </div>
                         </div>
                     )}
@@ -342,14 +333,13 @@ export default function TenantDashboard({
                         <div className="bg-card p-5 rounded-2xl border border-border shadow-sm space-y-4">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-sm font-bold flex items-center gap-2 text-amber-600 dark:text-amber-500">
-                                    <AlertTriangle className="w-4 h-4" /> Low Stock Warning
-                                </h2>
+                                    <AlertTriangle className="w-4 h-4" /> {t("Low Stock Warning")}</h2>
                                 {lowStockAlerts.length > 0 && (
                                     <Link
                                         href={`/${current_tenant?.slug}/inventory/skus`}
                                         className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 font-semibold"
                                     >
-                                        View All <ArrowRight size={12} />
+                                        {t("View All")}{' '}<ArrowRight size={12} />
                                     </Link>
                                 )}
                             </div>
@@ -359,10 +349,10 @@ export default function TenantDashboard({
                                     <table className="w-full text-xs text-left">
                                         <thead>
                                             <tr className="border-b border-border bg-muted/50 text-muted-foreground font-semibold">
-                                                <th className="p-3">SKU CODE</th>
-                                                <th className="p-3">PRODUCT</th>
-                                                <th className="p-3">CURRENT</th>
-                                                <th className="p-3">MIN STOCK</th>
+                                                <th className="p-3">{t("SKU CODE")}</th>
+                                                <th className="p-3">{t("PRODUCT")}</th>
+                                                <th className="p-3">{t("CURRENT")}</th>
+                                                <th className="p-3">{t("MIN STOCK")}</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-border">
@@ -391,10 +381,9 @@ export default function TenantDashboard({
                                     <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-900 dark:text-emerald-400 flex items-center justify-center mb-2">
                                         <CheckCircle2 size={22} />
                                     </div>
-                                    <h4 className="text-xs font-bold text-emerald-900 dark:text-emerald-300">All Stocks Are Optimal</h4>
+                                    <h4 className="text-xs font-bold text-emerald-900 dark:text-emerald-300">{t("All Stocks Are Optimal")}</h4>
                                     <p className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 max-w-xs mt-0.5">
-                                        No SKUs are currently below their defined minimum safety thresholds.
-                                    </p>
+                                        {t("No SKUs are currently below their defined minimum safety thresholds.")}</p>
                                 </div>
                             )}
                         </div>
@@ -405,8 +394,7 @@ export default function TenantDashboard({
                         <div className="bg-card p-5 rounded-2xl border border-border shadow-sm space-y-4">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-sm font-bold flex items-center gap-2 text-foreground">
-                                    <History className="w-4 h-4 text-blue-600 dark:text-blue-400" /> Recent Activity Audit
-                                </h2>
+                                    <History className="w-4 h-4 text-blue-600 dark:text-blue-400" /> {t("Recent Activity Audit")}</h2>
                             </div>
 
                             {recentMovements.length > 0 ? (
@@ -414,10 +402,10 @@ export default function TenantDashboard({
                                     <table className="w-full text-xs text-left">
                                         <thead>
                                             <tr className="border-b border-border bg-muted/50 text-muted-foreground font-semibold">
-                                                <th className="p-3">SKU / ITEM</th>
-                                                <th className="p-3">TYPE</th>
-                                                <th className="p-3">QTY</th>
-                                                <th className="p-3">TIME</th>
+                                                <th className="p-3">{t("SKU / ITEM")}</th>
+                                                <th className="p-3">{t("TYPE")}</th>
+                                                <th className="p-3">{t("QTY")}</th>
+                                                <th className="p-3">{t("TIME")}</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-border">
@@ -455,10 +443,9 @@ export default function TenantDashboard({
                                     <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 flex items-center justify-center mb-2">
                                         <Inbox size={20} />
                                     </div>
-                                    <h4 className="text-xs font-bold text-foreground">No Activity Recorded</h4>
+                                    <h4 className="text-xs font-bold text-foreground">{t("No Activity Recorded")}</h4>
                                     <p className="text-[11px] text-muted-foreground max-w-xs mt-0.5">
-                                        Stock inventory adjustments and transaction movements will log here in real time.
-                                    </p>
+                                        {t("Stock inventory adjustments and transaction movements will log here in real time.")}</p>
                                 </div>
                             )}
                         </div>
@@ -470,5 +457,5 @@ export default function TenantDashboard({
 }
 
 TenantDashboard.layout = {
-    breadcrumbs: [{ title: 'Dashboard', href: '#' }],
+    breadcrumbs: [{ title: "Dashboard", href: '#' }],
 };

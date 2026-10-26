@@ -1,7 +1,8 @@
 import { Link, useForm } from '@inertiajs/react';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/input';import { useTranslation } from '@/context/language-context';
+
 
 interface Unit {
     id?: number;
@@ -20,6 +21,7 @@ export default function UnitForm({
     unit,
     mode,
 }: Props) {
+    const { t } = useTranslation();
     const isEdit = mode === 'edit';
 
     const form = useForm({
@@ -47,8 +49,7 @@ export default function UnitForm({
                     htmlFor="name"
                     className="text-sm font-medium text-foreground"
                 >
-                    Unit Name
-                </label>
+                    {t("Unit Name")}</label>
 
                 <Input
                     id="name"
@@ -57,7 +58,7 @@ export default function UnitForm({
                     onChange={(e) =>
                         form.setData('name', e.target.value)
                     }
-                    placeholder="Enter unit name"
+                    placeholder={t("Enter unit name")}
                 />
 
                 {form.errors.name && (
@@ -73,8 +74,7 @@ export default function UnitForm({
                     htmlFor="symbol"
                     className="text-sm font-medium text-foreground"
                 >
-                    Unit Symbol
-                </label>
+                    {t("Unit Symbol")}</label>
                 <Input
                     id="symbol"
                     type="text"
@@ -82,7 +82,7 @@ export default function UnitForm({
                     onChange={(e) =>
                         form.setData('symbol', e.target.value)
                     }
-                    placeholder="Enter unit symbol"
+                    placeholder={t("Enter unit symbol")}
                 />
                 {form.errors.symbol && (
                     <p className="text-sm text-red-500">
@@ -97,13 +97,12 @@ export default function UnitForm({
                     <Link
                         href={`/${tenant_slug}/inventory/units`}
                     >
-                        Cancel
-                    </Link>
+                        {t("Cancel")}</Link>
                 </Button>
 
                 <Button type="submit" disabled={form.processing}>
                     {form.processing
-                        ? 'Saving...'
+                        ? t("Saving...")
                         : isEdit
                           ? 'Update Unit'
                           : 'Create Unit'}

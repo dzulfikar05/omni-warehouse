@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { debounce } from 'lodash';
+import { useTranslation } from '@/context/language-context';
 import { usePermission } from '@/utils/permission';
 import {
     Plus,
@@ -88,6 +89,7 @@ interface IndexProps {
 }
 
 export default function SkuIndex({ skus, stats, categories, units, filters }: IndexProps) {
+    const { t } = useTranslation();
     const { flash, current_tenant, auth } = usePage().props as any;
     const { can } = usePermission();
 
@@ -179,24 +181,24 @@ export default function SkuIndex({ skus, stats, categories, units, filters }: In
     const canCreate = can('tenant.skus.create') || can('skus.create');
 
     const tableHeaders: Array<string | HeaderConfig> = [
-        { label: 'KODE SKU / BARCODE', sortField: 'sku_code' },
-        { label: 'NAMA PRODUK', sortField: 'product_id' },
+        { label: t("KODE SKU / BARCODE"), sortField: 'sku_code' },
+        { label: t("NAMA PRODUK"), sortField: 'product_id' },
         'KATEGORI',
         'SATUAN',
-        { label: 'BASE COST (HPP)', sortField: 'base_cost' },
-        { label: 'STOK AKTUAL', sortField: 'current_stock' },
-        { label: 'TANGGAL DIBUAT', sortField: 'created_at' },
+        { label: t("BASE COST (HPP)"), sortField: 'base_cost' },
+        { label: t("STOK AKTUAL"), sortField: 'current_stock' },
+        { label: t("TANGGAL DIBUAT"), sortField: 'created_at' },
         'ACTIONS',
     ];
 
     return (
         <>
-            <Head title="Master SKU" />
+            <Head title={t("Master SKU")} />
 
             <div className="space-y-6 p-4 sm:p-6">
                 <PageHeader
-                    title="Stock Keeping Unit (SKU)"
-                    description="Kelola varian barang, kode barcode, harga modal acuan, serta pantau ambang batas stok minimum."
+                    title={t("Stock Keeping Unit (SKU)")}
+                    description={t("Kelola varian barang, kode barcode, harga modal acuan, serta pantau ambang batas stok minimum.")}
                     renderAction={
                         <div className="flex items-center gap-2">
                             {canExport && (
@@ -207,24 +209,21 @@ export default function SkuIndex({ skus, stats, categories, units, filters }: In
                                         onClick={handleExportPdf}
                                         className="h-9 gap-1.5 border-border text-xs"
                                     >
-                                        <FileText size={15} className="text-red-500" /> Export PDF
-                                    </Button>
+                                        <FileText size={15} className="text-red-500" /> {t("Export PDF")}</Button>
                                     <Button
                                         variant="outline"
                                         size="sm"
                                         onClick={handleExportExcel}
                                         className="h-9 gap-1.5 border-border text-xs"
                                     >
-                                        <FileSpreadsheet size={15} className="text-emerald-500" /> Export Excel
-                                    </Button>
+                                        <FileSpreadsheet size={15} className="text-emerald-500" /> {t("Export Excel")}</Button>
                                 </>
                             )}
 
                             {canCreate && (
                                 <Button asChild className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700">
                                     <Link href={`/${tenantSlug}/inventory/skus/create`}>
-                                        <Plus className="mr-1.5 h-4 w-4" /> Add SKU
-                                    </Link>
+                                        <Plus className="mr-1.5 h-4 w-4" /> {t("Add SKU")}</Link>
                                 </Button>
                             )}
                         </div>
@@ -235,9 +234,9 @@ export default function SkuIndex({ skus, stats, categories, units, filters }: In
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Total Item SKU</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Total Item SKU")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-foreground">{totalSkus}</h3>
-                            <p className="mt-0.5 text-[11px] text-muted-foreground">Varian Terdaftar</p>
+                            <p className="mt-0.5 text-[11px] text-muted-foreground">{t("Varian Terdaftar")}</p>
                         </div>
                         <div className="rounded-xl bg-blue-50 p-3 text-blue-600 dark:bg-blue-950/50">
                             <Boxes size={22} />
@@ -246,9 +245,9 @@ export default function SkuIndex({ skus, stats, categories, units, filters }: In
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Aset Fisik Stok</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Aset Fisik Stok")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-foreground">{totalStock}</h3>
-                            <p className="mt-0.5 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">Unit Persediaan</p>
+                            <p className="mt-0.5 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">{t("Unit Persediaan")}</p>
                         </div>
                         <div className="rounded-xl bg-emerald-50 p-3 text-emerald-600 dark:bg-emerald-950/50">
                             <CheckCircle2 size={22} />
@@ -257,9 +256,9 @@ export default function SkuIndex({ skus, stats, categories, units, filters }: In
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Stok Menipis</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Stok Menipis")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-amber-600 dark:text-amber-400">{lowStockCount}</h3>
-                            <p className="mt-0.5 text-[11px] text-amber-600 dark:text-amber-400 font-medium">Perlu Restock</p>
+                            <p className="mt-0.5 text-[11px] text-amber-600 dark:text-amber-400 font-medium">{t("Perlu Restock")}</p>
                         </div>
                         <div className="rounded-xl bg-amber-50 p-3 text-amber-600 dark:bg-amber-950/50">
                             <TrendingDown size={22} />
@@ -268,9 +267,9 @@ export default function SkuIndex({ skus, stats, categories, units, filters }: In
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Estimasi Nilai Persediaan</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Estimasi Nilai Persediaan")}</p>
                             <h3 className="mt-1 text-xl font-bold text-foreground">{formatCurrency(totalValuation)}</h3>
-                            <p className="mt-0.5 text-[11px] text-muted-foreground">Berdasarkan HPP</p>
+                            <p className="mt-0.5 text-[11px] text-muted-foreground">{t("Berdasarkan HPP")}</p>
                         </div>
                         <div className="rounded-xl bg-indigo-50 p-3 text-indigo-600 dark:bg-indigo-950/50">
                             <DollarSign size={22} />
@@ -304,13 +303,13 @@ export default function SkuIndex({ skus, stats, categories, units, filters }: In
                     >
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <Label className="text-xs font-semibold">Kategori Produk</Label>
+                                <Label className="text-xs font-semibold">{t("Kategori Produk")}</Label>
                                 <Select value={categoryId} onValueChange={setCategoryId}>
                                     <SelectTrigger className="h-9 text-xs">
-                                        <SelectValue placeholder="Semua Kategori" />
+                                        <SelectValue placeholder={t("Semua Kategori")} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">Semua Kategori</SelectItem>
+                                        <SelectItem value="all">{t("Semua Kategori")}</SelectItem>
                                         {categories.map((c) => (
                                             <SelectItem key={c.id} value={String(c.id)}>
                                                 {c.name}
@@ -321,17 +320,16 @@ export default function SkuIndex({ skus, stats, categories, units, filters }: In
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-xs font-semibold">Satuan (Unit)</Label>
+                                <Label className="text-xs font-semibold">{t("Satuan (Unit)")}</Label>
                                 <Select value={unitId} onValueChange={setUnitId}>
                                     <SelectTrigger className="h-9 text-xs">
-                                        <SelectValue placeholder="Semua Unit" />
+                                        <SelectValue placeholder={t("Semua Unit")} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">Semua Satuan</SelectItem>
+                                        <SelectItem value="all">{t("Semua Satuan")}</SelectItem>
                                         {units.map((u) => (
                                             <SelectItem key={u.id} value={String(u.id)}>
-                                                {u.name} ({u.symbol})
-                                            </SelectItem>
+                                                {u.name} {t("(")}{u.symbol}{t(")")}</SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
@@ -410,7 +408,7 @@ export default function SkuIndex({ skus, stats, categories, units, filters }: In
 
 SkuIndex.layout = {
     breadcrumbs: [
-        { title: 'Inventory Management', href: '#' },
-        { title: 'Master SKU', href: '#' },
+        { title: "Inventory Management", href: '#' },
+        { title: "Master SKU", href: '#' },
     ],
 };

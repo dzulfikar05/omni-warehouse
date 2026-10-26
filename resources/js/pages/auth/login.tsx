@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useTranslation } from '@/context/language-context';
 import { register } from '@/routes';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
@@ -23,9 +24,10 @@ export default function Login({
     canResetPassword,
     canRegister,
 }: Props) {
+    const { t } = useTranslation();
     return (
         <>
-            <Head title="Admin Portal Login" />
+            <Head title={t("Admin Portal Login")} />
 
             {/* Container Outer dengan Adaptasi Light/Dark Mode */}
             <div className="relative flex min-h-screen items-center justify-center bg-slate-50 p-4 font-sans overflow-hidden transition-colors duration-300 dark:bg-slate-950">
@@ -35,8 +37,7 @@ export default function Login({
                     className="absolute top-6 left-6 z-20 inline-flex items-center gap-2 rounded-xl border border-slate-200/80 bg-white/80 px-3.5 py-2 text-xs font-semibold text-slate-600 shadow-xs backdrop-blur-md transition-all hover:bg-white hover:text-slate-900 hover:shadow-md active:scale-95 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-white"
                 >
                     <ArrowLeft className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                    Back to Home
-                </Link>
+                    {t("Back to Home")}</Link>
 
                 {/* Decorative Background Blur Glows */}
                 <div className="absolute -top-24 -left-24 h-96 w-96 rounded-full bg-blue-100/60 blur-3xl dark:bg-blue-900/20" />
@@ -54,12 +55,10 @@ export default function Login({
                         </div>
 
                         <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                            OmniWarehouse Admin Login
-                        </h1>
+                            {t("OmniWarehouse Admin Login")}</h1>
 
                         <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400 px-2">
-                            Access central administration console, system settings, and tenant management.
-                        </p>
+                            {t("Access central administration console, system settings, and tenant management.")}</p>
                     </div>
 
                     <Form
@@ -74,8 +73,7 @@ export default function Login({
                                     <div className="grid gap-2">
                                         <Label htmlFor="email" className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300">
                                             <User className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                                            Email address
-                                        </Label>
+                                            {t("Email address")}</Label>
                                         <div className="relative">
                                             <Input
                                                 id="email"
@@ -85,7 +83,7 @@ export default function Login({
                                                 autoFocus
                                                 tabIndex={1}
                                                 autoComplete="email"
-                                                placeholder="admin@omniwarehouse.com"
+                                                placeholder={t("admin@omniwarehouse.com")}
                                                 className="h-11 border-slate-200/80 bg-slate-50/50 pl-3 text-sm transition-all focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white dark:placeholder-slate-500 dark:focus:bg-slate-950 dark:focus:border-blue-500 dark:focus:ring-blue-500/20"
                                             />
                                         </div>
@@ -97,16 +95,14 @@ export default function Login({
                                         <div className="flex items-center justify-between">
                                             <Label htmlFor="password" className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300">
                                                 <Lock className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                                                Password
-                                            </Label>
+                                                {t("Password")}</Label>
                                             {canResetPassword && (
                                                 <TextLink
                                                     href={request()}
                                                     className="text-[11px] font-medium text-blue-600 hover:text-blue-700 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
                                                     tabIndex={5}
                                                 >
-                                                    Forgot password?
-                                                </TextLink>
+                                                    {t("Forgot password?")}</TextLink>
                                             )}
                                         </div>
                                         <PasswordInput
@@ -115,7 +111,7 @@ export default function Login({
                                             required
                                             tabIndex={2}
                                             autoComplete="current-password"
-                                            placeholder="••••••••••••••••"
+                                            placeholder={t("••••••••••••••••")}
                                             className="h-11 border-slate-200/80 bg-slate-50/50 text-sm transition-all focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white dark:placeholder-slate-500 dark:focus:bg-slate-950 dark:focus:border-blue-500 dark:focus:ring-blue-500/20"
                                         />
                                         <InputError message={errors.password} />
@@ -133,8 +129,7 @@ export default function Login({
                                             <Spinner className="mr-2 h-4 w-4" />
                                         ) : (
                                             <span className="flex items-center justify-center gap-2">
-                                                Sign In to Admin Console
-                                                <ArrowRight className="h-4 w-4" />
+                                                {t("Sign In to Admin Console")}<ArrowRight className="h-4 w-4" />
                                             </span>
                                         )}
                                     </Button>

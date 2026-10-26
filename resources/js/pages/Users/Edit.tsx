@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/page-header';
 import { ArrowLeft, Save, RotateCcw } from 'lucide-react';
+import { useTranslation } from '@/context/language-context';
 import { User } from '@/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -18,6 +19,7 @@ interface Role {
 }
 
 export default function Edit({ user, roles }: { user: UserWithRoles; roles: Role[] }) {
+    const { t } = useTranslation();
     const { data, setData, put, processing, errors, reset } = useForm({
         name: user.name || '',
         email: user.email || '',
@@ -38,12 +40,11 @@ export default function Edit({ user, roles }: { user: UserWithRoles; roles: Role
             <div className="space-y-6 p-4 sm:p-6">
                 <PageHeader
                     title={`Edit User: ${user.name}`}
-                    description="Update account details, change email, or reassign system roles."
+                    description={t("Update account details, change email, or reassign system roles.")}
                     renderAction={
                         <Button asChild variant="outline" size="sm" className="h-9 gap-1.5 border-border text-xs">
                             <Link href="/users">
-                                <ArrowLeft className="h-4 w-4" /> Back
-                            </Link>
+                                <ArrowLeft className="h-4 w-4" /> {t("Back")}</Link>
                         </Button>
                     }
                 />
@@ -53,7 +54,7 @@ export default function Edit({ user, roles }: { user: UserWithRoles; roles: Role
                         <div className="space-y-6 p-6 border-b border-border">
                             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                                 <div className="space-y-1.5">
-                                    <Label htmlFor="name" className="text-xs font-semibold">Name</Label>
+                                    <Label htmlFor="name" className="text-xs font-semibold">{t("Name")}</Label>
                                     <Input
                                         id="name"
                                         value={data.name}
@@ -64,7 +65,7 @@ export default function Edit({ user, roles }: { user: UserWithRoles; roles: Role
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <Label htmlFor="email" className="text-xs font-semibold">Email Address</Label>
+                                    <Label htmlFor="email" className="text-xs font-semibold">{t("Email Address")}</Label>
                                     <Input
                                         id="email"
                                         type="email"
@@ -76,13 +77,13 @@ export default function Edit({ user, roles }: { user: UserWithRoles; roles: Role
                                 </div>
 
                                 <div className="space-y-1.5 md:col-span-2">
-                                    <Label htmlFor="role" className="text-xs font-semibold">Assigned System Role</Label>
+                                    <Label htmlFor="role" className="text-xs font-semibold">{t("Assigned System Role")}</Label>
                                     <Select
                                         defaultValue={data.role}
                                         onValueChange={(value) => setData('role', value)}
                                     >
                                         <SelectTrigger className="h-9 w-full text-xs">
-                                            <SelectValue placeholder="Select a role" />
+                                            <SelectValue placeholder={t("Select a role")} />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {roles.map((role) => (
@@ -97,14 +98,13 @@ export default function Edit({ user, roles }: { user: UserWithRoles; roles: Role
 
                                 <div className="space-y-1.5">
                                     <Label htmlFor="password" className="text-xs font-semibold">
-                                        New Password (Leave blank to keep current)
-                                    </Label>
+                                        {t("New Password (Leave blank to keep current)")}</Label>
                                     <Input
                                         id="password"
                                         type="password"
                                         value={data.password}
                                         onChange={(e) => setData('password', e.target.value)}
-                                        placeholder="••••••••"
+                                        placeholder={t("••••••••")}
                                         className="h-9 text-xs"
                                     />
                                     {errors.password && <span className="text-[11px] text-red-500">{errors.password}</span>}
@@ -112,14 +112,13 @@ export default function Edit({ user, roles }: { user: UserWithRoles; roles: Role
 
                                 <div className="space-y-1.5">
                                     <Label htmlFor="password_confirmation" className="text-xs font-semibold">
-                                        Confirm New Password
-                                    </Label>
+                                        {t("Confirm New Password")}</Label>
                                     <Input
                                         id="password_confirmation"
                                         type="password"
                                         value={data.password_confirmation}
                                         onChange={(e) => setData('password_confirmation', e.target.value)}
-                                        placeholder="••••••••"
+                                        placeholder={t("••••••••")}
                                         className="h-9 text-xs"
                                     />
                                 </div>
@@ -135,15 +134,14 @@ export default function Edit({ user, roles }: { user: UserWithRoles; roles: Role
                                 onClick={() => reset()}
                                 className="h-9 gap-1.5 border-border text-xs"
                             >
-                                <RotateCcw className="h-3.5 w-3.5" /> Reset
-                            </Button>
+                                <RotateCcw className="h-3.5 w-3.5" /> {t("Reset")}</Button>
                             <Button
                                 type="submit"
                                 size="sm"
                                 disabled={processing}
                                 className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700"
                             >
-                                <Save className="mr-1.5 h-4 w-4" /> {processing ? 'Updating...' : 'Update User'}
+                                <Save className="mr-1.5 h-4 w-4" /> {processing ? t("Updating...") : t("Update User")}
                             </Button>
                         </div>
                     </form>
@@ -155,7 +153,7 @@ export default function Edit({ user, roles }: { user: UserWithRoles; roles: Role
 
 Edit.layout = {
     breadcrumbs: [
-        { title: 'Users Management', href: '/users' },
-        { title: 'Edit User', href: '#' },
+        { title: "Users Management", href: '/users' },
+        { title: "Edit User", href: '#' },
     ],
 };

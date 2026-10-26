@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ChevronDown, PauseCircle, X } from 'lucide-react';
+import { ChevronDown, PauseCircle, X } from 'lucide-react';import { useTranslation } from '@/context/language-context';
+
 
 interface HoldSessionModalProps {
     isOpen: boolean;
@@ -12,6 +13,7 @@ export const HoldSessionModal: React.FC<HoldSessionModalProps> = ({
     onClose,
     onConfirm,
 }) => {
+    const { t } = useTranslation();
     const [reason, setReason] = useState<string>(
         'Pergantian Shift Operator (Shift 1 ke Shift 2)',
     );
@@ -29,7 +31,7 @@ export const HoldSessionModal: React.FC<HoldSessionModalProps> = ({
                 <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-muted/40">
                     <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                         <PauseCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                        <span>Tunda / Hold Sesi Bongkar Muat</span>
+                        <span>{t("Tunda / Hold Sesi Bongkar Muat")}</span>
                     </h3>
                     <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
                         <X className="w-4 h-4" />
@@ -37,10 +39,9 @@ export const HoldSessionModal: React.FC<HoldSessionModalProps> = ({
                 </div>
                 <div className="p-6 flex flex-col gap-3 text-xs">
                     <p className="text-muted-foreground">
-                        Pilih alasan penundaan sesi receiving. Data scan sementara akan dibekukan tanpa memotong kuota PO.
-                    </p>
+                        {t("Pilih alasan penundaan sesi receiving. Data scan sementara akan dibekukan tanpa memotong kuota PO.")}</p>
                     <div className="flex flex-col gap-1.5">
-                        <label className="font-semibold text-foreground">Alasan Penundaan</label>
+                        <label className="font-semibold text-foreground">{t("Alasan Penundaan")}</label>
                         <div className="relative">
                             <select
                                 value={reason}
@@ -48,17 +49,13 @@ export const HoldSessionModal: React.FC<HoldSessionModalProps> = ({
                                 className="w-full h-9 pl-3 pr-8 bg-muted/50 border border-input rounded-lg text-foreground outline-none cursor-pointer appearance-none"
                             >
                                 <option value="Pergantian Shift Operator (Shift 1 ke Shift 2)">
-                                    Pergantian Shift Operator (Shift 1 ke Shift 2)
-                                </option>
+                                    {t("Pergantian Shift Operator (Shift 1 ke Shift 2)")}</option>
                                 <option value="Forklift Stacker mengalami kendala teknis">
-                                    Forklift Stacker mengalami kendala teknis
-                                </option>
+                                    {t("Forklift Stacker mengalami kendala teknis")}</option>
                                 <option value="Hujan lebat di area Loading Dock (Bongkar basah)">
-                                    Hujan lebat di area Loading Dock (Bongkar basah)
-                                </option>
+                                    {t("Hujan lebat di area Loading Dock (Bongkar basah)")}</option>
                                 <option value="Selisih fisik masif butuh konfirmasi Supplier">
-                                    Selisih fisik masif butuh konfirmasi Supplier
-                                </option>
+                                    {t("Selisih fisik masif butuh konfirmasi Supplier")}</option>
                             </select>
                             <ChevronDown className="w-3.5 h-3.5 text-muted-foreground absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                         </div>
@@ -69,14 +66,12 @@ export const HoldSessionModal: React.FC<HoldSessionModalProps> = ({
                         onClick={onClose}
                         className="h-9 px-4 bg-card hover:bg-muted border border-border rounded-lg text-xs font-semibold text-foreground cursor-pointer"
                     >
-                        Kembali Bekerja
-                    </button>
+                        {t("Kembali Bekerja")}</button>
                     <button
                         onClick={handleHold}
                         className="h-9 px-4 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold shadow-sm cursor-pointer"
                     >
-                        Hold Sesi
-                    </button>
+                        {t("Hold Sesi")}</button>
                 </div>
             </div>
         </div>

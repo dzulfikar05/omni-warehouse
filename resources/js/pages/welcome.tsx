@@ -11,12 +11,14 @@ import SocialProof from './welcome/social-proof';
 import PricingSection from './welcome/pricing-section';
 import CtaBanner from './welcome/cta-banner';
 import FaqSection from './welcome/faq-section';
-import Footer from './welcome/footer';
+import Footer from './welcome/footer';import { useTranslation } from '@/context/language-context';
+
 
 export default function Welcome({ plans = [] }: WelcomeProps) {
+    const { t } = useTranslation();
     return (
         <>
-            <Head title="OmniWarehouse — Sistem Manajemen Gudang Multi-Tenant" />
+            <Head title={t("OmniWarehouse — Sistem Manajemen Gudang Multi-Tenant")} />
 
             <div className="min-h-screen bg-white text-slate-900 font-sans antialiased selection:bg-blue-600 selection:text-white">
                 <Navbar />

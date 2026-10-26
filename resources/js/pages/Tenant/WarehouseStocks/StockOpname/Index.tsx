@@ -31,12 +31,14 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { useTranslation } from '@/context/language-context';
 import { ReconciliationItem, StockOpnamePageProps } from '@/types/stock-opname';
 import { CreateOpnameModal } from './components/CreateOpnameModal';
 import { VerificationModal } from './components/VerificationModal';
 import { PrintSheetModal } from './components/PrintSheetModal';
 
 export default function Index({ session: initialSession, items: initialItems }: StockOpnamePageProps) {
+    const { t } = useTranslation();
     const { current_tenant, auth } = usePage().props as any;
 
     const [items, setItems] = useState<ReconciliationItem[]>(initialItems || []);
@@ -161,12 +163,12 @@ export default function Index({ session: initialSession, items: initialItems }: 
 
     return (
         <>
-            <Head title="Stock Opname & Rekonsiliasi Audit" />
+            <Head title={t("Stock Opname & Rekonsiliasi Audit")} />
 
             <div className="space-y-6 p-4 sm:p-6 font-sans">
                 <PageHeader
-                    title="Stock Opname & Rekonsiliasi Audit"
-                    description="Kelola jadwal pemeriksaan fisik persediaan barang, verifikasi blind count, dan eksekusi penyesuaian stok otomatis."
+                    title={t("Stock Opname & Rekonsiliasi Audit")}
+                    description={t("Kelola jadwal pemeriksaan fisik persediaan barang, verifikasi blind count, dan eksekusi penyesuaian stok otomatis.")}
                     renderAction={
                         <div className="flex items-center gap-2">
                             <Button
@@ -175,30 +177,26 @@ export default function Index({ session: initialSession, items: initialItems }: 
                                 onClick={handleExportPdf}
                                 className="h-9 gap-1.5 border-border text-xs rounded-xl"
                             >
-                                <FileText size={15} className="text-red-500" /> Export PDF
-                            </Button>
+                                <FileText size={15} className="text-red-500" /> {t("Export PDF")}</Button>
                             <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={handleExportExcel}
                                 className="h-9 gap-1.5 border-border text-xs rounded-xl"
                             >
-                                <FileSpreadsheet size={15} className="text-emerald-500" /> Export Excel
-                            </Button>
+                                <FileSpreadsheet size={15} className="text-emerald-500" /> {t("Export Excel")}</Button>
                             <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => setIsPrintModalOpen(true)}
                                 className="h-9 gap-1.5 border-border text-xs rounded-xl"
                             >
-                                <Printer size={15} className="text-muted-foreground" /> Cetak Blanko A4
-                            </Button>
+                                <Printer size={15} className="text-muted-foreground" /> {t("Cetak Blanko A4")}</Button>
                             <Button
                                 onClick={() => setIsCreateModalOpen(true)}
                                 className="h-9 bg-blue-600 hover:bg-blue-700 text-white shadow-md text-xs rounded-xl gap-1.5"
                             >
-                                <Plus size={16} /> Buat Sesi Opname Baru
-                            </Button>
+                                <Plus size={16} /> {t("Buat Sesi Opname Baru")}</Button>
                         </div>
                     }
                 />
@@ -209,25 +207,24 @@ export default function Index({ session: initialSession, items: initialItems }: 
                         <div className="flex flex-col gap-2">
                             <div className="flex items-center gap-2.5 flex-wrap">
                                 <h2 className="text-lg font-bold text-foreground tracking-tight">
-                                    Stock Opname Sesi Aktif
-                                </h2>
+                                    {t("Stock Opname Sesi Aktif")}</h2>
                                 <span className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 px-2.5 py-0.5 rounded-md">
-                                    {initialSession?.session_code || 'OPN-DRAFT'}
+                                    {initialSession?.session_code || t("OPN-DRAFT")}
                                 </span>
                                 <span className="text-[10px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-400 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded-md flex items-center gap-1.5 font-mono">
                                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                                    {initialSession?.status || 'Active Audit'}
+                                    {initialSession?.status || t("Active Audit")}
                                 </span>
                             </div>
 
                             <div className="flex items-center gap-2 flex-wrap text-xs text-muted-foreground">
                                 <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-muted/60 border border-border font-medium text-foreground">
                                     <Layers className="w-3.5 h-3.5 text-muted-foreground" />
-                                    <span>Zona Audit: <strong className="text-foreground font-semibold">{initialSession?.zone || 'Semua Zona'}</strong></span>
+                                    <span>{t("Zona Audit:")}{' '}<strong className="text-foreground font-semibold">{initialSession?.zone || t("Semua Zona")}</strong></span>
                                 </div>
                                 <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-muted/60 border border-border font-medium text-foreground">
                                     <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
-                                    <span>Gudang: <strong className="text-foreground font-semibold">{activeTenantName}</strong></span>
+                                    <span>{t("Gudang:")}{' '}<strong className="text-foreground font-semibold">{activeTenantName}</strong></span>
                                 </div>
                             </div>
                         </div>
@@ -248,19 +245,18 @@ export default function Index({ session: initialSession, items: initialItems }: 
                                 type="text"
                                 value={barcodeInput}
                                 onChange={(e) => setBarcodeInput(e.target.value)}
-                                placeholder="Scan Barcode Rak (cth: A-01-01) atau Barcode SKU (cth: 8998866200114) untuk koreksi..."
+                                placeholder={t("Scan Barcode Rak (cth: A-01-01) atau Barcode SKU (cth: 8998866200114) untuk koreksi...")}
                                 className="pl-9 pr-14 h-9 bg-background border-border text-xs font-mono font-medium rounded-xl"
                             />
                             <kbd className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[10px] bg-muted border border-border text-muted-foreground px-1.5 py-0.5 rounded font-bold">
-                                Enter
-                            </kbd>
+                                {t("Enter")}</kbd>
                         </div>
                         <Button
                             type="submit"
                             className="w-full sm:w-auto h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-xs gap-2 flex-shrink-0"
                         >
                             <Check className="w-4 h-4" />
-                            <span>Verifikasi & Koreksi Fisik</span>
+                            <span>{t("Verifikasi & Koreksi Fisik")}</span>
                         </Button>
                     </form>
                 </div>
@@ -269,58 +265,56 @@ export default function Index({ session: initialSession, items: initialItems }: 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between h-36 text-card-foreground">
                         <div className="flex items-center justify-between">
-                            <span className="text-xs font-semibold text-muted-foreground">Cakupan Audit</span>
+                            <span className="text-xs font-semibold text-muted-foreground">{t("Cakupan Audit")}</span>
                             <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                                 <Boxes className="w-4 h-4" />
                             </div>
                         </div>
                         <div>
                             <div className="text-3xl font-bold text-foreground tracking-tight">
-                                {totalSkus} <span className="text-xs font-normal text-muted-foreground">SKU</span>
+                                {totalSkus} <span className="text-xs font-normal text-muted-foreground">{t("SKU")}</span>
                             </div>
                             <div className="text-xs text-muted-foreground mt-1">
-                                Total Saldo Buku: <strong className="font-mono text-foreground font-semibold">{totalSystemQty} Unit</strong>
+                                {t("Total Saldo Buku:")}{' '}<strong className="font-mono text-foreground font-semibold">{totalSystemQty} {t("Unit")}</strong>
                             </div>
                         </div>
                     </div>
 
                     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between h-36 text-card-foreground">
                         <div className="flex items-center justify-between">
-                            <span className="text-xs font-semibold text-muted-foreground">Fisik Cocok (Match)</span>
+                            <span className="text-xs font-semibold text-muted-foreground">{t("Fisik Cocok (Match)")}</span>
                             <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                                 <CheckCircle2 className="w-4 h-4" />
                             </div>
                         </div>
                         <div>
                             <div className="text-3xl font-bold text-foreground tracking-tight">
-                                {matchedSkus} <span className="text-xs font-normal text-muted-foreground">SKU</span>
+                                {matchedSkus} <span className="text-xs font-normal text-muted-foreground">{t("SKU")}</span>
                             </div>
                             <div className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1">
-                                {matchPercentage}% fisik terverifikasi 0 selisih
-                            </div>
+                                {matchPercentage}{t("% fisik terverifikasi 0 selisih")}</div>
                         </div>
                     </div>
 
                     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between h-36 text-card-foreground">
                         <div className="flex items-center justify-between">
-                            <span className="text-xs font-semibold text-muted-foreground">Selisih Fisik (Variance)</span>
+                            <span className="text-xs font-semibold text-muted-foreground">{t("Selisih Fisik (Variance)")}</span>
                             <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center">
                                 <AlertTriangle className="w-4 h-4" />
                             </div>
                         </div>
                         <div>
                             <div className="text-3xl font-bold text-amber-600 dark:text-amber-400 tracking-tight">
-                                {netVariance > 0 ? `+${netVariance}` : netVariance} <span className="text-xs font-normal text-amber-600 dark:text-amber-400">Unit</span>
+                                {netVariance > 0 ? `+${netVariance}` : netVariance} <span className="text-xs font-normal text-amber-600 dark:text-amber-400">{t("Unit")}</span>
                             </div>
                             <div className="text-xs text-amber-600 dark:text-amber-400 font-medium mt-1">
-                                Defisit {deficitUnits} Unit • Surplus +{surplusUnits} Unit
-                            </div>
+                                {t("Defisit")}{' '}{deficitUnits} {t("Unit • Surplus +")}{surplusUnits} {t("Unit")}</div>
                         </div>
                     </div>
 
                     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between h-36 text-card-foreground">
                         <div className="flex items-center justify-between">
-                            <span className="text-xs font-semibold text-muted-foreground">Status Rekonsiliasi</span>
+                            <span className="text-xs font-semibold text-muted-foreground">{t("Status Rekonsiliasi")}</span>
                             <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
                                 <Scale className="w-4 h-4" />
                             </div>
@@ -328,9 +322,8 @@ export default function Index({ session: initialSession, items: initialItems }: 
                         <div>
                             <div className="text-base font-bold text-foreground flex items-center gap-1.5">
                                 <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                                Menunggu Approval
-                            </div>
-                            <div className="text-xs text-muted-foreground mt-1">Siap dikomit ke database</div>
+                                {t("Menunggu Approval")}</div>
+                            <div className="text-xs text-muted-foreground mt-1">{t("Siap dikomit ke database")}</div>
                         </div>
                     </div>
                 </div>
@@ -351,14 +344,14 @@ export default function Index({ session: initialSession, items: initialItems }: 
                     >
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <Label className="text-xs font-semibold">Status Selisih</Label>
+                                <Label className="text-xs font-semibold">{t("Status Selisih")}</Label>
                                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                                    <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Semua Status" /></SelectTrigger>
+                                    <SelectTrigger className="h-9 text-xs"><SelectValue placeholder={t("Semua Status")} /></SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">Semua Status</SelectItem>
-                                        <SelectItem value="match">Match (Cocok)</SelectItem>
-                                        <SelectItem value="defisit">Defisit</SelectItem>
-                                        <SelectItem value="surplus">Surplus</SelectItem>
+                                        <SelectItem value="all">{t("Semua Status")}</SelectItem>
+                                        <SelectItem value="match">{t("Match (Cocok)")}</SelectItem>
+                                        <SelectItem value="defisit">{t("Defisit")}</SelectItem>
+                                        <SelectItem value="surplus">{t("Surplus")}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -370,11 +363,11 @@ export default function Index({ session: initialSession, items: initialItems }: 
                 <div className="rounded-2xl border border-border bg-card shadow-sm flex flex-col overflow-hidden text-card-foreground">
                     <div className="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
-                            <h3 className="text-sm font-bold text-foreground">Lembar Rekonsiliasi Saldo Buku vs Hasil Hitung</h3>
-                            <p className="text-xs text-muted-foreground">Membaca saldo live inventory_stocks dibandingkan fisik aktual lapangan</p>
+                            <h3 className="text-sm font-bold text-foreground">{t("Lembar Rekonsiliasi Saldo Buku vs Hasil Hitung")}</h3>
+                            <p className="text-xs text-muted-foreground">{t("Membaca saldo live inventory_stocks dibandingkan fisik aktual lapangan")}</p>
                         </div>
                         <div className="flex items-center gap-1.5 bg-muted/60 p-1 rounded-xl text-xs font-mono">
-                            <span className="px-2 py-0.5 font-semibold text-foreground">{filteredItems.length} Baris Terpantau</span>
+                            <span className="px-2 py-0.5 font-semibold text-foreground">{filteredItems.length} {t("Baris Terpantau")}</span>
                         </div>
                     </div>
 
@@ -382,14 +375,14 @@ export default function Index({ session: initialSession, items: initialItems }: 
                         <table className="w-full text-left border-collapse text-xs">
                             <thead className="bg-muted/40 text-muted-foreground font-semibold border-b border-border">
                                 <tr>
-                                    <th className="py-3 px-5">SKU / Barcode</th>
-                                    <th className="py-3 px-5">Nama Barang & Batch</th>
-                                    <th className="py-3 px-5">Rak</th>
-                                    <th className="py-3 px-5 text-right">Stok Sistem</th>
-                                    <th className="py-3 px-5 text-right">Fisik Lapangan</th>
-                                    <th className="py-3 px-5 text-center">Selisih (Variance)</th>
-                                    <th className="py-3 px-5 text-center">Status</th>
-                                    <th className="py-3 px-4 text-center">Aksi</th>
+                                    <th className="py-3 px-5">{t("SKU / Barcode")}</th>
+                                    <th className="py-3 px-5">{t("Nama Barang & Batch")}</th>
+                                    <th className="py-3 px-5">{t("Rak")}</th>
+                                    <th className="py-3 px-5 text-right">{t("Stok Sistem")}</th>
+                                    <th className="py-3 px-5 text-right">{t("Fisik Lapangan")}</th>
+                                    <th className="py-3 px-5 text-center">{t("Selisih (Variance)")}</th>
+                                    <th className="py-3 px-5 text-center">{t("Status")}</th>
+                                    <th className="py-3 px-4 text-center">{t("Aksi")}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border text-foreground font-sans">
@@ -412,7 +405,7 @@ export default function Index({ session: initialSession, items: initialItems }: 
                                             <td className="py-3 px-5 font-sans">
                                                 <div className="font-semibold text-foreground">{item.name}</div>
                                                 <div className="text-[11px] text-muted-foreground font-mono">
-                                                    {item.batch} • Exp: {item.exp_date}
+                                                    {item.batch} {t("• Exp:")}{' '}{item.exp_date}
                                                 </div>
                                             </td>
                                             <td className="py-3 px-5 font-mono">
@@ -465,7 +458,7 @@ export default function Index({ session: initialSession, items: initialItems }: 
                                                     type="button"
                                                     onClick={() => setVerifModalItem(item)}
                                                     className="p-1.5 hover:bg-muted rounded-xl text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                                                    title="Koreksi Hitungan"
+                                                    title={t("Koreksi Hitungan")}
                                                 >
                                                     <Edit3 className="w-4 h-4 text-blue-600" />
                                                 </button>
@@ -478,11 +471,9 @@ export default function Index({ session: initialSession, items: initialItems }: 
                                             <div className="flex flex-col items-center justify-center gap-2">
                                                 <Boxes className="w-8 h-8 text-muted-foreground/60 stroke-1" />
                                                 <p className="text-xs font-semibold text-foreground">
-                                                    Belum ada sesi stock opname aktif atau data barang terdaftar.
-                                                </p>
+                                                    {t("Belum ada sesi stock opname aktif atau data barang terdaftar.")}</p>
                                                 <p className="text-[11px] text-muted-foreground">
-                                                    Klik tombol <strong className="text-blue-600 dark:text-blue-400 font-semibold">"+ Buat Sesi Opname Baru"</strong> untuk memulai inisiasi audit.
-                                                </p>
+                                                    {t("Klik tombol")}{' '}<strong className="text-blue-600 dark:text-blue-400 font-semibold">{t("\"+ Buat Sesi Opname Baru\"")}</strong> {t("untuk memulai inisiasi audit.")}</p>
                                             </div>
                                         </td>
                                     </tr>
@@ -494,19 +485,18 @@ export default function Index({ session: initialSession, items: initialItems }: 
                     {/* Table Footer */}
                     <div className="p-4 bg-muted/30 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
                         <div className="flex items-center gap-3 text-xs text-muted-foreground font-mono flex-wrap">
-                            <span>Buku: <strong className="text-foreground">{totalSystemQty}</strong></span>
-                            <span className="text-border">•</span>
-                            <span>Fisik: <strong className="text-foreground">{totalSystemQty + netVariance}</strong></span>
-                            <span className="text-border">•</span>
-                            <span>Defisit: <strong className="text-rose-600 dark:text-rose-400">{deficitUnits}</strong></span>
-                            <span className="text-border">•</span>
-                            <span>Surplus: <strong className="text-blue-600 dark:text-blue-400">+{surplusUnits}</strong></span>
-                            <span className="text-border">•</span>
+                            <span>{t("Buku:")}{' '}<strong className="text-foreground">{totalSystemQty}</strong></span>
+                            <span className="text-border">{t("•")}</span>
+                            <span>{t("Fisik:")}{' '}<strong className="text-foreground">{totalSystemQty + netVariance}</strong></span>
+                            <span className="text-border">{t("•")}</span>
+                            <span>{t("Defisit:")}{' '}<strong className="text-rose-600 dark:text-rose-400">{deficitUnits}</strong></span>
+                            <span className="text-border">{t("•")}</span>
+                            <span>{t("Surplus:")}{' '}<strong className="text-blue-600 dark:text-blue-400">{t("+")}{surplusUnits}</strong></span>
+                            <span className="text-border">{t("•")}</span>
                             <span>
-                                Net Variance:{' '}
+                                {t("Net Variance:")}{' '}
                                 <strong className={`font-bold ${netVariance === 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                                    {netVariance > 0 ? `+${netVariance}` : netVariance} Unit
-                                </strong>
+                                    {netVariance > 0 ? `+${netVariance}` : netVariance} {t("Unit")}</strong>
                             </span>
                         </div>
                         <Button
@@ -515,7 +505,7 @@ export default function Index({ session: initialSession, items: initialItems }: 
                             className="px-4 h-9 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-2 cursor-pointer transition-all"
                         >
                             <CheckCheck className="w-4 h-4" />
-                            <span>Approve & Eksekusi Adjustment</span>
+                            <span>{t("Approve & Eksekusi Adjustment")}</span>
                         </Button>
                     </div>
                 </div>
@@ -548,7 +538,7 @@ export default function Index({ session: initialSession, items: initialItems }: 
 
 Index.layout = {
     breadcrumbs: [
-        { title: 'Warehouse & Stocks', href: '#' },
-        { title: 'Stock Opname & Rekonsiliasi Audit', href: '#' },
+        { title: "Warehouse & Stocks", href: '#' },
+        { title: "Stock Opname & Rekonsiliasi Audit", href: '#' },
     ],
 };

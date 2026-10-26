@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Head, router, Link } from '@inertiajs/react';
+import { useTranslation } from '@/context/language-context';
 import { usePermission } from '@/utils/permission';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -52,6 +53,7 @@ export default function Dashboard({
     recent_subscriptions,
     period,
 }: Props) {
+    const { t } = useTranslation();
     const { can } = usePermission();
     const [selectedPeriod, setSelectedPeriod] = useState(period || '30_days');
 
@@ -70,12 +72,12 @@ export default function Dashboard({
 
     return (
         <>
-            <Head title="Platform Executive Dashboard" />
+            <Head title={t("Platform Executive Dashboard")} />
 
             <div className="space-y-6 p-4 sm:p-6">
                 <PageHeader
-                    title="Executive Dashboard"
-                    description="Overview of tenant growth, recurring monthly revenue, and central administration activity."
+                    title={t("Executive Dashboard")}
+                    description={t("Overview of tenant growth, recurring monthly revenue, and central administration activity.")}
                     renderAction={
                         <div className="flex items-center gap-2 rounded-xl border border-border bg-card p-1">
                             <Calendar className="ml-2 h-4 w-4 text-muted-foreground" />
@@ -84,10 +86,10 @@ export default function Dashboard({
                                 onChange={(e) => handlePeriodChange(e.target.value)}
                                 className="h-8 rounded-lg bg-transparent text-xs font-medium focus:outline-none"
                             >
-                                <option value="7_days">Last 7 Days</option>
-                                <option value="30_days">Last 30 Days</option>
-                                <option value="90_days">Last 90 Days</option>
-                                <option value="1_year">Last 1 Year</option>
+                                <option value="7_days">{t("Last 7 Days")}</option>
+                                <option value="30_days">{t("Last 30 Days")}</option>
+                                <option value="90_days">{t("Last 90 Days")}</option>
+                                <option value="1_year">{t("Last 1 Year")}</option>
                             </select>
                         </div>
                     }
@@ -98,9 +100,9 @@ export default function Dashboard({
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-xs">
                             <div>
-                                <p className="text-xs font-semibold text-muted-foreground">Total Active Tenants</p>
+                                <p className="text-xs font-semibold text-muted-foreground">{t("Total Active Tenants")}</p>
                                 <h3 className="mt-1 text-2xl font-bold text-foreground">
-                                    {stats?.active_tenants || 0} / <span className="text-sm font-normal text-muted-foreground">{stats?.total_tenants || 0}</span>
+                                    {stats?.active_tenants || 0} {t("/")}{' '}<span className="text-sm font-normal text-muted-foreground">{stats?.total_tenants || 0}</span>
                                 </h3>
                             </div>
                             <div className="rounded-xl bg-blue-500/10 p-3 text-blue-600 dark:text-blue-400">
@@ -110,7 +112,7 @@ export default function Dashboard({
 
                         <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-xs">
                             <div>
-                                <p className="text-xs font-semibold text-muted-foreground">Monthly MRR (Active)</p>
+                                <p className="text-xs font-semibold text-muted-foreground">{t("Monthly MRR (Active)")}</p>
                                 <h3 className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                                     {formatRupiah(stats?.monthly_mrr || 0)}
                                 </h3>
@@ -122,7 +124,7 @@ export default function Dashboard({
 
                         <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-xs">
                             <div>
-                                <p className="text-xs font-semibold text-muted-foreground">Active Subscriptions</p>
+                                <p className="text-xs font-semibold text-muted-foreground">{t("Active Subscriptions")}</p>
                                 <h3 className="mt-1 text-2xl font-bold text-purple-600 dark:text-purple-400">
                                     {stats?.active_subscriptions || 0}
                                 </h3>
@@ -134,7 +136,7 @@ export default function Dashboard({
 
                         <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-xs">
                             <div>
-                                <p className="text-xs font-semibold text-muted-foreground">Central Admin Users</p>
+                                <p className="text-xs font-semibold text-muted-foreground">{t("Central Admin Users")}</p>
                                 <h3 className="mt-1 text-2xl font-bold text-amber-600 dark:text-amber-400">
                                     {stats?.central_users_count || 0}
                                 </h3>
@@ -152,8 +154,8 @@ export default function Dashboard({
                         <div className="rounded-2xl border border-border bg-card p-6 shadow-xs">
                             <div className="flex items-center justify-between border-b border-border pb-4">
                                 <div>
-                                    <h4 className="text-sm font-bold text-foreground">Subscription Registrations</h4>
-                                    <p className="text-xs text-muted-foreground">New subscription activity over the selected period</p>
+                                    <h4 className="text-sm font-bold text-foreground">{t("Subscription Registrations")}</h4>
+                                    <p className="text-xs text-muted-foreground">{t("New subscription activity over the selected period")}</p>
                                 </div>
                                 <Layers className="h-5 w-5 text-muted-foreground" />
                             </div>
@@ -172,8 +174,7 @@ export default function Dashboard({
                                     ))
                                 ) : (
                                     <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
-                                        No subscription data in this period.
-                                    </div>
+                                        {t("No subscription data in this period.")}</div>
                                 )}
                             </div>
                         </div>
@@ -183,8 +184,8 @@ export default function Dashboard({
                         <div className="rounded-2xl border border-border bg-card p-6 shadow-xs">
                             <div className="flex items-center justify-between border-b border-border pb-4">
                                 <div>
-                                    <h4 className="text-sm font-bold text-foreground">Tenant Onboarding Trend</h4>
-                                    <p className="text-xs text-muted-foreground">New tenant organizations created</p>
+                                    <h4 className="text-sm font-bold text-foreground">{t("Tenant Onboarding Trend")}</h4>
+                                    <p className="text-xs text-muted-foreground">{t("New tenant organizations created")}</p>
                                 </div>
                                 <Building2 className="h-5 w-5 text-muted-foreground" />
                             </div>
@@ -203,8 +204,7 @@ export default function Dashboard({
                                     ))
                                 ) : (
                                     <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
-                                        No new tenant onboardings in this period.
-                                    </div>
+                                        {t("No new tenant onboardings in this period.")}</div>
                                 )}
                             </div>
                         </div>
@@ -217,11 +217,11 @@ export default function Dashboard({
                     {can('central.dashboard.recent_tenants_table') && (
                         <div className="rounded-2xl border border-border bg-card p-6 shadow-xs">
                             <div className="flex items-center justify-between border-b border-border pb-4">
-                                <h4 className="text-sm font-bold text-foreground">Recently Registered Tenants</h4>
+                                <h4 className="text-sm font-bold text-foreground">{t("Recently Registered Tenants")}</h4>
                                 {can('central.tenants.view') && (
                                     <Button asChild variant="ghost" size="sm" className="h-8 text-xs gap-1">
                                         <Link href="/admin/tenants">
-                                            View All <ArrowUpRight className="h-3.5 w-3.5" />
+                                            {t("View All")}{' '}<ArrowUpRight className="h-3.5 w-3.5" />
                                         </Link>
                                     </Button>
                                 )}
@@ -230,33 +230,33 @@ export default function Dashboard({
                                 <table className="w-full border-collapse text-left text-xs">
                                     <thead>
                                         <tr className="border-b border-border bg-muted/30 font-semibold text-muted-foreground">
-                                            <th className="py-2.5 px-3">TENANT</th>
-                                            <th className="py-2.5 px-3">PLAN</th>
-                                            <th className="py-2.5 px-3">STATUS</th>
+                                            <th className="py-2.5 px-3">{t("TENANT")}</th>
+                                            <th className="py-2.5 px-3">{t("PLAN")}</th>
+                                            <th className="py-2.5 px-3">{t("STATUS")}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-border">
                                         {recent_tenants && recent_tenants.length > 0 ? (
-                                            recent_tenants.map((t) => (
-                                                <tr key={t.id} className="hover:bg-muted/20">
+                                            recent_tenants.map((tenant) => (
+                                                <tr key={tenant.id} className="hover:bg-muted/20">
                                                     <td className="py-2.5 px-3 font-semibold">
-                                                        {t.name}
-                                                        <div className="text-[10px] font-normal text-muted-foreground">slug: {t.slug}</div>
+                                                        {tenant.name}
+                                                        <div className="text-[10px] font-normal text-muted-foreground">{t("slug:")}{' '}{tenant.slug}</div>
                                                     </td>
                                                     <td className="py-2.5 px-3">
                                                         <Badge variant="outline" className="text-[10px]">
-                                                            {t.plan?.name || 'No Plan'}
+                                                            {tenant.plan?.name || t("No Plan")}
                                                         </Badge>
                                                     </td>
                                                     <td className="py-2.5 px-3">
                                                         <span
                                                             className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${
-                                                                t.status === 'active'
+                                                                tenant.status === 'active'
                                                                     ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                                                                     : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
                                                             }`}
                                                         >
-                                                            {t.status}
+                                                            {tenant.status}
                                                         </span>
                                                     </td>
                                                 </tr>
@@ -264,8 +264,7 @@ export default function Dashboard({
                                         ) : (
                                             <tr>
                                                 <td colSpan={3} className="py-6 text-center text-muted-foreground">
-                                                    No recent tenant records.
-                                                </td>
+                                                    {t("No recent tenant records.")}</td>
                                             </tr>
                                         )}
                                     </tbody>
@@ -278,11 +277,11 @@ export default function Dashboard({
                     {can('central.dashboard.recent_subscriptions_table') && (
                         <div className="rounded-2xl border border-border bg-card p-6 shadow-xs">
                             <div className="flex items-center justify-between border-b border-border pb-4">
-                                <h4 className="text-sm font-bold text-foreground">Recent Subscriptions</h4>
+                                <h4 className="text-sm font-bold text-foreground">{t("Recent Subscriptions")}</h4>
                                 {can('central.subscriptions.view') && (
                                     <Button asChild variant="ghost" size="sm" className="h-8 text-xs gap-1">
                                         <Link href="/admin/subscriptions">
-                                            View All <ArrowUpRight className="h-3.5 w-3.5" />
+                                            {t("View All")}{' '}<ArrowUpRight className="h-3.5 w-3.5" />
                                         </Link>
                                     </Button>
                                 )}
@@ -291,9 +290,9 @@ export default function Dashboard({
                                 <table className="w-full border-collapse text-left text-xs">
                                     <thead>
                                         <tr className="border-b border-border bg-muted/30 font-semibold text-muted-foreground">
-                                            <th className="py-2.5 px-3">TENANT</th>
-                                            <th className="py-2.5 px-3">PLAN & PRICE</th>
-                                            <th className="py-2.5 px-3">STATUS</th>
+                                            <th className="py-2.5 px-3">{t("TENANT")}</th>
+                                            <th className="py-2.5 px-3">{t("PLAN & PRICE")}</th>
+                                            <th className="py-2.5 px-3">{t("STATUS")}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-border">
@@ -301,11 +300,10 @@ export default function Dashboard({
                                             recent_subscriptions.map((s) => (
                                                 <tr key={s.id} className="hover:bg-muted/20">
                                                     <td className="py-2.5 px-3 font-semibold">
-                                                        {s.tenant?.name || 'N/A'}
+                                                        {s.tenant?.name || t("N/A")}
                                                     </td>
                                                     <td className="py-2.5 px-3 font-mono">
-                                                        {s.plan?.name || '-'} ({formatRupiah(s.plan?.price || 0)})
-                                                    </td>
+                                                        {s.plan?.name || '-'} {t("(")}{formatRupiah(s.plan?.price || 0)}{t(")")}</td>
                                                     <td className="py-2.5 px-3">
                                                         <span
                                                             className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${
@@ -322,8 +320,7 @@ export default function Dashboard({
                                         ) : (
                                             <tr>
                                                 <td colSpan={3} className="py-6 text-center text-muted-foreground">
-                                                    No recent subscription records.
-                                                </td>
+                                                    {t("No recent subscription records.")}</td>
                                             </tr>
                                         )}
                                     </tbody>
@@ -340,7 +337,7 @@ export default function Dashboard({
 Dashboard.layout = {
     breadcrumbs: [
         {
-            title: 'Dashboard',
+            title: "Dashboard",
             href: '/dashboard',
         },
     ],

@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';import { useTranslation } from '@/context/language-context';
+
 
 interface Category {
     id: number;
@@ -19,6 +20,7 @@ export default function Show({
     tenant_slug,
     category,
 }: Props) {
+    const { t } = useTranslation();
     return (
         <>
             <Head title={`Category - ${category.name}`} />
@@ -26,30 +28,26 @@ export default function Show({
             <div className="space-y-6 p-4">
                 <div>
                     <h1 className="text-2xl font-bold text-foreground">
-                        Category Details
-                    </h1>
+                        {t("Category Details")}</h1>
 
                     <p className="mt-1 text-sm text-muted-foreground">
-                        View category information.
-                    </p>
+                        {t("View category information.")}</p>
                 </div>
 
                 <div className="rounded-lg border border-border bg-card p-6 shadow-md">
                     <div className="grid gap-6 md:grid-cols-2">
                         <div>
                             <p className="text-sm text-muted-foreground">
-                                Category ID
-                            </p>
+                                {t("Category ID")}</p>
 
                             <p className="mt-1 font-medium text-foreground">
-                                CAT-00{category.id}
+                                {t("CAT-00")}{category.id}
                             </p>
                         </div>
 
                         <div>
                             <p className="text-sm text-muted-foreground">
-                                Category Name
-                            </p>
+                                {t("Category Name")}</p>
 
                             <p className="mt-1 font-medium text-foreground">
                                 {category.name}
@@ -58,18 +56,16 @@ export default function Show({
 
                         <div className="md:col-span-2">
                             <p className="text-sm text-muted-foreground">
-                                Description
-                            </p>
+                                {t("Description")}</p>
 
                             <p className="mt-1 font-medium text-foreground">
-                                {category.desc || 'No description provided.'}
+                                {category.desc || t("No description provided.")}
                             </p>
                         </div>
 
                         <div>
                             <p className="text-sm text-muted-foreground">
-                                Date Added
-                            </p>
+                                {t("Date Added")}</p>
 
                             <p className="mt-1 font-medium text-foreground">
                                 {new Date(
@@ -80,8 +76,7 @@ export default function Show({
 
                         <div>
                             <p className="text-sm text-muted-foreground">
-                                Last Updated
-                            </p>
+                                {t("Last Updated")}</p>
 
                             <p className="mt-1 font-medium text-foreground">
                                 {new Date(
@@ -96,16 +91,14 @@ export default function Show({
                             <Link
                                 href={`/${tenant_slug}/inventory/categories`}
                             >
-                                Back
-                            </Link>
+                                {t("Back")}</Link>
                         </Button>
 
                         <Button asChild>
                             <Link
                                 href={`/${tenant_slug}/inventory/categories/${category.id}/edit`}
                             >
-                                Edit Category
-                            </Link>
+                                {t("Edit Category")}</Link>
                         </Button>
                     </div>
                 </div>
@@ -116,8 +109,8 @@ export default function Show({
 
 Show.layout = {
     breadcrumbs: [
-        { title: 'Inventory Management', href: '/categories' },
-        { title: 'Categories', href: '/categories' },
-        { title: 'Category Details', href: '#' },
+        { title: "Inventory Management", href: '/categories' },
+        { title: "Categories", href: '/categories' },
+        { title: "Category Details", href: '#' },
     ],
 };

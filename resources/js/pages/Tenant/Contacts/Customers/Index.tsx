@@ -8,6 +8,7 @@ import { ActionButton } from '@/components/action-button';
 import { PageHeader } from '@/components/page-header';
 import { toast } from 'sonner';
 import { debounce } from 'lodash';
+import { useTranslation } from '@/context/language-context';
 import { usePermission } from '@/utils/permission';
 import { Plus, UserCheck, UserPlus, PhoneCall, FileText, FileSpreadsheet } from 'lucide-react';
 
@@ -46,6 +47,7 @@ interface PageProps {
 }
 
 export default function CustomerIndex({ customers, stats, filters }: PageProps) {
+    const { t } = useTranslation();
     const { flash, current_tenant, auth } = usePage().props as any;
     const { can } = usePermission();
 
@@ -120,22 +122,22 @@ export default function CustomerIndex({ customers, stats, filters }: PageProps) 
     const canCreate = can('tenant.contacts.customers.create') || can('customers.create');
 
     const tableHeaders: Array<string | HeaderConfig> = [
-        { label: '#', sortField: 'id' },
-        { label: 'CUSTOMER NAME', sortField: 'name' },
-        { label: 'PHONE', sortField: 'phone' },
-        { label: 'EMAIL', sortField: 'email' },
-        { label: 'TAX ID / NPWP', sortField: 'tax_number' },
+        { label: t("#"), sortField: 'id' },
+        { label: t("CUSTOMER NAME"), sortField: 'name' },
+        { label: t("PHONE"), sortField: 'phone' },
+        { label: t("EMAIL"), sortField: 'email' },
+        { label: t("TAX ID / NPWP"), sortField: 'tax_number' },
         'ACTIONS',
     ];
 
     return (
         <>
-            <Head title="Customers Management" />
+            <Head title={t("Customers Management")} />
 
             <div className="space-y-6 p-4 sm:p-6">
                 <PageHeader
-                    title="Customers Management"
-                    description="Manage customer database, contacts, and transaction profiles."
+                    title={t("Customers Management")}
+                    description={t("Manage customer database, contacts, and transaction profiles.")}
                     renderAction={
                         <div className="flex items-center gap-2">
                             {canExport && (
@@ -146,24 +148,21 @@ export default function CustomerIndex({ customers, stats, filters }: PageProps) 
                                         onClick={handleExportPdf}
                                         className="h-9 gap-1.5 border-border text-xs"
                                     >
-                                        <FileText size={15} className="text-red-500" /> Export PDF
-                                    </Button>
+                                        <FileText size={15} className="text-red-500" /> {t("Export PDF")}</Button>
                                     <Button
                                         variant="outline"
                                         size="sm"
                                         onClick={handleExportExcel}
                                         className="h-9 gap-1.5 border-border text-xs"
                                     >
-                                        <FileSpreadsheet size={15} className="text-emerald-500" /> Export Excel
-                                    </Button>
+                                        <FileSpreadsheet size={15} className="text-emerald-500" /> {t("Export Excel")}</Button>
                                 </>
                             )}
 
                             {canCreate && (
                                 <Button asChild className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700">
                                     <Link href={`/${tenantSlug}/contacts/customers/create`}>
-                                        <Plus className="mr-1.5 h-4 w-4" /> Add Customer
-                                    </Link>
+                                        <Plus className="mr-1.5 h-4 w-4" /> {t("Add Customer")}</Link>
                                 </Button>
                             )}
                         </div>
@@ -174,7 +173,7 @@ export default function CustomerIndex({ customers, stats, filters }: PageProps) 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Total Customers</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Total Customers")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-foreground">
                                 {stats?.total_customers ?? customers.total ?? 0}
                             </h3>
@@ -186,7 +185,7 @@ export default function CustomerIndex({ customers, stats, filters }: PageProps) 
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">New This Month</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("New This Month")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-foreground">
                                 {stats?.new_this_month ?? 0}
                             </h3>
@@ -198,7 +197,7 @@ export default function CustomerIndex({ customers, stats, filters }: PageProps) 
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">With Contact Info</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("With Contact Info")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-foreground">
                                 {stats?.has_contact ?? 0}
                             </h3>
@@ -231,7 +230,7 @@ export default function CustomerIndex({ customers, stats, filters }: PageProps) 
                     onSortChange={handleSortChange}
                     renderRow={(customer: Customer) => (
                         <>
-                            <TableCell className="font-mono text-xs text-muted-foreground">#{customer.id}</TableCell>
+                            <TableCell className="font-mono text-xs text-muted-foreground">{t("#")}{customer.id}</TableCell>
                             <TableCell className="text-xs font-bold text-foreground">{customer.name}</TableCell>
                             <TableCell className="text-xs text-muted-foreground">{customer.phone || '-'}</TableCell>
                             <TableCell className="text-xs text-muted-foreground">{customer.email || '-'}</TableCell>
@@ -257,7 +256,7 @@ export default function CustomerIndex({ customers, stats, filters }: PageProps) 
 
 CustomerIndex.layout = {
     breadcrumbs: [
-        { title: 'Contact', href: '#' },
-        { title: 'Customer', href: '#' },
+        { title: "Contact", href: '#' },
+        { title: "Customer", href: '#' },
     ],
 };

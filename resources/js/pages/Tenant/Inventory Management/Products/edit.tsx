@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 
-import ProductForm from './components/ProductForm';
+import ProductForm from './components/ProductForm';import { useTranslation } from '@/context/language-context';
+
 
 interface Product {
     id: number;
@@ -17,19 +18,18 @@ export default function Edit({
     tenant_slug,
     product,
 }: Props) {
+    const { t } = useTranslation();
     return (
         <>
-            <Head title="Edit Product" />
+            <Head title={t("Edit Product")} />
 
             <div className="space-y-6 p-4">
                 <div>
                     <h1 className="text-2xl font-bold text-foreground">
-                        Edit Product
-                    </h1>
+                        {t("Edit Product")}</h1>
 
                     <p className="mt-1 text-sm text-muted-foreground">
-                        Update product information.
-                    </p>
+                        {t("Update product information.")}</p>
                 </div>
 
                 <div className="rounded-lg border border-border bg-card p-6 shadow-md">
@@ -46,8 +46,8 @@ export default function Edit({
 
 Edit.layout = {
     breadcrumbs: [
-        { title: 'Dashboard', href: '/dashboard' },
-        { title: 'Products', href: '/products' },
-        { title: 'Edit Product', href: '#' },
+        { title: "Dashboard", href: '/dashboard' },
+        { title: "Products", href: '/products' },
+        { title: "Edit Product", href: '#' },
     ],
 };

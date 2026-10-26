@@ -14,6 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PageHeader } from '@/components/page-header';
+import { useTranslation } from '@/context/language-context';
 import { usePermission } from '@/utils/permission';
 import type { LocationOption, SkuOption, StockTransferItem, StockTransferSummary, WarehouseOption } from '@/types/stock_transfer';
 import { CreateTransferModal } from './components/CreateTransferModal';
@@ -34,6 +35,7 @@ export default function StockTransferIndex({
     skus = [],
     summary: initialSummary,
 }: StockTransferIndexProps) {
+    const { t } = useTranslation();
     const { current_tenant, auth, flash } = usePage().props as any;
     const { can } = usePermission();
     const [transfers, setTransfers] = React.useState<StockTransferItem[]>(initialTransfers);
@@ -82,12 +84,12 @@ export default function StockTransferIndex({
 
     return (
         <>
-            <Head title="Stock Transfer Management (Pemindahan Barang)" />
+            <Head title={t("Stock Transfer Management (Pemindahan Barang)")} />
 
             <div className="space-y-6 p-4 sm:p-6">
                 <PageHeader
-                    title="Stock Transfer Management"
-                    description="Kelola relokasi stok internal, replenishment rak penyimpanan, dan mutasi barang antar lokasi gudang."
+                    title={t("Stock Transfer Management")}
+                    description={t("Kelola relokasi stok internal, replenishment rak penyimpanan, dan mutasi barang antar lokasi gudang.")}
                     renderAction={
                         <div className="flex items-center gap-2.5 flex-wrap">
                             <div className="h-9 px-3 bg-muted/60 border border-border rounded-xl flex items-center gap-2 text-xs font-semibold text-foreground">
@@ -101,7 +103,7 @@ export default function StockTransferIndex({
                                     className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-4 h-9 rounded-xl shadow-md gap-1.5 cursor-pointer"
                                 >
                                     <Plus className="w-4 h-4" />
-                                    <span>Buat Transfer Stok</span>
+                                    <span>{t("Buat Transfer Stok")}</span>
                                 </Button>
                             )}
                         </div>
@@ -113,8 +115,7 @@ export default function StockTransferIndex({
                     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between h-32 text-card-foreground">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-medium text-muted-foreground">
-                                Total Transfer Sesi
-                            </span>
+                                {t("Total Transfer Sesi")}</span>
                             <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                                 <Layers className="w-4 h-4" />
                             </div>
@@ -122,19 +123,17 @@ export default function StockTransferIndex({
                         <div>
                             <div className="text-3xl font-bold text-foreground tracking-tight">
                                 {totalTransfers}{' '}
-                                <span className="text-xs font-normal text-muted-foreground">Mutasi</span>
+                                <span className="text-xs font-normal text-muted-foreground">{t("Mutasi")}</span>
                             </div>
                             <div className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1">
-                                Sesi relokasi stok terdaftar
-                            </div>
+                                {t("Sesi relokasi stok terdaftar")}</div>
                         </div>
                     </div>
 
                     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between h-32 text-card-foreground">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-medium text-muted-foreground">
-                                Dalam Perjalanan (In Transit)
-                            </span>
+                                {t("Dalam Perjalanan (In Transit)")}</span>
                             <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center">
                                 <Clock className="w-4 h-4" />
                             </div>
@@ -142,19 +141,17 @@ export default function StockTransferIndex({
                         <div>
                             <div className="text-3xl font-bold text-foreground tracking-tight">
                                 {inTransitCount}{' '}
-                                <span className="text-xs font-normal text-muted-foreground">Proses</span>
+                                <span className="text-xs font-normal text-muted-foreground">{t("Proses")}</span>
                             </div>
                             <div className="text-xs text-amber-600 dark:text-amber-400 font-medium mt-1">
-                                Sedang dipindahkan antar rak
-                            </div>
+                                {t("Sedang dipindahkan antar rak")}</div>
                         </div>
                     </div>
 
                     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between h-32 text-card-foreground">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-medium text-muted-foreground">
-                                Selesai (Completed)
-                            </span>
+                                {t("Selesai (Completed)")}</span>
                             <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                                 <CheckCircle2 className="w-4 h-4" />
                             </div>
@@ -162,19 +159,17 @@ export default function StockTransferIndex({
                         <div>
                             <div className="text-3xl font-bold text-foreground tracking-tight">
                                 {completedCount}{' '}
-                                <span className="text-xs font-normal text-muted-foreground">Selesai</span>
+                                <span className="text-xs font-normal text-muted-foreground">{t("Selesai")}</span>
                             </div>
                             <div className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1">
-                                Stok aman di lokasi tujuan
-                            </div>
+                                {t("Stok aman di lokasi tujuan")}</div>
                         </div>
                     </div>
 
                     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between h-32 text-card-foreground">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-medium text-muted-foreground">
-                                Total Unit Dipindahkan
-                            </span>
+                                {t("Total Unit Dipindahkan")}</span>
                             <div className="w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center">
                                 <PackageCheck className="w-4 h-4" />
                             </div>
@@ -182,11 +177,10 @@ export default function StockTransferIndex({
                         <div>
                             <div className="text-3xl font-bold text-foreground tracking-tight">
                                 {totalUnitsMoved}{' '}
-                                <span className="text-xs font-normal text-muted-foreground">Pcs</span>
+                                <span className="text-xs font-normal text-muted-foreground">{t("Pcs")}</span>
                             </div>
                             <div className="text-xs text-purple-600 dark:text-purple-400 font-medium mt-1">
-                                Akumulasi unit terelokasi
-                            </div>
+                                {t("Akumulasi unit terelokasi")}</div>
                         </div>
                     </div>
                 </div>
@@ -198,7 +192,7 @@ export default function StockTransferIndex({
                             <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
                             <Input
                                 type="text"
-                                placeholder="Cari Kode Transfer, SKU, Lokasi..."
+                                placeholder={t("Cari Kode Transfer, SKU, Lokasi...")}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="pl-9 bg-muted/50 border-input text-xs"
@@ -215,8 +209,7 @@ export default function StockTransferIndex({
                                         : 'text-muted-foreground hover:text-foreground'
                                 }`}
                             >
-                                Semua ({transfers.length})
-                            </button>
+                                {t("Semua (")}{transfers.length}{t(")")}</button>
                             <button
                                 type="button"
                                 onClick={() => setStatusFilter('IN_TRANSIT')}
@@ -226,8 +219,7 @@ export default function StockTransferIndex({
                                         : 'text-muted-foreground hover:text-foreground'
                                 }`}
                             >
-                                In Transit ({inTransitCount})
-                            </button>
+                                {t("In Transit (")}{inTransitCount}{t(")")}</button>
                             <button
                                 type="button"
                                 onClick={() => setStatusFilter('COMPLETED')}
@@ -237,8 +229,7 @@ export default function StockTransferIndex({
                                         : 'text-muted-foreground hover:text-foreground'
                                 }`}
                             >
-                                Completed ({completedCount})
-                            </button>
+                                {t("Completed (")}{completedCount}{t(")")}</button>
                         </div>
                     </div>
 
@@ -247,14 +238,14 @@ export default function StockTransferIndex({
                         <table className="w-full text-left text-xs border-collapse">
                             <thead>
                                 <tr className="border-b border-border bg-muted/40 text-muted-foreground font-semibold uppercase tracking-wider">
-                                    <th className="py-3.5 px-5">Kode Transfer</th>
-                                    <th className="py-3.5 px-5">Produk / SKU</th>
-                                    <th className="py-3.5 px-5">Lokasi Asal (Origin)</th>
-                                    <th className="py-3.5 px-5">Lokasi Tujuan (Dest)</th>
-                                    <th className="py-3.5 px-5 text-center">Qty</th>
-                                    <th className="py-3.5 px-5">Status</th>
-                                    <th className="py-3.5 px-5">Operator</th>
-                                    <th className="py-3.5 px-5 text-right">Tanggal</th>
+                                    <th className="py-3.5 px-5">{t("Kode Transfer")}</th>
+                                    <th className="py-3.5 px-5">{t("Produk / SKU")}</th>
+                                    <th className="py-3.5 px-5">{t("Lokasi Asal (Origin)")}</th>
+                                    <th className="py-3.5 px-5">{t("Lokasi Tujuan (Dest)")}</th>
+                                    <th className="py-3.5 px-5 text-center">{t("Qty")}</th>
+                                    <th className="py-3.5 px-5">{t("Status")}</th>
+                                    <th className="py-3.5 px-5">{t("Operator")}</th>
+                                    <th className="py-3.5 px-5 text-right">{t("Tanggal")}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border/60">
@@ -292,12 +283,10 @@ export default function StockTransferIndex({
                                             <td className="py-4 px-5">
                                                 {item.status === 'COMPLETED' ? (
                                                     <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                                                        Completed
-                                                    </span>
+                                                        {t("Completed")}</span>
                                                 ) : (
                                                     <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                                                        In Transit
-                                                    </span>
+                                                        {t("In Transit")}</span>
                                                 )}
                                             </td>
                                             <td className="py-4 px-5 text-muted-foreground font-medium">{item.created_by}</td>
@@ -309,8 +298,7 @@ export default function StockTransferIndex({
                                 ) : (
                                     <tr>
                                         <td colSpan={8} className="text-center py-12 text-muted-foreground">
-                                            Tidak ada transaksi transfer stok yang ditemukan.
-                                        </td>
+                                            {t("Tidak ada transaksi transfer stok yang ditemukan.")}</td>
                                     </tr>
                                 )}
                             </tbody>

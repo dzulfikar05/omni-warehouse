@@ -1,9 +1,11 @@
 import React from 'react';
 import { Link } from '@inertiajs/react';
-import { ArrowRight, CheckCircle } from 'lucide-react';
+import { ArrowRight, CheckCircle } from 'lucide-react';import { useTranslation } from '@/context/language-context';
+
 
 // Inline product mockup — simulates the WMS dashboard UI with Light/Dark Mode
 function DashboardMockup() {
+    const { t } = useTranslation();
     return (
         <div className="w-full max-w-3xl mx-auto mt-14 rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-200/80 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none overflow-hidden select-none pointer-events-none transition-colors duration-300">
             {/* Window chrome */}
@@ -12,8 +14,7 @@ function DashboardMockup() {
                 <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
                 <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
                 <div className="ml-3 flex-1 bg-slate-100 rounded-md px-3 py-1 text-[10px] text-slate-400 font-mono dark:bg-slate-900 dark:text-slate-500">
-                    app.omniwarehouse.id/dashboard
-                </div>
+                    {t("app.omniwarehouse.id/dashboard")}</div>
             </div>
 
             {/* Dashboard content */}
@@ -39,9 +40,9 @@ function DashboardMockup() {
                     {/* Metric cards */}
                     <div className="grid grid-cols-3 gap-3">
                         {[
-                            { label: 'Total SKU Aktif', value: '4.827', delta: '+12 hari ini', up: true },
-                            { label: 'Akurasi Stok', value: '99.4%', delta: 'vs 94% kemarin', up: true },
-                            { label: 'Picking Selesai', value: '183', delta: '12 pending', up: false },
+                            { label: t("Total SKU Aktif"), value: '4.827', delta: '+12 hari ini', up: true },
+                            { label: t("Akurasi Stok"), value: '99.4%', delta: 'vs 94% kemarin', up: true },
+                            { label: t("Picking Selesai"), value: '183', delta: '12 pending', up: false },
                         ].map((m, i) => (
                             <div key={i} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 p-3">
                                 <p className="text-[9px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wide">{m.label}</p>
@@ -54,8 +55,8 @@ function DashboardMockup() {
                     {/* Rack map stub */}
                     <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 p-3">
                         <div className="flex items-center justify-between mb-2">
-                            <p className="text-[10px] font-bold text-slate-700 dark:text-slate-200">Denah Rak — Gudang A</p>
-                            <span className="text-[9px] text-[#2B7FFF] font-semibold">Live</span>
+                            <p className="text-[10px] font-bold text-slate-700 dark:text-slate-200">{t("Denah Rak — Gudang A")}</p>
+                            <span className="text-[9px] text-[#2B7FFF] font-semibold">{t("Live")}</span>
                         </div>
                         <div className="grid grid-cols-10 gap-1">
                             {Array.from({ length: 40 }).map((_, i) => {
@@ -76,15 +77,15 @@ function DashboardMockup() {
                             })}
                         </div>
                         <div className="flex items-center gap-3 mt-2">
-                            <span className="flex items-center gap-1 text-[9px] text-slate-400 dark:text-slate-500"><span className="w-2 h-2 rounded-sm bg-[#2B7FFF] inline-block" /> Proses Picking</span>
-                            <span className="flex items-center gap-1 text-[9px] text-slate-400 dark:text-slate-500"><span className="w-2 h-2 rounded-sm bg-slate-200 dark:bg-slate-700 inline-block" /> Terisi</span>
-                            <span className="flex items-center gap-1 text-[9px] text-slate-400 dark:text-slate-500"><span className="w-2 h-2 rounded-sm bg-slate-100 dark:bg-slate-800 inline-block" /> Kosong</span>
+                            <span className="flex items-center gap-1 text-[9px] text-slate-400 dark:text-slate-500"><span className="w-2 h-2 rounded-sm bg-[#2B7FFF] inline-block" /> {t("Proses Picking")}</span>
+                            <span className="flex items-center gap-1 text-[9px] text-slate-400 dark:text-slate-500"><span className="w-2 h-2 rounded-sm bg-slate-200 dark:bg-slate-700 inline-block" /> {t("Terisi")}</span>
+                            <span className="flex items-center gap-1 text-[9px] text-slate-400 dark:text-slate-500"><span className="w-2 h-2 rounded-sm bg-slate-100 dark:bg-slate-800 inline-block" /> {t("Kosong")}</span>
                         </div>
                     </div>
 
                     {/* Recent activity */}
                     <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 p-3">
-                        <p className="text-[10px] font-bold text-slate-700 dark:text-slate-200 mb-2">Aktivitas Terakhir</p>
+                        <p className="text-[10px] font-bold text-slate-700 dark:text-slate-200 mb-2">{t("Aktivitas Terakhir")}</p>
                         <div className="space-y-1.5">
                             {[
                                 { action: 'Inbound 200 unit — SKU-7723 (Baju Polo)', time: '2 mnt lalu', type: 'in' },
@@ -106,6 +107,7 @@ function DashboardMockup() {
 }
 
 export default function HeroSection() {
+    const { t } = useTranslation();
     return (
         <section id="overview" className="relative pt-36 pb-20 px-6 overflow-hidden bg-white dark:bg-slate-950 transition-colors duration-300">
             {/* Subtle top-only gradient tint adapted for light and dark modes */}
@@ -119,20 +121,18 @@ export default function HeroSection() {
             <div className="relative max-w-4xl mx-auto text-center">
                 {/* Eyebrow */}
                 <p className="text-[11px] font-bold uppercase tracking-widest text-[#2B7FFF] dark:text-blue-400 mb-5">
-                    Warehouse Management System — Multi-Tenant SaaS
-                </p>
+                    {t("Warehouse Management System — Multi-Tenant SaaS")}</p>
 
                 {/* Headline — outcome-first, not feature-first */}
                 <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.08]">
-                    Eliminasi Selisih Stok.{' '}
+                    {t("Eliminasi Selisih Stok.")}{' '}
                     <br className="hidden sm:block" />
-                    Pangkas Waktu Picking{' '}
+                    {t("Pangkas Waktu Picking")}{' '}
                     <span
                         className="relative inline-block"
                         style={{ color: '#2B7FFF' }}
                     >
-                        hingga 40%.
-                        <svg
+                        {t("hingga 40%.")}<svg
                             className="absolute -bottom-1 left-0 w-full"
                             viewBox="0 0 300 8"
                             fill="none"
@@ -145,9 +145,7 @@ export default function HeroSection() {
 
                 {/* Subtext — pain-point language */}
                 <p className="mt-7 text-slate-500 dark:text-slate-400 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
-                    Tidak ada lagi barang hilang, stock opname berhari-hari, atau kesalahan picking.
-                    OmniWarehouse memberi kontrol penuh atas setiap rak, SKU, dan pergerakan stok gudang Anda — secara real-time.
-                </p>
+                    {t("Tidak ada lagi barang hilang, stock opname berhari-hari, atau kesalahan picking. OmniWarehouse memberi kontrol penuh atas setiap rak, SKU, dan pergerakan stok gudang Anda — secara real-time.")}</p>
 
                 {/* CTAs */}
                 <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -158,14 +156,13 @@ export default function HeroSection() {
                         onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#1a6fee')}
                         onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#2B7FFF')}
                     >
-                        Coba Gratis 14 Hari <ArrowRight size={16} />
+                        {t("Coba Gratis 14 Hari")}{' '}<ArrowRight size={16} />
                     </Link>
                     <a
                         href="#demo"
                         className="inline-flex items-center gap-2 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white font-semibold text-sm px-7 py-3.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900 transition-all duration-150 active:scale-[0.98]"
                     >
-                        Jadwalkan Live Demo 15 Menit
-                    </a>
+                        {t("Jadwalkan Live Demo 15 Menit")}</a>
                 </div>
 
                 {/* Proof points — specific, not generic claims */}

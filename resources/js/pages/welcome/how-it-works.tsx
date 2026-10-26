@@ -1,20 +1,22 @@
-import React from 'react';
+import React from 'react';import { useTranslation } from '@/context/language-context';
+
 
 export default function HowItWorks() {
+    const { t } = useTranslation();
     const steps = [
         {
             step: '01',
-            title: 'Daftar & Setup Gudang',
+            title: t("Daftar & Setup Gudang"),
             desc: 'Buat akun tenant Anda dalam 2 menit. Masukkan nama gudang, lokasi, dan zona rak. Tidak perlu hardware khusus — cukup browser.',
         },
         {
             step: '02',
-            title: 'Import SKU & Petakan Rak',
+            title: t("Import SKU & Petakan Rak"),
             desc: 'Upload daftar produk via CSV atau input manual. Tentukan lokasi penyimpanan tiap SKU di rak yang sudah Anda buat. Staf Anda langsung bisa mulai bekerja.',
         },
         {
             step: '03',
-            title: 'Operasikan & Pantau Real-Time',
+            title: t("Operasikan & Pantau Real-Time"),
             desc: 'Catat inbound, proses picking order, dan pantau pergerakan stok secara langsung. Laporan akurasi stok tersedia setiap saat.',
         },
     ];
@@ -24,11 +26,10 @@ export default function HowItWorks() {
             <div className="max-w-6xl mx-auto">
                 {/* Header Section */}
                 <div className="text-center mb-16">
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-[#2B7FFF] dark:text-blue-400 mb-3">Cara Kerja</p>
-                    <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Aktif dan siap pakai dalam satu hari kerja</h2>
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-[#2B7FFF] dark:text-blue-400 mb-3">{t("Cara Kerja")}</p>
+                    <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">{t("Aktif dan siap pakai dalam satu hari kerja")}</h2>
                     <p className="text-slate-500 dark:text-slate-400 text-sm mt-3 max-w-md mx-auto">
-                        Tanpa migrasi berbulan-bulan. Tanpa konsultan implementasi mahal.
-                    </p>
+                        {t("Tanpa migrasi berbulan-bulan. Tanpa konsultan implementasi mahal.")}</p>
                 </div>
 
                 {/* Steps Container */}

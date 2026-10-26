@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';import { useTranslation } from '@/context/language-context';
+
 
 interface Product {
     category: any;
@@ -20,6 +21,7 @@ export default function Show({
     tenant_slug,
     product,
 }: Props) {
+    const { t } = useTranslation();
     return (
         <>
             <Head title={`Product - ${product.name}`} />
@@ -27,20 +29,17 @@ export default function Show({
             <div className="space-y-6 p-4">
                 <div>
                     <h1 className="text-2xl font-bold text-foreground">
-                        Product Details
-                    </h1>
+                        {t("Product Details")}</h1>
 
                     <p className="mt-1 text-sm text-muted-foreground">
-                        View product information.
-                    </p>
+                        {t("View product information.")}</p>
                 </div>
 
                 <div className="rounded-lg border border-border bg-card p-6 shadow-md">
                     <div className="grid gap-6 md:grid-cols-2">
                         <div>
                             <p className="text-sm text-muted-foreground">
-                                Product ID
-                            </p>
+                                {t("Product ID")}</p>
 
                             <p className="mt-1 font-medium text-foreground">
                                 {product.id}
@@ -49,8 +48,7 @@ export default function Show({
 
                         <div>
                             <p className="text-sm text-muted-foreground">
-                                Product Name
-                            </p>
+                                {t("Product Name")}</p>
 
                             <p className="mt-1 font-medium text-foreground">
                                 {product.name}
@@ -59,18 +57,16 @@ export default function Show({
 
                         <div>
                             <p className="text-sm text-muted-foreground">
-                                Category
-                            </p>
+                                {t("Category")}</p>
 
                             <p className="mt-1 font-medium text-foreground">
-                                {product.category?.name || 'N/A'}
+                                {product.category?.name || t("N/A")}
                             </p>
                         </div>
 
                         <div>
                             <p className="text-sm text-muted-foreground">
-                                Date Added
-                            </p>
+                                {t("Date Added")}</p>
 
                             <p className="mt-1 font-medium text-foreground">
                                 {new Date(
@@ -81,8 +77,7 @@ export default function Show({
 
                         <div>
                             <p className="text-sm text-muted-foreground">
-                                Last Updated
-                            </p>
+                                {t("Last Updated")}</p>
 
                             <p className="mt-1 font-medium text-foreground">
                                 {new Date(
@@ -97,16 +92,14 @@ export default function Show({
                             <Link
                                 href={`/${tenant_slug}/inventory/products`}
                             >
-                                Back
-                            </Link>
+                                {t("Back")}</Link>
                         </Button>
 
                         <Button asChild>
                             <Link
                                 href={`/${tenant_slug}/inventory/products/${product.id}/edit`}
                             >
-                                Edit Product
-                            </Link>
+                                {t("Edit Product")}</Link>
                         </Button>
                     </div>
                 </div>

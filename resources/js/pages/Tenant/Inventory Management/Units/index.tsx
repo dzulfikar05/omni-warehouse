@@ -13,7 +13,8 @@ import {
     Popover,
     PopoverContent,
     PopoverTrigger,
-} from '@/components/ui/popover';
+} from '@/components/ui/popover';import { useTranslation } from '@/context/language-context';
+
 
 import {
     Plus,
@@ -55,6 +56,7 @@ export default function Index({
     units,
     filters,
 }: Props) {
+    const { t } = useTranslation();
     const [search, setSearch] = useState(filters.search ?? '');
     const [sortBy, setSortBy] = useState(filters.sort_by ?? 'latest');
     const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -131,42 +133,40 @@ export default function Index({
 
     return (
         <>
-            <Head title="Units" />
+            <Head title={t("Units")} />
 
             <div className="space-y-6 p-4">
                 {/* Header */}
                 <div className="rounded-lg border border-border bg-card p-6 text-card-foreground shadow-md">
                     <div className="flex items-center justify-between">
                         <h2 className="text-2xl font-bold text-foreground">
-                            Units
-                        </h2>
+                            {t("Units")}</h2>
 
                         <Button asChild className="shadow-md">
                             <Link
                                 href={`/${tenant_slug}/inventory/units/create`}
                             >
                                 <Plus className="mr-2 h-4 w-4" />
-                                Add Unit
-                            </Link>
+                                {t("Add Unit")}</Link>
                         </Button>
                     </div>
 
                     {/* Controls */}
                     <div className="mt-6 flex flex-col items-center justify-between gap-4 md:flex-row">
                         <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                            <span>Show</span>
+                            <span>{t("Show")}</span>
 
                             <select
                                 className="rounded-md border border-border bg-card px-2 py-1 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                                 value={units.per_page}
                                 onChange={handlePerPageChange}
                             >
-                                <option value="10">10</option>
-                                <option value="25">25</option>
-                                <option value="50">50</option>
+                                <option value="10">{t("10")}</option>
+                                <option value="25">{t("25")}</option>
+                                <option value="50">{t("50")}</option>
                             </select>
 
-                            <span>entries</span>
+                            <span>{t("entries")}</span>
                         </div>
 
                         <div className="flex w-full items-center space-x-3 md:w-auto">
@@ -174,7 +174,7 @@ export default function Index({
                                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
 
                                 <Input
-                                    placeholder="Search units..."
+                                    placeholder={t("Search units...")}
                                     value={search}
                                     onChange={handleSearchChange}
                                     className="pl-9"
@@ -189,18 +189,17 @@ export default function Index({
                                         className="relative flex items-center space-x-2"
                                     >
                                         <SlidersHorizontal className="h-4 w-4" />
-                                        <span>Filter</span>
+                                        <span>{t("Filter")}</span>
                                         {isFilterActive && (
                                             <span className="ml-1 rounded-full bg-primary-foreground text-primary px-1.5 py-0.5 text-xs font-bold">
-                                                •
-                                            </span>
+                                                {t("•")}</span>
                                         )}
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-80 p-4" align="end">
                                     <div className="space-y-4">
                                         <div className="flex items-center justify-between border-b pb-2">
-                                            <h4 className="font-semibold text-sm">Filter Units</h4>
+                                            <h4 className="font-semibold text-sm">{t("Filter Units")}</h4>
                                             {isFilterActive && (
                                                 <Button
                                                     variant="ghost"
@@ -208,24 +207,22 @@ export default function Index({
                                                     onClick={handleResetFilter}
                                                     className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
                                                 >
-                                                    Reset
-                                                </Button>
+                                                    {t("Reset")}</Button>
                                             )}
                                         </div>
 
                                         {/* Filter Urutan / Sort */}
                                         <div className="space-y-1.5">
                                             <label className="text-xs font-medium text-muted-foreground">
-                                                Sort By
-                                            </label>
+                                                {t("Sort By")}</label>
                                             <select
                                                 className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                                                 value={sortBy}
                                                 onChange={(e) => setSortBy(e.target.value)}
                                             >
-                                                <option value="latest">Newest First</option>
-                                                <option value="oldest">Oldest First</option>
-                                                <option value="name_asc">Name (A-Z)</option>
+                                                <option value="latest">{t("Newest First")}</option>
+                                                <option value="oldest">{t("Oldest First")}</option>
+                                                <option value="name_asc">{t("Name (A-Z)")}</option>
                                                 {/* <option value="name_desc">Name (Z-A)</option> */}
                                             </select>
                                         </div>
@@ -237,11 +234,9 @@ export default function Index({
                                                 size="sm"
                                                 onClick={() => setIsFilterOpen(false)}
                                             >
-                                                Cancel
-                                            </Button>
+                                                {t("Cancel")}</Button>
                                             <Button size="sm" onClick={handleApplyFilter}>
-                                                Apply
-                                            </Button>
+                                                {t("Apply")}</Button>
                                         </div>
                                     </div>
                                 </PopoverContent>
@@ -257,24 +252,19 @@ export default function Index({
                             <thead>
                                 <tr className="border-b border-border bg-muted/50 text-muted-foreground">
                                     <th className="p-4 font-semibold">
-                                        Unit ID
-                                    </th>
+                                        {t("Unit ID")}</th>
 
                                     <th className="p-4 font-semibold">
-                                        Unit Name
-                                    </th>
+                                        {t("Unit Name")}</th>
 
                                     <th className="p-4 font-semibold">
-                                        Symbol
-                                    </th>
+                                        {t("Symbol")}</th>
 
                                     <th className="p-4 font-semibold">
-                                        Date Added
-                                    </th>
+                                        {t("Date Added")}</th>
 
                                     <th className="p-4 text-right font-semibold">
-                                        Actions
-                                    </th>
+                                        {t("Actions")}</th>
                                 </tr>
                             </thead>
 
@@ -286,7 +276,7 @@ export default function Index({
                                             className="transition-colors hover:bg-muted/50"
                                         >
                                             <td className="p-4 font-medium text-foreground">
-                                                UNIT-00{unit.id}
+                                                {t("UNIT-00")}{unit.id}
                                             </td>
 
                                             <td className="p-4 text-foreground">
@@ -312,8 +302,7 @@ export default function Index({
                                                             variant="outline"
                                                             size="sm"
                                                         >
-                                                            Actions
-                                                        </Button>
+                                                            {t("Actions")}</Button>
                                                     </DropdownMenuTrigger>
 
                                                     <DropdownMenuContent
@@ -328,8 +317,7 @@ export default function Index({
                                                                 className="flex cursor-pointer items-center"
                                                             >
                                                                 <Eye className="mr-2 h-4 w-4 text-muted-foreground" />
-                                                                View Details
-                                                            </Link>
+                                                                {t("View Details")}</Link>
                                                         </DropdownMenuItem>
 
                                                         <DropdownMenuItem
@@ -340,8 +328,7 @@ export default function Index({
                                                                 className="flex cursor-pointer items-center"
                                                             >
                                                                 <Pencil className="mr-2 h-4 w-4 text-muted-foreground" />
-                                                                Edit Data
-                                                            </Link>
+                                                                {t("Edit Data")}</Link>
                                                         </DropdownMenuItem>
 
                                                         <DropdownMenuItem
@@ -353,8 +340,7 @@ export default function Index({
                                                             className="flex cursor-pointer items-center text-red-600 focus:text-red-600"
                                                         >
                                                             <Trash2 className="mr-2 h-4 w-4 text-red-600" />
-                                                            Delete Data
-                                                        </DropdownMenuItem>
+                                                            {t("Delete Data")}</DropdownMenuItem>
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
                                             </td>
@@ -366,8 +352,7 @@ export default function Index({
                                             colSpan={5}
                                             className="p-6 text-center text-muted-foreground"
                                         >
-                                            No units found.
-                                        </td>
+                                            {t("No units found.")}</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -377,11 +362,11 @@ export default function Index({
                     {/* Pagination */}
                     <div className="flex items-center justify-between border-t border-border bg-muted/20 p-4 text-sm text-muted-foreground">
                         <div>
-                            Page{' '}
+                            {t("Page")}{' '}
                             <span className="font-medium text-foreground">
                                 {units.current_page}
                             </span>{' '}
-                            of {units.last_page}
+                            {t("of")}{' '}{units.last_page}
                         </div>
 
                         <div className="flex items-center space-x-2">
@@ -395,8 +380,7 @@ export default function Index({
                                     )
                                 }
                             >
-                                Prev
-                            </Button>
+                                {t("Prev")}</Button>
 
                             <Button
                                 variant="outline"
@@ -411,8 +395,7 @@ export default function Index({
                                     )
                                 }
                             >
-                                Next
-                            </Button>
+                                {t("Next")}</Button>
                         </div>
                     </div>
                 </div>
@@ -423,7 +406,7 @@ export default function Index({
 
 Index.layout = {
     breadcrumbs: [
-        { title: 'Inventory Management', href: '/units' },
-        { title: 'Units', href: '/units' },
+        { title: "Inventory Management", href: '/units' },
+        { title: "Units", href: '/units' },
     ],
 };

@@ -1,7 +1,8 @@
 import React from 'react';
 import { Head, Link } from '@inertiajs/react';
 import AppLogo from '@/components/app-logo';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';import { useTranslation } from '@/context/language-context';
+
 import { ArrowRight, Building2, CheckCircle2, ExternalLink, UserCheck } from 'lucide-react';
 
 interface Props {
@@ -17,12 +18,13 @@ interface Props {
 }
 
 export default function RegisterSuccess({ tenant, user }: Props) {
+    const { t } = useTranslation();
     const tenantUrl = `/${tenant.slug}`;
     const loginUrl = `/${tenant.slug}/login`;
 
     return (
         <>
-            <Head title="Registration Successful" />
+            <Head title={t("Registration Successful")} />
 
             {/* Container Outer dengan Background Soft Blue Glow */}
             <div className="relative flex min-h-screen items-center justify-center bg-slate-50/50 dark:bg-slate-950 p-4 font-sans overflow-hidden transition-colors duration-300">
@@ -42,12 +44,10 @@ export default function RegisterSuccess({ tenant, user }: Props) {
                         </div>
 
                         <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                            Company Registered!
-                        </h1>
+                            {t("Company Registered!")}</h1>
 
                         <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400 px-2">
-                            Your multi-tenant warehouse environment has been successfully created and configured.
-                        </p>
+                            {t("Your multi-tenant warehouse environment has been successfully created and configured.")}</p>
                     </div>
 
                     {/* Details Box */}
@@ -58,8 +58,7 @@ export default function RegisterSuccess({ tenant, user }: Props) {
                             </div>
                             <div>
                                 <div className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 dark:text-slate-500">
-                                    Company
-                                </div>
+                                    {t("Company")}</div>
                                 <div className="text-sm font-bold text-slate-800 dark:text-slate-100">
                                     {tenant.name}
                                 </div>
@@ -72,8 +71,7 @@ export default function RegisterSuccess({ tenant, user }: Props) {
                             </div>
                             <div>
                                 <div className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 dark:text-slate-500">
-                                    Admin Account
-                                </div>
+                                    {t("Admin Account")}</div>
                                 <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
                                     {user.email}
                                 </div>
@@ -88,8 +86,7 @@ export default function RegisterSuccess({ tenant, user }: Props) {
                             className="h-11 w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 font-semibold text-white shadow-md shadow-blue-600/25 dark:shadow-blue-950/50 transition-all active:scale-[0.99]"
                         >
                             <Link href={loginUrl} className="flex items-center justify-center gap-2">
-                                Go to Sign In Portal
-                                <ArrowRight className="h-4 w-4" />
+                                {t("Go to Sign In Portal")}<ArrowRight className="h-4 w-4" />
                             </Link>
                         </Button>
 
@@ -99,8 +96,7 @@ export default function RegisterSuccess({ tenant, user }: Props) {
                             className="h-10 w-full border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white text-xs"
                         >
                             <Link href={tenantUrl} className="flex items-center justify-center gap-1.5">
-                                Visit Tenant Public Page ({tenantUrl})
-                                <ExternalLink className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+                                {t("Visit Tenant Public Page (")}{tenantUrl}{t(")")}<ExternalLink className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
                             </Link>
                         </Button>
                     </div>

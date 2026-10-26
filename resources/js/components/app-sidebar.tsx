@@ -24,10 +24,12 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { useTranslation } from '@/context/language-context';
 import type { NavItem } from '@/types';
 
 export function AppSidebar() {
     const { auth, current_tenant, settings, tenant_profile } = usePage().props as any;
+    const { t } = useTranslation();
 
     const userPermissions: string[] = auth?.user?.permissions || [];
     const userRoles: string[] = auth?.user?.roles || [];
@@ -55,7 +57,7 @@ export function AppSidebar() {
         current_tenant?.name ||
         auth?.user?.tenant_name ||
         auth?.user?.tenant?.name ||
-        'Tenant Portal';
+        t('Tenant Portal');
 
     // ----------------------------------------------------
     // SHARING LOGO GENERAL SETTINGS KHUSUS TENANT
@@ -86,6 +88,7 @@ export function AppSidebar() {
 
         // 2. Inventory Management
         const inventoryChildren = [];
+
         if (can('tenant.skus.view')) {
             inventoryChildren.push({
                 title: 'SKUs',
@@ -133,6 +136,7 @@ export function AppSidebar() {
 
         // 3. Warehouse & Stocks
         const warehouseChildren = [];
+
         if (can('tenant.warehouses.view')) {
             warehouseChildren.push({
                 title: 'Warehouses',
@@ -141,6 +145,7 @@ export function AppSidebar() {
                     : '#',
             });
         }
+
         if (can('tenant.stock_locations.view')) {
             warehouseChildren.push({
                 title: 'Rack & Stock Location',
@@ -149,6 +154,7 @@ export function AppSidebar() {
                     : '#',
             });
         }
+
         if (can('tenant.stock_opname.view')) {
             warehouseChildren.push({
                 title: 'Stock Opname',
@@ -169,6 +175,7 @@ export function AppSidebar() {
 
         // 4. Transactions
         const transactionChildren = [];
+
         if (can('tenant.inbound.view')) {
             transactionChildren.push({
                 title: 'Inbound Management',
@@ -177,6 +184,7 @@ export function AppSidebar() {
                     : '#',
             });
         }
+
         if (can('tenant.outbound.view')) {
             transactionChildren.push({
                 title: 'Outbound Management',
@@ -185,6 +193,7 @@ export function AppSidebar() {
                     : '#',
             });
         }
+
         if (can('tenant.stock_transfer.view')) {
             transactionChildren.push({
                 title: 'Stock Transfer',
@@ -205,6 +214,7 @@ export function AppSidebar() {
 
         // 5. Contact
         const contactChildren = [];
+
         if (can('tenant.contacts.customers.view')) {
             contactChildren.push({
                 title: 'Customer',
@@ -213,6 +223,7 @@ export function AppSidebar() {
                     : '#',
             });
         }
+
         if (can('tenant.contacts.suppliers.view')) {
             contactChildren.push({
                 title: 'Supplier',
@@ -233,6 +244,7 @@ export function AppSidebar() {
 
         // 6. Reports
         const reportChildren = [];
+
         if (can('tenant.stock_summary.view')) {
             reportChildren.push({
                 title: 'Stock Summary Report',
@@ -241,6 +253,7 @@ export function AppSidebar() {
                     : '#',
             });
         }
+
         if (can('tenant.stock_movement.view')) {
             reportChildren.push({
                 title: 'Stock Movement',
@@ -249,6 +262,7 @@ export function AppSidebar() {
                     : '#',
             });
         }
+
         if (can('tenant.valuation_asset.view')) {
             reportChildren.push({
                 title: 'Valuation & Asset Report',
@@ -257,6 +271,7 @@ export function AppSidebar() {
                     : '#',
             });
         }
+
         if (can('tenant.inbound_outbound.view')) {
             reportChildren.push({
                 title: 'Inbound / Outbound Summary',

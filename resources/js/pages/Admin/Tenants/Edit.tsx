@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Head, useForm, Link, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
-import { PageHeader } from '@/components/page-header';
+import { PageHeader } from '@/components/page-header';import { useTranslation } from '@/context/language-context';
+
 import { ArrowLeft, Save, RotateCcw, Upload, Building2 } from 'lucide-react';
 
 interface Plan {
@@ -30,6 +31,7 @@ interface Props {
 }
 
 export default function TenantEdit({ tenant, plans }: Props) {
+    const { t } = useTranslation();
     const [logoPreview, setLogoPreview] = useState<string | null>(tenant.logo_url || null);
 
     const { data, setData, processing, errors, reset } = useForm({
@@ -66,13 +68,12 @@ export default function TenantEdit({ tenant, plans }: Props) {
 
             <div className="space-y-6 p-4 sm:p-6">
                 <PageHeader
-                    title="Edit Tenant Data"
+                    title={t("Edit Tenant Data")}
                     description={`Modify organization records and active subscription plan for ${tenant.name}.`}
                     renderAction={
                         <Button asChild variant="outline" size="sm" className="h-9 gap-1.5 border-border text-xs">
                             <Link href="/admin/tenants">
-                                <ArrowLeft className="h-4 w-4" /> Back
-                            </Link>
+                                <ArrowLeft className="h-4 w-4" /> {t("Back")}</Link>
                         </Button>
                     }
                 />
@@ -84,13 +85,13 @@ export default function TenantEdit({ tenant, plans }: Props) {
                             <div className="flex items-center gap-5">
                                 <div className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-border bg-muted">
                                     {logoPreview ? (
-                                        <img src={logoPreview} alt="Logo Preview" className="h-full w-full object-cover" />
+                                        <img src={logoPreview} alt={t("Logo Preview")} className="h-full w-full object-cover" />
                                     ) : (
                                         <Building2 className="h-8 w-8 text-muted-foreground" />
                                     )}
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="block text-xs font-semibold text-foreground">Company Logo</label>
+                                    <label className="block text-xs font-semibold text-foreground">{t("Company Logo")}</label>
                                     <input
                                         type="file"
                                         accept="image/*"
@@ -105,16 +106,15 @@ export default function TenantEdit({ tenant, plans }: Props) {
                                         className="h-8 gap-1.5 border-border text-xs"
                                         onClick={() => document.getElementById('logo-upload')?.click()}
                                     >
-                                        <Upload className="h-3.5 w-3.5" /> Change Logo
-                                    </Button>
-                                    <p className="text-[11px] text-muted-foreground">Allowed formats: PNG, JPG, WEBP. Max size: 2MB.</p>
+                                        <Upload className="h-3.5 w-3.5" /> {t("Change Logo")}</Button>
+                                    <p className="text-[11px] text-muted-foreground">{t("Allowed formats: PNG, JPG, WEBP. Max size: 2MB.")}</p>
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-semibold text-foreground">
-                                        Company Name <span className="text-red-500">*</span>
+                                        {t("Company Name")}{' '}<span className="text-red-500">{t("*")}</span>
                                     </label>
                                     <input
                                         type="text"
@@ -127,7 +127,7 @@ export default function TenantEdit({ tenant, plans }: Props) {
 
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-semibold text-foreground">
-                                        Slug Identifier <span className="text-red-500">*</span>
+                                        {t("Slug Identifier")}{' '}<span className="text-red-500">{t("*")}</span>
                                     </label>
                                     <input
                                         type="text"
@@ -139,7 +139,7 @@ export default function TenantEdit({ tenant, plans }: Props) {
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-semibold text-foreground">Phone Number</label>
+                                    <label className="text-xs font-semibold text-foreground">{t("Phone Number")}</label>
                                     <input
                                         type="text"
                                         value={data.phone}
@@ -150,7 +150,7 @@ export default function TenantEdit({ tenant, plans }: Props) {
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-semibold text-foreground">Email Address</label>
+                                    <label className="text-xs font-semibold text-foreground">{t("Email Address")}</label>
                                     <input
                                         type="email"
                                         value={data.email}
@@ -161,7 +161,7 @@ export default function TenantEdit({ tenant, plans }: Props) {
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-semibold text-foreground">Website URL</label>
+                                    <label className="text-xs font-semibold text-foreground">{t("Website URL")}</label>
                                     <input
                                         type="url"
                                         value={data.website}
@@ -172,7 +172,7 @@ export default function TenantEdit({ tenant, plans }: Props) {
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-semibold text-foreground">Tax Number (NPWP)</label>
+                                    <label className="text-xs font-semibold text-foreground">{t("Tax Number (NPWP)")}</label>
                                     <input
                                         type="text"
                                         value={data.tax_number}
@@ -184,7 +184,7 @@ export default function TenantEdit({ tenant, plans }: Props) {
 
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-semibold text-foreground">
-                                        Subscription Plan <span className="text-red-500">*</span>
+                                        {t("Subscription Plan")}{' '}<span className="text-red-500">{t("*")}</span>
                                     </label>
                                     <select
                                         value={data.plan_id}
@@ -201,7 +201,7 @@ export default function TenantEdit({ tenant, plans }: Props) {
                                 </div>
 
                                 <div className="space-y-1.5 md:col-span-2">
-                                    <label className="text-xs font-semibold text-foreground">Physical Address</label>
+                                    <label className="text-xs font-semibold text-foreground">{t("Physical Address")}</label>
                                     <textarea
                                         value={data.address}
                                         onChange={(e) => setData('address', e.target.value)}
@@ -222,15 +222,14 @@ export default function TenantEdit({ tenant, plans }: Props) {
                                 onClick={() => reset()}
                                 className="h-9 gap-1.5 border-border text-xs"
                             >
-                                <RotateCcw className="h-3.5 w-3.5" /> Reset
-                            </Button>
+                                <RotateCcw className="h-3.5 w-3.5" /> {t("Reset")}</Button>
                             <Button
                                 type="submit"
                                 size="sm"
                                 disabled={processing}
                                 className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700"
                             >
-                                <Save className="mr-1.5 h-4 w-4" /> {processing ? 'Updating...' : 'Update Changes'}
+                                <Save className="mr-1.5 h-4 w-4" /> {processing ? t("Updating...") : t("Update Changes")}
                             </Button>
                         </div>
                     </form>
@@ -242,8 +241,8 @@ export default function TenantEdit({ tenant, plans }: Props) {
 
 TenantEdit.layout = {
     breadcrumbs: [
-        { title: 'Admin', href: '#' },
-        { title: 'Tenants Management', href: '/admin/tenants' },
-        { title: 'Edit Tenant', href: '#' },
+        { title: "Admin", href: '#' },
+        { title: "Tenants Management", href: '/admin/tenants' },
+        { title: "Edit Tenant", href: '#' },
     ],
 };

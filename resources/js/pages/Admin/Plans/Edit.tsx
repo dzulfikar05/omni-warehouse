@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Head, useForm, Link, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/page-header';
+import { useTranslation } from '@/context/language-context';
 import { usePermission } from '@/utils/permission';
 import {
     ArrowLeft,
@@ -31,6 +32,7 @@ interface Props {
 }
 
 export default function PlanEdit({ plan }: Props) {
+    const { t } = useTranslation();
     const { can } = usePermission();
     const { data, setData, put, processing, errors, reset } = useForm({
         name: plan.name || '',
@@ -81,13 +83,12 @@ export default function PlanEdit({ plan }: Props) {
             <div className="space-y-6 p-4 sm:p-6">
                 <PageHeader
                     title={`Edit Plan: ${plan.name}`}
-                    description="Update plan tier pricing, features, and active settings."
+                    description={t("Update plan tier pricing, features, and active settings.")}
                     renderAction={
                         <div className="flex items-center gap-2">
                             <Button asChild variant="outline" size="sm" className="h-9 gap-1.5 border-border text-xs">
                                 <Link href="/admin/plans">
-                                    <ArrowLeft className="h-4 w-4" /> Back
-                                </Link>
+                                    <ArrowLeft className="h-4 w-4" /> {t("Back")}</Link>
                             </Button>
 
                             {canDelete && (
@@ -98,8 +99,7 @@ export default function PlanEdit({ plan }: Props) {
                                     onClick={() => setShowDeleteModal(true)}
                                     className="h-9 gap-1.5 border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900/50 dark:text-red-400"
                                 >
-                                    <Trash2 className="h-4 w-4" /> Delete Plan
-                                </Button>
+                                    <Trash2 className="h-4 w-4" /> {t("Delete Plan")}</Button>
                             )}
                         </div>
                     }
@@ -111,7 +111,7 @@ export default function PlanEdit({ plan }: Props) {
                             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-semibold text-foreground">
-                                        Plan Name <span className="text-red-500">*</span>
+                                        {t("Plan Name")}{' '}<span className="text-red-500">{t("*")}</span>
                                     </label>
                                     <input
                                         type="text"
@@ -124,7 +124,7 @@ export default function PlanEdit({ plan }: Props) {
 
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-semibold text-foreground">
-                                        Price Monthly (IDR) <span className="text-red-500">*</span>
+                                        {t("Price Monthly (IDR)")}{' '}<span className="text-red-500">{t("*")}</span>
                                     </label>
                                     <input
                                         type="number"
@@ -136,7 +136,7 @@ export default function PlanEdit({ plan }: Props) {
                                 </div>
 
                                 <div className="space-y-1.5 md:col-span-2">
-                                    <label className="text-xs font-semibold text-foreground">Short Description</label>
+                                    <label className="text-xs font-semibold text-foreground">{t("Short Description")}</label>
                                     <textarea
                                         value={data.desc}
                                         onChange={(e) => setData('desc', e.target.value)}
@@ -151,8 +151,7 @@ export default function PlanEdit({ plan }: Props) {
                             <div className="space-y-3 pt-4 border-t border-border">
                                 <div className="flex items-center justify-between">
                                     <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                                        Feature List
-                                    </label>
+                                        {t("Feature List")}</label>
                                     <Button
                                         type="button"
                                         variant="outline"
@@ -160,8 +159,7 @@ export default function PlanEdit({ plan }: Props) {
                                         onClick={addFeatureField}
                                         className="h-8 gap-1 border-border text-xs"
                                     >
-                                        <Plus className="h-3.5 w-3.5" /> Add Feature
-                                    </Button>
+                                        <Plus className="h-3.5 w-3.5" /> {t("Add Feature")}</Button>
                                 </div>
 
                                 {data.features.map((feat, index) => (
@@ -195,15 +193,14 @@ export default function PlanEdit({ plan }: Props) {
                                 onClick={() => reset()}
                                 className="h-9 gap-1.5 border-border text-xs"
                             >
-                                <RotateCcw className="h-3.5 w-3.5" /> Reset
-                            </Button>
+                                <RotateCcw className="h-3.5 w-3.5" /> {t("Reset")}</Button>
                             <Button
                                 type="submit"
                                 size="sm"
                                 disabled={processing}
                                 className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700"
                             >
-                                <Save className="mr-1.5 h-4 w-4" /> {processing ? 'Updating...' : 'Update Plan Tier'}
+                                <Save className="mr-1.5 h-4 w-4" /> {processing ? t("Updating...") : t("Update Plan Tier")}
                             </Button>
                         </div>
                     </form>
@@ -224,10 +221,9 @@ export default function PlanEdit({ plan }: Props) {
                         </div>
 
                         <div className="flex flex-col gap-1.5">
-                            <h3 className="text-base font-bold text-foreground">Delete Plan Tier "{plan.name}"?</h3>
+                            <h3 className="text-base font-bold text-foreground">{t("Delete Plan Tier \"")}{plan.name}{t("\"?")}</h3>
                             <p className="text-xs leading-relaxed text-muted-foreground">
-                                Permanent action. The subscription tier and all embedded feature definitions will be removed from the system catalog.
-                            </p>
+                                {t("Permanent action. The subscription tier and all embedded feature definitions will be removed from the system catalog.")}</p>
                         </div>
 
                         <div className="flex items-center justify-end gap-3 pt-2">
@@ -239,8 +235,7 @@ export default function PlanEdit({ plan }: Props) {
                                 onClick={() => setShowDeleteModal(false)}
                                 className="h-9 border-border text-xs"
                             >
-                                Cancel
-                            </Button>
+                                {t("Cancel")}</Button>
                             <Button
                                 type="button"
                                 size="sm"
@@ -248,7 +243,7 @@ export default function PlanEdit({ plan }: Props) {
                                 onClick={handleDelete}
                                 className="h-9 bg-red-600 text-white hover:bg-red-700"
                             >
-                                {isDeleting ? 'Deleting...' : 'Yes, Delete Plan'}
+                                {isDeleting ? t("Deleting...") : t("Yes, Delete Plan")}
                             </Button>
                         </div>
                     </div>
@@ -260,8 +255,8 @@ export default function PlanEdit({ plan }: Props) {
 
 PlanEdit.layout = {
     breadcrumbs: [
-        { title: 'Admin', href: '#' },
-        { title: 'Plans Management', href: '/admin/plans' },
-        { title: 'Edit Plan Tier', href: '#' },
+        { title: "Admin", href: '#' },
+        { title: "Plans Management", href: '/admin/plans' },
+        { title: "Edit Plan Tier", href: '#' },
     ],
 };

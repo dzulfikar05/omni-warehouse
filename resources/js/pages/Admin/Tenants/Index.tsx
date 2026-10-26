@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { debounce } from 'lodash';
+import { useTranslation } from '@/context/language-context';
 import { usePermission } from '@/utils/permission';
 import {
     Plus,
@@ -82,6 +83,7 @@ interface PageProps {
 }
 
 export default function TenantIndex({ tenants, stats, plans, filters }: PageProps) {
+    const { t } = useTranslation();
     const { flash } = usePage().props as any;
     const { can } = usePermission();
 
@@ -177,23 +179,23 @@ export default function TenantIndex({ tenants, stats, plans, filters }: PageProp
     const canCreate = can('central.tenants.create');
 
     const tableHeaders: Array<string | HeaderConfig> = [
-        { label: '#', sortField: 'id' },
-        { label: 'TENANT NAME', sortField: 'name' },
+        { label: t("#"), sortField: 'id' },
+        { label: t("TENANT NAME"), sortField: 'name' },
         'PLAN TIER',
         'PHONE / EMAIL',
-        { label: 'TAX ID / NPWP', sortField: 'tax_number' },
-        { label: 'STATUS', sortField: 'status' },
+        { label: t("TAX ID / NPWP"), sortField: 'tax_number' },
+        { label: t("STATUS"), sortField: 'status' },
         'ACTIONS',
     ];
 
     return (
         <>
-            <Head title="Tenants Management" />
+            <Head title={t("Tenants Management")} />
 
             <div className="space-y-6 p-4 sm:p-6">
                 <PageHeader
-                    title="Tenants Management"
-                    description="Manage registered organization tenants, subscriptions, and system resource limits."
+                    title={t("Tenants Management")}
+                    description={t("Manage registered organization tenants, subscriptions, and system resource limits.")}
                     renderAction={
                         <div className="flex items-center gap-2">
                             {canView && (
@@ -204,16 +206,14 @@ export default function TenantIndex({ tenants, stats, plans, filters }: PageProp
                                         onClick={handleExportPdf}
                                         className="h-9 gap-1.5 border-border text-xs"
                                     >
-                                        <FileText size={15} className="text-red-500" /> Export PDF
-                                    </Button>
+                                        <FileText size={15} className="text-red-500" /> {t("Export PDF")}</Button>
                                     <Button
                                         variant="outline"
                                         size="sm"
                                         onClick={handleExportExcel}
                                         className="h-9 gap-1.5 border-border text-xs"
                                     >
-                                        <FileSpreadsheet size={15} className="text-emerald-500" /> Export Excel
-                                    </Button>
+                                        <FileSpreadsheet size={15} className="text-emerald-500" /> {t("Export Excel")}</Button>
                                 </>
                             )}
 
@@ -221,8 +221,7 @@ export default function TenantIndex({ tenants, stats, plans, filters }: PageProp
                                 <Button asChild className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700">
                                     {/* PERBAIKAN: URL Create ke /tenants/create */}
                                     <Link href="/tenants/create">
-                                        <Plus className="mr-1.5 h-4 w-4" /> Add Tenant
-                                    </Link>
+                                        <Plus className="mr-1.5 h-4 w-4" /> {t("Add Tenant")}</Link>
                                 </Button>
                             )}
                         </div>
@@ -233,7 +232,7 @@ export default function TenantIndex({ tenants, stats, plans, filters }: PageProp
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Total Tenants</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Total Tenants")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-foreground">
                                 {stats?.total_tenants ?? tenants.total ?? 0}
                             </h3>
@@ -245,7 +244,7 @@ export default function TenantIndex({ tenants, stats, plans, filters }: PageProp
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Active Subscriptions</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Active Subscriptions")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                                 {stats?.active_tenants ?? 0}
                             </h3>
@@ -257,7 +256,7 @@ export default function TenantIndex({ tenants, stats, plans, filters }: PageProp
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Inactive Tenants</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Inactive Tenants")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-rose-600 dark:text-rose-400">
                                 {stats?.inactive_tenants ?? 0}
                             </h3>
@@ -269,9 +268,9 @@ export default function TenantIndex({ tenants, stats, plans, filters }: PageProp
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">New This Month</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("New This Month")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-purple-600 dark:text-purple-400">
-                                +{stats?.new_this_month ?? 0}
+                                {t("+")}{stats?.new_this_month ?? 0}
                             </h3>
                         </div>
                         <div className="rounded-xl bg-purple-50 p-3 text-purple-600 dark:bg-purple-950/50">
@@ -296,27 +295,27 @@ export default function TenantIndex({ tenants, stats, plans, filters }: PageProp
                     <FilterDropdown onApply={handleApplyDropdownFilter} onReset={handleResetDropdownFilter}>
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <Label className="text-xs font-bold uppercase tracking-wider">Tenant Status</Label>
+                                <Label className="text-xs font-bold uppercase tracking-wider">{t("Tenant Status")}</Label>
                                 <Select value={tempStatus} onValueChange={setTempStatus}>
                                     <SelectTrigger className="text-xs">
-                                        <SelectValue placeholder="All Status" />
+                                        <SelectValue placeholder={t("All Status")} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Status</SelectItem>
-                                        <SelectItem value="active">Active</SelectItem>
-                                        <SelectItem value="inactive">Inactive</SelectItem>
+                                        <SelectItem value="all">{t("All Status")}</SelectItem>
+                                        <SelectItem value="active">{t("Active")}</SelectItem>
+                                        <SelectItem value="inactive">{t("Inactive")}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-xs font-bold uppercase tracking-wider">Plan Tier</Label>
+                                <Label className="text-xs font-bold uppercase tracking-wider">{t("Plan Tier")}</Label>
                                 <Select value={tempPlan} onValueChange={setTempPlan}>
                                     <SelectTrigger className="text-xs">
-                                        <SelectValue placeholder="All Plans" />
+                                        <SelectValue placeholder={t("All Plans")} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Plans</SelectItem>
+                                        <SelectItem value="all">{t("All Plans")}</SelectItem>
                                         {plans.map((p) => (
                                             <SelectItem key={p.id} value={p.id.toString()}>
                                                 {p.name}
@@ -342,15 +341,15 @@ export default function TenantIndex({ tenants, stats, plans, filters }: PageProp
                         return (
                             <>
                                 <TableCell className="font-mono text-xs text-muted-foreground">
-                                    #{tenant.id}
+                                    {t("#")}{tenant.id}
                                 </TableCell>
                                 <TableCell className="text-xs">
                                     <div className="font-bold text-foreground">{tenant.name}</div>
-                                    <div className="text-[11px] text-muted-foreground">/{tenant.slug}</div>
+                                    <div className="text-[11px] text-muted-foreground">{t("/")}{tenant.slug}</div>
                                 </TableCell>
                                 <TableCell className="text-xs">
                                     <span className="rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-600 dark:border-blue-900/50 dark:bg-blue-950/50 dark:text-blue-400">
-                                        {tenant.subscription?.plan?.name || 'Standard Plan'}
+                                        {tenant.subscription?.plan?.name || t("Standard Plan")}
                                     </span>
                                 </TableCell>
                                 <TableCell className="text-xs text-muted-foreground">
@@ -368,7 +367,7 @@ export default function TenantIndex({ tenants, stats, plans, filters }: PageProp
                                                 : 'border border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400'
                                         }`}
                                     >
-                                        {isActive ? 'Active' : 'Inactive'}
+                                        {isActive ? t("Active") : t("Inactive")}
                                     </span>
                                 </TableCell>
                                 <TableCell className="text-right">
@@ -394,7 +393,7 @@ export default function TenantIndex({ tenants, stats, plans, filters }: PageProp
 
 TenantIndex.layout = {
     breadcrumbs: [
-        { title: 'Admin', href: '#' },
-        { title: 'Tenants Management', href: '/tenants' },
+        { title: "Admin", href: '#' },
+        { title: "Tenants Management", href: '/tenants' },
     ],
 };

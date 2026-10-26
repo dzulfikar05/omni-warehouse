@@ -3,6 +3,7 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/page-header';
 import { toast } from 'sonner';
+import { useTranslation } from '@/context/language-context';
 import { usePermission } from '@/utils/permission';
 import {
     Plus,
@@ -38,6 +39,7 @@ interface Props {
 }
 
 export default function PlanIndex({ plans }: Props) {
+    const { t } = useTranslation();
     const { flash } = usePage().props as any;
     const { can } = usePermission();
 
@@ -69,18 +71,17 @@ export default function PlanIndex({ plans }: Props) {
 
     return (
         <>
-            <Head title="Plans & Features" />
+            <Head title={t("Plans & Features")} />
 
             <div className="space-y-6 p-4 sm:p-6">
                 <PageHeader
-                    title="Plans & Features"
-                    description="Manage subscription tiers, feature flags, and pricing modules for all system tenants."
+                    title={t("Plans & Features")}
+                    description={t("Manage subscription tiers, feature flags, and pricing modules for all system tenants.")}
                     renderAction={
                         canCreate && (
                             <Button asChild className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700">
                                 <Link href="/admin/plans/create">
-                                    <Plus className="mr-1.5 h-4 w-4" /> Add New Plan
-                                </Link>
+                                    <Plus className="mr-1.5 h-4 w-4" /> {t("Add New Plan")}</Link>
                             </Button>
                         )
                     }
@@ -90,7 +91,7 @@ export default function PlanIndex({ plans }: Props) {
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Total Tiers</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Total Tiers")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-foreground">{totalPlans}</h3>
                         </div>
                         <div className="rounded-xl bg-blue-50 p-3 text-blue-600 dark:bg-blue-950/50">
@@ -100,7 +101,7 @@ export default function PlanIndex({ plans }: Props) {
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Active Tiers</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Active Tiers")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                                 {activePlans}
                             </h3>
@@ -112,7 +113,7 @@ export default function PlanIndex({ plans }: Props) {
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Starter / Free Tiers</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Starter / Free Tiers")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-purple-600 dark:text-purple-400">
                                 {freeStarterPlans}
                             </h3>
@@ -124,7 +125,7 @@ export default function PlanIndex({ plans }: Props) {
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Active Subscriptions</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Active Subscriptions")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-blue-600 dark:text-blue-400">
                                 {totalSubscriptions}
                             </h3>
@@ -138,10 +139,9 @@ export default function PlanIndex({ plans }: Props) {
                 {/* Main Catalog Container */}
                 <div className="flex flex-col gap-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
                     <div>
-                        <h2 className="text-sm font-bold tracking-tight text-foreground">Preview Catalog Plans</h2>
+                        <h2 className="text-sm font-bold tracking-tight text-foreground">{t("Preview Catalog Plans")}</h2>
                         <p className="text-xs text-muted-foreground">
-                            Active subscription packages displayed during tenant registration and upgrades.
-                        </p>
+                            {t("Active subscription packages displayed during tenant registration and upgrades.")}</p>
                     </div>
 
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -170,7 +170,7 @@ export default function PlanIndex({ plans }: Props) {
                                                     {plan.name}
                                                 </h3>
                                                 <p className="min-h-[32px] text-xs leading-relaxed text-muted-foreground">
-                                                    {plan.desc || 'Warehouse inventory and logistics management tier.'}
+                                                    {plan.desc || t("Warehouse inventory and logistics management tier.")}
                                                 </p>
                                             </div>
 
@@ -185,7 +185,7 @@ export default function PlanIndex({ plans }: Props) {
                                                 <span className="text-xl font-extrabold tracking-tight text-foreground">
                                                     {formatRupiah(Number(plan.price))}
                                                 </span>
-                                                <span className="text-xs font-medium text-muted-foreground">/ month</span>
+                                                <span className="text-xs font-medium text-muted-foreground">{t("/ month")}</span>
                                             </div>
 
                                             {/* Features List */}
@@ -202,8 +202,7 @@ export default function PlanIndex({ plans }: Props) {
                                                     ))
                                                 ) : (
                                                     <span className="text-xs italic text-muted-foreground">
-                                                        No features configured.
-                                                    </span>
+                                                        {t("No features configured.")}</span>
                                                 )}
                                             </div>
                                         </div>
@@ -217,11 +216,10 @@ export default function PlanIndex({ plans }: Props) {
                                                         : 'text-muted-foreground'
                                                 }`}
                                             >
-                                                <span>Active Tenants</span>
+                                                <span>{t("Active Tenants")}</span>
                                                 <span className="flex items-center gap-1 font-semibold">
                                                     <Users className="h-3.5 w-3.5 text-muted-foreground" />
-                                                    {plan.subscriptions_count || 0} tenants
-                                                </span>
+                                                    {plan.subscriptions_count || 0} {t("tenants")}</span>
                                             </div>
 
                                             {canEdit && (
@@ -235,8 +233,7 @@ export default function PlanIndex({ plans }: Props) {
                                                     }`}
                                                 >
                                                     <Link href={`/admin/plans/${plan.id}/edit`}>
-                                                        <Edit className="mr-1.5 h-3.5 w-3.5" /> Edit Plan Details
-                                                    </Link>
+                                                        <Edit className="mr-1.5 h-3.5 w-3.5" /> {t("Edit Plan Details")}</Link>
                                                 </Button>
                                             )}
                                         </div>
@@ -246,7 +243,7 @@ export default function PlanIndex({ plans }: Props) {
                         ) : (
                             <div className="col-span-3 py-12 text-center text-muted-foreground">
                                 <ShieldCheck className="mx-auto mb-2 h-8 w-8 stroke-1 text-muted-foreground" />
-                                <p className="text-xs font-medium">No subscription plan tiers available.</p>
+                                <p className="text-xs font-medium">{t("No subscription plan tiers available.")}</p>
                             </div>
                         )}
                     </div>
@@ -258,7 +255,7 @@ export default function PlanIndex({ plans }: Props) {
 
 PlanIndex.layout = {
     breadcrumbs: [
-        { title: 'Admin', href: '#' },
-        { title: 'Plans Management', href: '/admin/plans' },
+        { title: "Admin", href: '#' },
+        { title: "Plans Management", href: '/admin/plans' },
     ],
 };

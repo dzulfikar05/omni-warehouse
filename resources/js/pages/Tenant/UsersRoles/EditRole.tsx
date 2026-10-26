@@ -2,7 +2,8 @@ import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Checkbox } from '@/components/ui/checkbox';import { useTranslation } from '@/context/language-context';
+
 import { ArrowLeftCircleIcon, ChevronDown, ChevronUp } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
@@ -18,6 +19,7 @@ interface Role {
 }
 
 export default function EditRole({ role, permissions = [] }: { role: Role; permissions: Permission[] }) {
+    const { t } = useTranslation();
     const { current_tenant, auth } = usePage().props as any;
     const currentPathSlug = window.location.pathname.split('/')[1];
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
@@ -101,16 +103,14 @@ export default function EditRole({ role, permissions = [] }: { role: Role; permi
                 <div className="rounded-2xl border border-border bg-card p-6 shadow-sm flex items-center justify-between text-card-foreground">
                     <div>
                         <h2 className="text-xl font-bold tracking-tight">
-                            Edit Role: <span className="capitalize text-blue-600">{role.name}</span>
+                            {t("Edit Role:")}{' '}<span className="capitalize text-blue-600">{role.name}</span>
                         </h2>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                            Update permissions mapped to this security role.
-                        </p>
+                            {t("Update permissions mapped to this security role.")}</p>
                     </div>
                     <Button asChild variant="outline" className="rounded-xl border-border">
                         <Link href={`/${tenantSlug}/settings/users-roles?tab=roles`}>
-                            <ArrowLeftCircleIcon className="mr-2 h-4 w-4 text-blue-600" /> Back
-                        </Link>
+                            <ArrowLeftCircleIcon className="mr-2 h-4 w-4 text-blue-600" /> {t("Back")}</Link>
                     </Button>
                 </div>
 
@@ -118,13 +118,12 @@ export default function EditRole({ role, permissions = [] }: { role: Role; permi
                     <form onSubmit={submit} className="max-w-4xl space-y-6">
                         <div className="max-w-xl space-y-1.5">
                             <Label htmlFor="name" className="text-xs font-semibold">
-                                Role Name
-                            </Label>
+                                {t("Role Name")}</Label>
                             <Input
                                 id="name"
                                 value={data.name}
                                 onChange={(e) => setData('name', e.target.value)}
-                                placeholder="e.g. Supervisor Gudang"
+                                placeholder={t("e.g. Supervisor Gudang")}
                                 className="h-10 text-xs border-border bg-background rounded-xl"
                             />
                             {errors.name && (
@@ -136,8 +135,7 @@ export default function EditRole({ role, permissions = [] }: { role: Role; permi
 
                         <div className="space-y-4">
                             <Label className="text-sm font-bold tracking-tight">
-                                Update Permissions Mapping
-                            </Label>
+                                {t("Update Permissions Mapping")}</Label>
 
                             <div className="space-y-4">
                                 {Object.entries(groupedPermissions).map(([groupName, perms]) => {
@@ -181,8 +179,7 @@ export default function EditRole({ role, permissions = [] }: { role: Role; permi
                                                         htmlFor={`all-${groupName}`}
                                                         className="cursor-pointer text-[10px] font-bold tracking-wider text-muted-foreground uppercase"
                                                     >
-                                                        Check All
-                                                    </label>
+                                                        {t("Check All")}</label>
                                                 </div>
                                             </div>
 
@@ -233,12 +230,11 @@ export default function EditRole({ role, permissions = [] }: { role: Role; permi
                                 className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-6 py-2.5 rounded-xl shadow-md shadow-blue-600/20"
                                 disabled={processing}
                             >
-                                {processing ? 'Updating...' : 'Update Role'}
+                                {processing ? t("Updating...") : t("Update Role")}
                             </Button>
                             <Button asChild variant="ghost" className="rounded-xl text-xs">
                                 <Link href={`/${tenantSlug}/settings/users-roles?tab=roles`}>
-                                    Cancel
-                                </Link>
+                                    {t("Cancel")}</Link>
                             </Button>
                         </div>
                     </form>
@@ -250,8 +246,8 @@ export default function EditRole({ role, permissions = [] }: { role: Role; permi
 
 EditRole.layout = {
     breadcrumbs: [
-        { title: 'Settings', href: '#' },
-        { title: 'User & Roles', href: '#' },
-        { title: 'Edit Role', href: '#' },
+        { title: "Settings", href: '#' },
+        { title: "User & Roles", href: '#' },
+        { title: "Edit Role", href: '#' },
     ],
 };

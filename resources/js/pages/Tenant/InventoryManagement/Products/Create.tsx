@@ -10,7 +10,8 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@/components/ui/select';
+} from '@/components/ui/select';import { useTranslation } from '@/context/language-context';
+
 import { ArrowLeftCircleIcon, Save } from 'lucide-react';
 
 interface Category {
@@ -23,6 +24,7 @@ interface CreateProps {
 }
 
 export default function ProductCreate({ categories }: CreateProps) {
+    const { t } = useTranslation();
     const { current_tenant, auth } = usePage().props as any;
     const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
@@ -41,23 +43,20 @@ export default function ProductCreate({ categories }: CreateProps) {
 
     return (
         <>
-            <Head title="Tambah Produk Baru" />
+            <Head title={t("Tambah Produk Baru")} />
 
             <div className="space-y-6 p-4 sm:p-6 font-sans">
                 {/* Header Card */}
                 <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-6 shadow-sm text-card-foreground">
                     <div>
                         <h2 className="text-xl font-bold tracking-tight">
-                            Tambah Produk Baru
-                        </h2>
+                            {t("Tambah Produk Baru")}</h2>
                         <p className="mt-0.5 text-xs text-muted-foreground">
-                            Buat item produk baru sebagai induk dari beberapa kode varian SKU.
-                        </p>
+                            {t("Buat item produk baru sebagai induk dari beberapa kode varian SKU.")}</p>
                     </div>
                     <Button asChild variant="outline" className="rounded-xl border-border">
                         <Link href={`/${tenantSlug}/inventory/products`}>
-                            <ArrowLeftCircleIcon className="mr-2 h-4 w-4 text-blue-600" /> Back
-                        </Link>
+                            <ArrowLeftCircleIcon className="mr-2 h-4 w-4 text-blue-600" /> {t("Back")}</Link>
                     </Button>
                 </div>
 
@@ -67,13 +66,13 @@ export default function ProductCreate({ categories }: CreateProps) {
                         {/* Nama Produk */}
                         <div className="space-y-1.5">
                             <Label htmlFor="name" className="text-xs font-semibold">
-                                Nama Produk <span className="text-red-500">*</span>
+                                {t("Nama Produk")}{' '}<span className="text-red-500">{t("*")}</span>
                             </Label>
                             <Input
                                 id="name"
                                 value={data.name}
                                 onChange={(e) => setData('name', e.target.value)}
-                                placeholder="misal: Sepatu Olahraga Running"
+                                placeholder={t("misal: Sepatu Olahraga Running")}
                                 required
                                 className="h-10 text-xs border-border bg-background rounded-xl"
                             />
@@ -86,14 +85,14 @@ export default function ProductCreate({ categories }: CreateProps) {
                             {/* Kategori Select */}
                             <div className="space-y-1.5">
                                 <Label htmlFor="category_id" className="text-xs font-semibold">
-                                    Kategori Produk <span className="text-red-500">*</span>
+                                    {t("Kategori Produk")}{' '}<span className="text-red-500">{t("*")}</span>
                                 </Label>
                                 <Select
                                     value={data.category_id}
                                     onValueChange={(val) => setData('category_id', val)}
                                 >
                                     <SelectTrigger className="h-10 text-xs border-border bg-background rounded-xl">
-                                        <SelectValue placeholder="Pilih Kategori" />
+                                        <SelectValue placeholder={t("Pilih Kategori")} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {categories.map((c) => (
@@ -111,19 +110,19 @@ export default function ProductCreate({ categories }: CreateProps) {
                             {/* Status Select */}
                             <div className="space-y-1.5">
                                 <Label htmlFor="status" className="text-xs font-semibold">
-                                    Status Produk <span className="text-red-500">*</span>
+                                    {t("Status Produk")}{' '}<span className="text-red-500">{t("*")}</span>
                                 </Label>
                                 <Select
                                     value={data.status}
                                     onValueChange={(val) => setData('status', val)}
                                 >
                                     <SelectTrigger className="h-10 text-xs border-border bg-background rounded-xl">
-                                        <SelectValue placeholder="Pilih Status" />
+                                        <SelectValue placeholder={t("Pilih Status")} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="active">Active</SelectItem>
-                                        <SelectItem value="inactive">Inactive</SelectItem>
-                                        <SelectItem value="draft">Draft</SelectItem>
+                                        <SelectItem value="active">{t("Active")}</SelectItem>
+                                        <SelectItem value="inactive">{t("Inactive")}</SelectItem>
+                                        <SelectItem value="draft">{t("Draft")}</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 {errors.status && (
@@ -135,14 +134,13 @@ export default function ProductCreate({ categories }: CreateProps) {
                         {/* Deskripsi */}
                         <div className="space-y-1.5">
                             <Label htmlFor="description" className="text-xs font-semibold">
-                                Deskripsi Produk
-                            </Label>
+                                {t("Deskripsi Produk")}</Label>
                             <Textarea
                                 id="description"
                                 rows={3}
                                 value={data.description}
                                 onChange={(e) => setData('description', e.target.value)}
-                                placeholder="Tambahkan catatan atau deskripsi ringkas..."
+                                placeholder={t("Tambahkan catatan atau deskripsi ringkas...")}
                                 className="text-xs border-border bg-background rounded-xl p-3"
                             />
                             {errors.description && (
@@ -158,10 +156,10 @@ export default function ProductCreate({ categories }: CreateProps) {
                                 className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-6 py-2.5 rounded-xl shadow-md shadow-blue-600/20 flex items-center gap-2"
                             >
                                 <Save className="h-4 w-4" />
-                                {processing ? 'Saving...' : 'Save Product'}
+                                {processing ? t("Saving...") : t("Save Product")}
                             </Button>
                             <Button asChild variant="ghost" className="rounded-xl text-xs">
-                                <Link href={`/${tenantSlug}/inventory/products`}>Cancel</Link>
+                                <Link href={`/${tenantSlug}/inventory/products`}>{t("Cancel")}</Link>
                             </Button>
                         </div>
                     </form>
@@ -173,8 +171,8 @@ export default function ProductCreate({ categories }: CreateProps) {
 
 ProductCreate.layout = {
     breadcrumbs: [
-        { title: 'Inventory Management', href: '#' },
-        { title: 'Products', href: '#' },
-        { title: 'Tambah Produk', href: '#' },
+        { title: "Inventory Management", href: '#' },
+        { title: "Products", href: '#' },
+        { title: "Tambah Produk", href: '#' },
     ],
 };

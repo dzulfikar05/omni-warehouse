@@ -141,32 +141,3 @@
         @apply bg-background text-foreground;
     }
 }
-
-/* Styling & Penyesuaian Widget Google Translate */
-.goog-te-banner-frame.skiptranslate {
-    display: none !important;
-}
-body {
-    top: 0px !important;
-}
-
-.goog-te-combo {
-    padding: 6px 12px;
-    border-radius: 8px;
-    border: 1px solid hsl(var(--border));
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
-    font-size: 12px;
-    outline: none;
-    cursor: pointer;
-}
-
-.goog-logo-link, .goog-te-gadget span {
-    display: none !important;
-}
-.goog-te-gadget {
-    color: transparent !important;
-    font-size: 0px !important;
-}
-
-

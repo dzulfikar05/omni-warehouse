@@ -10,7 +10,8 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@/components/ui/select';
+} from '@/components/ui/select';import { useTranslation } from '@/context/language-context';
+
 import { ArrowLeftCircleIcon, Save, RotateCcw } from 'lucide-react';
 
 interface Warehouse {
@@ -35,6 +36,7 @@ export default function LocationEdit({
     location: Location;
     warehouses: Warehouse[];
 }) {
+    const { t } = useTranslation();
     const { current_tenant, auth } = usePage().props as any;
     const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
@@ -59,15 +61,13 @@ export default function LocationEdit({
             <div className="space-y-6 p-4 sm:p-6">
                 <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-6 shadow-sm text-card-foreground">
                     <div>
-                        <h2 className="text-xl font-bold tracking-tight">Location Edit Form</h2>
+                        <h2 className="text-xl font-bold tracking-tight">{t("Location Edit Form")}</h2>
                         <p className="mt-0.5 text-xs text-muted-foreground">
-                            Perbarui detail parameter lokasi rak {location.rack_code}.
-                        </p>
+                            {t("Perbarui detail parameter lokasi rak")}{' '}{location.rack_code}{t(".")}</p>
                     </div>
                     <Button asChild variant="outline" className="rounded-xl border-border">
                         <Link href={`/${tenantSlug}/locations`}>
-                            <ArrowLeftCircleIcon className="mr-2 h-4 w-4 text-blue-600" /> Back
-                        </Link>
+                            <ArrowLeftCircleIcon className="mr-2 h-4 w-4 text-blue-600" /> {t("Back")}</Link>
                     </Button>
                 </div>
 
@@ -75,19 +75,19 @@ export default function LocationEdit({
                     <form onSubmit={handleSubmit} className="max-w-2xl space-y-5">
                         <div className="space-y-1.5">
                             <Label className="text-xs font-semibold">
-                                Gudang Target <span className="text-red-500">*</span>
+                                {t("Gudang Target")}{' '}<span className="text-red-500">{t("*")}</span>
                             </Label>
                             <Select
                                 value={data.warehouse_id}
                                 onValueChange={(val) => setData('warehouse_id', val)}
                             >
                                 <SelectTrigger className="h-10 text-xs rounded-xl border-border bg-background">
-                                    <SelectValue placeholder="-- Pilih Gudang Target --" />
+                                    <SelectValue placeholder={t("-- Pilih Gudang Target --")} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {warehouses.map((wh) => (
                                         <SelectItem key={wh.id} value={String(wh.id)}>
-                                            {wh.code} - {wh.name}
+                                            {wh.code} {t("-")}{' '}{wh.name}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -100,13 +100,13 @@ export default function LocationEdit({
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-1.5">
                                 <Label htmlFor="rack_code" className="text-xs font-semibold">
-                                    Kode Rak / Slot <span className="text-red-500">*</span>
+                                    {t("Kode Rak / Slot")}{' '}<span className="text-red-500">{t("*")}</span>
                                 </Label>
                                 <Input
                                     id="rack_code"
                                     value={data.rack_code}
                                     onChange={(e) => setData('rack_code', e.target.value.toUpperCase())}
-                                    placeholder="Contoh: RACK-A01"
+                                    placeholder={t("Contoh: RACK-A01")}
                                     required
                                     className="h-10 text-xs border-border bg-background rounded-xl font-mono uppercase"
                                 />
@@ -117,13 +117,12 @@ export default function LocationEdit({
 
                             <div className="space-y-1.5">
                                 <Label htmlFor="zone" className="text-xs font-semibold">
-                                    Nama Zona / Kategori Area
-                                </Label>
+                                    {t("Nama Zona / Kategori Area")}</Label>
                                 <Input
                                     id="zone"
                                     value={data.zone}
                                     onChange={(e) => setData('zone', e.target.value)}
-                                    placeholder="Contoh: Zona Fast Moving"
+                                    placeholder={t("Contoh: Zona Fast Moving")}
                                     className="h-10 text-xs border-border bg-background rounded-xl"
                                 />
                                 {errors.zone && (
@@ -133,13 +132,13 @@ export default function LocationEdit({
                         </div>
 
                         <div className="space-y-1.5">
-                            <Label htmlFor="desc" className="text-xs font-semibold">Deskripsi / Catatan Rak</Label>
+                            <Label htmlFor="desc" className="text-xs font-semibold">{t("Deskripsi / Catatan Rak")}</Label>
                             <Textarea
                                 id="desc"
                                 rows={3}
                                 value={data.desc}
                                 onChange={(e) => setData('desc', e.target.value)}
-                                placeholder="Keterangan spesifikasi rak atau panduan penataan..."
+                                placeholder={t("Keterangan spesifikasi rak atau panduan penataan...")}
                                 className="text-xs border-border bg-background rounded-xl p-3"
                             />
                             {errors.desc && (
@@ -156,8 +155,7 @@ export default function LocationEdit({
                                 className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
                             />
                             <Label htmlFor="is_active" className="text-xs font-semibold cursor-pointer">
-                                Status Aktif Digunakan
-                            </Label>
+                                {t("Status Aktif Digunakan")}</Label>
                         </div>
 
                         <div className="flex items-center gap-3 pt-4 border-t border-border">
@@ -167,7 +165,7 @@ export default function LocationEdit({
                                 className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-6 py-2.5 rounded-xl shadow-md shadow-blue-600/20 flex items-center gap-2"
                             >
                                 <Save className="h-4 w-4" />
-                                {processing ? 'Saving...' : 'Save Changes'}
+                                {processing ? t("Saving...") : t("Save Changes")}
                             </Button>
                             <Button
                                 type="button"
@@ -175,8 +173,7 @@ export default function LocationEdit({
                                 onClick={() => reset()}
                                 className="rounded-xl border-border text-xs gap-2"
                             >
-                                <RotateCcw size={14} /> Reset
-                            </Button>
+                                <RotateCcw size={14} /> {t("Reset")}</Button>
                         </div>
                     </form>
                 </div>
@@ -187,8 +184,8 @@ export default function LocationEdit({
 
 LocationEdit.layout = {
     breadcrumbs: [
-        { title: 'Warehouse & Stocks', href: '#' },
-        { title: 'Rack & Locations', href: '#' },
-        { title: 'Edit Location', href: '#' },
+        { title: "Warehouse & Stocks", href: '#' },
+        { title: "Rack & Locations", href: '#' },
+        { title: "Edit Location", href: '#' },
     ],
 };

@@ -3,10 +3,12 @@ import { Head, useForm, usePage, Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Textarea } from '@/components/ui/textarea';import { useTranslation } from '@/context/language-context';
+
 import { ArrowLeftCircleIcon, Save, RotateCcw } from 'lucide-react';
 
 export default function CustomerCreate() {
+    const { t } = useTranslation();
     const { current_tenant, auth } = usePage().props as any;
     const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
@@ -27,20 +29,18 @@ export default function CustomerCreate() {
 
     return (
         <>
-            <Head title="Add New Customer" />
+            <Head title={t("Add New Customer")} />
 
             <div className="space-y-6 p-4 sm:p-6">
                 <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-6 shadow-sm text-card-foreground">
                     <div>
-                        <h2 className="text-xl font-bold tracking-tight">Customer Add Form</h2>
+                        <h2 className="text-xl font-bold tracking-tight">{t("Customer Add Form")}</h2>
                         <p className="mt-0.5 text-xs text-muted-foreground">
-                            Create a new customer profile for sales and outbound processing.
-                        </p>
+                            {t("Create a new customer profile for sales and outbound processing.")}</p>
                     </div>
                     <Button asChild variant="outline" className="rounded-xl border-border">
                         <Link href={`/${tenantSlug}/contacts/customers`}>
-                            <ArrowLeftCircleIcon className="mr-2 h-4 w-4 text-blue-600" /> Back
-                        </Link>
+                            <ArrowLeftCircleIcon className="mr-2 h-4 w-4 text-blue-600" /> {t("Back")}</Link>
                     </Button>
                 </div>
 
@@ -48,13 +48,13 @@ export default function CustomerCreate() {
                     <form onSubmit={handleSubmit} className="max-w-2xl space-y-5">
                         <div className="space-y-1.5">
                             <Label htmlFor="name" className="text-xs font-semibold">
-                                Customer Name <span className="text-red-500">*</span>
+                                {t("Customer Name")}{' '}<span className="text-red-500">{t("*")}</span>
                             </Label>
                             <Input
                                 id="name"
                                 value={data.name}
                                 onChange={(e) => setData('name', e.target.value)}
-                                placeholder="Customer Name"
+                                placeholder={t("Customer Name")}
                                 required
                                 className="h-10 text-xs border-border bg-background rounded-xl"
                             />
@@ -63,25 +63,25 @@ export default function CustomerCreate() {
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-1.5">
-                                <Label htmlFor="phone" className="text-xs font-semibold">Phone</Label>
+                                <Label htmlFor="phone" className="text-xs font-semibold">{t("Phone")}</Label>
                                 <Input
                                     id="phone"
                                     value={data.phone}
                                     onChange={(e) => setData('phone', e.target.value)}
-                                    placeholder="Phone Number"
+                                    placeholder={t("Phone Number")}
                                     className="h-10 text-xs border-border bg-background rounded-xl"
                                 />
                                 {errors.phone && <span className="text-xs text-destructive">{errors.phone}</span>}
                             </div>
 
                             <div className="space-y-1.5">
-                                <Label htmlFor="email" className="text-xs font-semibold">Email</Label>
+                                <Label htmlFor="email" className="text-xs font-semibold">{t("Email")}</Label>
                                 <Input
                                     id="email"
                                     type="email"
                                     value={data.email}
                                     onChange={(e) => setData('email', e.target.value)}
-                                    placeholder="Email Address"
+                                    placeholder={t("Email Address")}
                                     className="h-10 text-xs border-border bg-background rounded-xl"
                                 />
                                 {errors.email && <span className="text-xs text-destructive">{errors.email}</span>}
@@ -89,38 +89,38 @@ export default function CustomerCreate() {
                         </div>
 
                         <div className="space-y-1.5">
-                            <Label htmlFor="tax_number" className="text-xs font-semibold">Tax Number / NPWP</Label>
+                            <Label htmlFor="tax_number" className="text-xs font-semibold">{t("Tax Number / NPWP")}</Label>
                             <Input
                                 id="tax_number"
                                 value={data.tax_number}
                                 onChange={(e) => setData('tax_number', e.target.value)}
-                                placeholder="01.234.567.8-901.000"
+                                placeholder={t("01.234.567.8-901.000")}
                                 className="h-10 text-xs border-border bg-background rounded-xl font-mono"
                             />
                             {errors.tax_number && <span className="text-xs text-destructive">{errors.tax_number}</span>}
                         </div>
 
                         <div className="space-y-1.5">
-                            <Label htmlFor="address" className="text-xs font-semibold">Address</Label>
+                            <Label htmlFor="address" className="text-xs font-semibold">{t("Address")}</Label>
                             <Textarea
                                 id="address"
                                 rows={2}
                                 value={data.address}
                                 onChange={(e) => setData('address', e.target.value)}
-                                placeholder="Customer complete address..."
+                                placeholder={t("Customer complete address...")}
                                 className="text-xs border-border bg-background rounded-xl p-3"
                             />
                             {errors.address && <span className="text-xs text-destructive">{errors.address}</span>}
                         </div>
 
                         <div className="space-y-1.5">
-                            <Label htmlFor="notes" className="text-xs font-semibold">Notes</Label>
+                            <Label htmlFor="notes" className="text-xs font-semibold">{t("Notes")}</Label>
                             <Textarea
                                 id="notes"
                                 rows={3}
                                 value={data.notes}
                                 onChange={(e) => setData('notes', e.target.value)}
-                                placeholder="Additional notes..."
+                                placeholder={t("Additional notes...")}
                                 className="text-xs border-border bg-background rounded-xl p-3"
                             />
                             {errors.notes && <span className="text-xs text-destructive">{errors.notes}</span>}
@@ -133,7 +133,7 @@ export default function CustomerCreate() {
                                 className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-6 py-2.5 rounded-xl shadow-md shadow-blue-600/20 flex items-center gap-2"
                             >
                                 <Save className="h-4 w-4" />
-                                {processing ? 'Saving...' : 'Save'}
+                                {processing ? t("Saving...") : t("Save")}
                             </Button>
                             <Button
                                 type="button"
@@ -141,8 +141,7 @@ export default function CustomerCreate() {
                                 onClick={() => reset()}
                                 className="rounded-xl border-border text-xs gap-2"
                             >
-                                <RotateCcw size={14} /> Reset
-                            </Button>
+                                <RotateCcw size={14} /> {t("Reset")}</Button>
                         </div>
                     </form>
                 </div>
@@ -153,8 +152,8 @@ export default function CustomerCreate() {
 
 CustomerCreate.layout = {
     breadcrumbs: [
-        { title: 'Contact', href: '#' },
-        { title: 'Customer', href: '#' },
-        { title: 'Add Customer', href: '#' },
+        { title: "Contact", href: '#' },
+        { title: "Customer", href: '#' },
+        { title: "Add Customer", href: '#' },
     ],
 };

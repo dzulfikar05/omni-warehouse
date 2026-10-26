@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { debounce } from 'lodash';
+import { useTranslation } from '@/context/language-context';
 import { usePermission } from '@/utils/permission';
 import {
     Plus,
@@ -59,6 +60,7 @@ interface IndexProps {
 }
 
 export default function CategoryIndex({ categories, stats, filters }: IndexProps) {
+    const { t } = useTranslation();
     const { flash, current_tenant, auth } = usePage().props as any;
     const { can } = usePermission();
 
@@ -137,22 +139,22 @@ export default function CategoryIndex({ categories, stats, filters }: IndexProps
     const canCreate = can('tenant.categories.create') || can('categories.create');
 
     const tableHeaders: Array<string | HeaderConfig> = [
-        { label: 'CATEGORY ID', sortField: 'id' },
-        { label: 'CATEGORY NAME', sortField: 'name' },
-        { label: 'DESCRIPTION', sortField: 'desc' },
-        { label: 'PRODUCTS COUNT', sortField: 'products_count' },
-        { label: 'DATE ADDED', sortField: 'created_at' },
+        { label: t("CATEGORY ID"), sortField: 'id' },
+        { label: t("CATEGORY NAME"), sortField: 'name' },
+        { label: t("DESCRIPTION"), sortField: 'desc' },
+        { label: t("PRODUCTS COUNT"), sortField: 'products_count' },
+        { label: t("DATE ADDED"), sortField: 'created_at' },
         'ACTIONS',
     ];
 
     return (
         <>
-            <Head title="Product Categories" />
+            <Head title={t("Product Categories")} />
 
             <div className="space-y-6 p-4 font-sans sm:p-6">
                 <PageHeader
-                    title="Product Categories"
-                    description="Organize and structure your inventory products into logical classifications."
+                    title={t("Product Categories")}
+                    description={t("Organize and structure your inventory products into logical classifications.")}
                     renderAction={
                         <div className="flex items-center gap-2">
                             {canExport && (
@@ -163,24 +165,21 @@ export default function CategoryIndex({ categories, stats, filters }: IndexProps
                                         onClick={handleExportPdf}
                                         className="h-9 gap-1.5 border-border text-xs"
                                     >
-                                        <FileText size={15} className="text-red-500" /> Export PDF
-                                    </Button>
+                                        <FileText size={15} className="text-red-500" /> {t("Export PDF")}</Button>
                                     <Button
                                         variant="outline"
                                         size="sm"
                                         onClick={handleExportExcel}
                                         className="h-9 gap-1.5 border-border text-xs"
                                     >
-                                        <FileSpreadsheet size={15} className="text-emerald-500" /> Export Excel
-                                    </Button>
+                                        <FileSpreadsheet size={15} className="text-emerald-500" /> {t("Export Excel")}</Button>
                                 </>
                             )}
 
                             {canCreate && (
                                 <Button asChild className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700">
                                     <Link href={`/${tenantSlug}/inventory/categories/create`}>
-                                        <Plus className="mr-1.5 h-4 w-4" /> Add Category
-                                    </Link>
+                                        <Plus className="mr-1.5 h-4 w-4" /> {t("Add Category")}</Link>
                                 </Button>
                             )}
                         </div>
@@ -191,9 +190,9 @@ export default function CategoryIndex({ categories, stats, filters }: IndexProps
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Total Categories</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Total Categories")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-foreground">{totalCategories}</h3>
-                            <p className="mt-0.5 text-[11px] text-muted-foreground">Classifications</p>
+                            <p className="mt-0.5 text-[11px] text-muted-foreground">{t("Classifications")}</p>
                         </div>
                         <div className="rounded-xl bg-blue-50 p-3 text-blue-600 dark:bg-blue-950/50">
                             <FolderTree size={22} />
@@ -202,9 +201,9 @@ export default function CategoryIndex({ categories, stats, filters }: IndexProps
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Linked Products</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Linked Products")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-foreground">{totalProductsCount}</h3>
-                            <p className="mt-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">Assigned Items</p>
+                            <p className="mt-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">{t("Assigned Items")}</p>
                         </div>
                         <div className="rounded-xl bg-emerald-50 p-3 text-emerald-600 dark:bg-emerald-950/50">
                             <Package size={22} />
@@ -213,9 +212,9 @@ export default function CategoryIndex({ categories, stats, filters }: IndexProps
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Detailed Categories</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Detailed Categories")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-foreground">{categoriesWithDesc}</h3>
-                            <p className="mt-0.5 text-[11px] text-muted-foreground">With Descriptions</p>
+                            <p className="mt-0.5 text-[11px] text-muted-foreground">{t("With Descriptions")}</p>
                         </div>
                         <div className="rounded-xl bg-indigo-50 p-3 text-indigo-600 dark:bg-indigo-950/50">
                             <AlignLeft size={22} />
@@ -248,7 +247,7 @@ export default function CategoryIndex({ categories, stats, filters }: IndexProps
                     renderRow={(category: CategoryItem) => (
                         <>
                             <TableCell className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400">
-                                CAT-00{category.id}
+                                {t("CAT-00")}{category.id}
                             </TableCell>
 
                             <TableCell className="text-xs font-bold text-foreground">
@@ -290,7 +289,7 @@ export default function CategoryIndex({ categories, stats, filters }: IndexProps
 
 CategoryIndex.layout = {
     breadcrumbs: [
-        { title: 'Inventory Management', href: '#' },
-        { title: 'Categories', href: '#' },
+        { title: "Inventory Management", href: '#' },
+        { title: "Categories", href: '#' },
     ],
 };

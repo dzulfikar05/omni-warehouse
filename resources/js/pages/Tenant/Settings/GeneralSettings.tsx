@@ -3,7 +3,8 @@ import { Head, useForm, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { PageHeader } from '@/components/page-header';
+import { PageHeader } from '@/components/page-header';import { useTranslation } from '@/context/language-context';
+
 import {
     Printer,
     Save,
@@ -40,6 +41,7 @@ const SimpleRichTextEditor = ({
     onChange: (html: string) => void;
     placeholder?: string;
 }) => {
+    const { t } = useTranslation();
     const editorRef = React.useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -58,30 +60,30 @@ const SimpleRichTextEditor = ({
     return (
         <div className="border border-border rounded-lg overflow-hidden bg-background">
             <div className="flex flex-wrap items-center gap-1 p-2 bg-muted/40 border-b border-border text-foreground">
-                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => execCommand('bold')} title="Bold">
+                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => execCommand('bold')} title={t("Bold")}>
                     <Bold size={14} />
                 </Button>
-                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => execCommand('italic')} title="Italic">
+                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => execCommand('italic')} title={t("Italic")}>
                     <Italic size={14} />
                 </Button>
-                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => execCommand('underline')} title="Underline">
+                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => execCommand('underline')} title={t("Underline")}>
                     <Underline size={14} />
                 </Button>
                 <div className="w-px h-4 bg-border mx-1" />
-                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => execCommand('justifyLeft')} title="Align Left">
+                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => execCommand('justifyLeft')} title={t("Align Left")}>
                     <AlignLeft size={14} />
                 </Button>
-                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => execCommand('justifyCenter')} title="Align Center">
+                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => execCommand('justifyCenter')} title={t("Align Center")}>
                     <AlignCenter size={14} />
                 </Button>
-                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => execCommand('justifyRight')} title="Align Right">
+                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => execCommand('justifyRight')} title={t("Align Right")}>
                     <AlignRight size={14} />
                 </Button>
                 <div className="w-px h-4 bg-border mx-1" />
-                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => execCommand('insertUnorderedList')} title="Bullet List">
+                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => execCommand('insertUnorderedList')} title={t("Bullet List")}>
                     <List size={14} />
                 </Button>
-                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => execCommand('insertOrderedList')} title="Numbered List">
+                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => execCommand('insertOrderedList')} title={t("Numbered List")}>
                     <ListOrdered size={14} />
                 </Button>
             </div>
@@ -102,6 +104,7 @@ const SimpleRichTextEditor = ({
 };
 
 export default function GeneralSettings({ settings, tenant_profile }: SettingsProps) {
+    const { t } = useTranslation();
     const { flash, current_tenant, auth } = usePage().props as any;
 
     // Deteksi Slug Dinamis secara Aman
@@ -140,12 +143,12 @@ export default function GeneralSettings({ settings, tenant_profile }: SettingsPr
 
     return (
         <>
-            <Head title="General Settings - Kop Surat & Cetak" />
+            <Head title={t("General Settings - Kop Surat & Cetak")} />
 
             <div className="space-y-6 p-4">
                 <PageHeader
-                    title="General Settings"
-                    description="Pengaturan Kop Surat (Header/Footer HTML) dan Preferensi Cetak PDF / Excel."
+                    title={t("General Settings")}
+                    description={t("Pengaturan Kop Surat (Header/Footer HTML) dan Preferensi Cetak PDF / Excel.")}
                 />
 
                 <form onSubmit={handleSubmit} className="space-y-6 max-w-5xl">
@@ -155,11 +158,9 @@ export default function GeneralSettings({ settings, tenant_profile }: SettingsPr
                             <div className="flex items-center justify-between border-b border-border pb-3">
                                 <div>
                                     <h2 className="text-sm font-semibold text-foreground">
-                                        Templat Kop Surat & Dokumen
-                                    </h2>
+                                        {t("Templat Kop Surat & Dokumen")}</h2>
                                     <p className="text-xs text-muted-foreground mt-0.5">
-                                        Atur susunan teks, alamat, dan format header/footer dokumen.
-                                    </p>
+                                        {t("Atur susunan teks, alamat, dan format header/footer dokumen.")}</p>
                                 </div>
                                 <div className="flex gap-2">
                                     <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
@@ -180,8 +181,7 @@ export default function GeneralSettings({ settings, tenant_profile }: SettingsPr
                                             onChange={(e) => setData('doc_show_logo', e.target.checked)}
                                             className="rounded border-border bg-background text-blue-600 focus:ring-blue-500 h-4 w-4"
                                         />
-                                        Tampilkan Logo Perusahaan
-                                    </label>
+                                        {t("Tampilkan Logo Perusahaan")}</label>
 
                                     <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-foreground">
                                         <input
@@ -190,29 +190,26 @@ export default function GeneralSettings({ settings, tenant_profile }: SettingsPr
                                             onChange={(e) => setData('doc_show_npwp', e.target.checked)}
                                             className="rounded border-border bg-background text-blue-600 focus:ring-blue-500 h-4 w-4"
                                         />
-                                        Tampilkan NPWP di Header
-                                    </label>
+                                        {t("Tampilkan NPWP di Header")}</label>
                                 </div>
 
                                 <div className="space-y-1.5">
                                     <Label className="text-xs font-medium">
-                                        Kop Surat Header (HTML Editor)
-                                    </Label>
+                                        {t("Kop Surat Header (HTML Editor)")}</Label>
                                     <SimpleRichTextEditor
                                         value={data.doc_header_html}
                                         onChange={(html) => setData('doc_header_html', html)}
-                                        placeholder="Ketik teks kop surat di sini..."
+                                        placeholder={t("Ketik teks kop surat di sini...")}
                                     />
                                 </div>
 
                                 <div className="space-y-1.5">
                                     <Label className="text-xs font-medium">
-                                        Catatan Kaki / Footer Dokumen (Syarat & Ketentuan)
-                                    </Label>
+                                        {t("Catatan Kaki / Footer Dokumen (Syarat & Ketentuan)")}</Label>
                                     <SimpleRichTextEditor
                                         value={data.doc_footer_html}
                                         onChange={(html) => setData('doc_footer_html', html)}
-                                        placeholder="Ketik syarat & ketentuan di sini..."
+                                        placeholder={t("Ketik syarat & ketentuan di sini...")}
                                     />
                                 </div>
                             </div>
@@ -224,7 +221,7 @@ export default function GeneralSettings({ settings, tenant_profile }: SettingsPr
                                     className="bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs px-5 h-9 rounded-lg shadow-xs flex items-center gap-1.5 transition-colors"
                                 >
                                     <Save size={15} />
-                                    {processing ? 'Saving...' : 'Save Document Settings'}
+                                    {processing ? t("Saving...") : t("Save Document Settings")}
                                 </Button>
                             </div>
                         </div>
@@ -232,8 +229,7 @@ export default function GeneralSettings({ settings, tenant_profile }: SettingsPr
                         {/* Live Interactive Preview Panel (Sisi Kanan) */}
                         <div className="lg:col-span-5 space-y-3">
                             <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">
-                                <Eye size={14} className="text-blue-600" /> Live Print Preview
-                            </div>
+                                <Eye size={14} className="text-blue-600" /> {t("Live Print Preview")}</div>
 
                             <div className="rounded-xl border border-border bg-white text-black p-5 shadow-sm space-y-4 font-sans text-xs min-h-[380px] flex flex-col justify-between">
                                 {/* Header Preview */}
@@ -245,7 +241,7 @@ export default function GeneralSettings({ settings, tenant_profile }: SettingsPr
                                                 {companyLogo ? (
                                                     <img
                                                         src={companyLogo}
-                                                        alt="Company Logo"
+                                                        alt={t("Company Logo")}
                                                         className="h-12 w-auto object-contain max-w-[100px]"
                                                     />
                                                 ) : (
@@ -266,9 +262,8 @@ export default function GeneralSettings({ settings, tenant_profile }: SettingsPr
                                         {data.doc_show_npwp && (
                                             <div className="text-right shrink-0 font-mono text-[10px] text-gray-700 border-l border-gray-300 pl-2">
                                                 <div className="font-semibold text-black flex items-center gap-1 justify-end">
-                                                    <FileCheck size={12} /> NPWP / TAX ID
-                                                </div>
-                                                <span>{companyTaxNumber || 'Belum Diisi'}</span>
+                                                    <FileCheck size={12} /> {t("NPWP / TAX ID")}</div>
+                                                <span>{companyTaxNumber || t("Belum Diisi")}</span>
                                             </div>
                                         )}
                                     </div>
@@ -277,9 +272,8 @@ export default function GeneralSettings({ settings, tenant_profile }: SettingsPr
                                 {/* Placeholder Body Dokumen */}
                                 <div className="my-6 border border-dashed border-gray-300 rounded p-4 text-center text-gray-400 bg-gray-50/50 space-y-1">
                                     <p className="font-semibold text-gray-500 text-[11px]">
-                                        [ AREA ISI DOKUMEN / FAKTUR / SURAT JALAN ]
-                                    </p>
-                                    <p className="text-[10px]">Tabel barang dan detail transaksi akan tampil di area ini.</p>
+                                        {t("[ AREA ISI DOKUMEN / FAKTUR / SURAT JALAN ]")}</p>
+                                    <p className="text-[10px]">{t("Tabel barang dan detail transaksi akan tampil di area ini.")}</p>
                                 </div>
 
                                 {/* Footer Preview */}
@@ -300,7 +294,7 @@ export default function GeneralSettings({ settings, tenant_profile }: SettingsPr
 
 GeneralSettings.layout = {
     breadcrumbs: [
-        { title: 'Settings', href: '#' },
-        { title: 'General Settings', href: '#' },
+        { title: "Settings", href: '#' },
+        { title: "General Settings", href: '#' },
     ],
 };

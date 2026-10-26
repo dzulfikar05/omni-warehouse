@@ -1,6 +1,7 @@
 import React from 'react';
 import { Printer, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/context/language-context';
 import { ReconciliationItem, OpnameSession } from '@/types/stock-opname';
 
 interface PrintSheetModalProps {
@@ -11,6 +12,7 @@ interface PrintSheetModalProps {
 }
 
 export function PrintSheetModal({ isOpen, session, items, onClose }: PrintSheetModalProps) {
+    const { t } = useTranslation();
     if (!isOpen) return null;
 
     const handlePrint = () => {
@@ -23,7 +25,7 @@ export function PrintSheetModal({ isOpen, session, items, onClose }: PrintSheetM
                 <div className="px-6 py-3.5 border-b border-border flex items-center justify-between bg-muted/40">
                     <div className="flex items-center gap-2 text-foreground font-bold text-sm">
                         <Printer className="w-4 h-4 text-blue-600" />
-                        <span>Lembar Kerja Opname Fisik (Form Blind Count A4)</span>
+                        <span>{t("Lembar Kerja Opname Fisik (Form Blind Count A4)")}</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <Button
@@ -32,7 +34,7 @@ export function PrintSheetModal({ isOpen, session, items, onClose }: PrintSheetM
                             className="h-8 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold gap-1.5 shadow-md"
                         >
                             <Printer className="w-3.5 h-3.5" />
-                            <span>Cetak Dokumen</span>
+                            <span>{t("Cetak Dokumen")}</span>
                         </Button>
                         <button
                             type="button"
@@ -48,14 +50,14 @@ export function PrintSheetModal({ isOpen, session, items, onClose }: PrintSheetM
                     <div id="printable-opname-sheet" className="bg-white w-full max-w-[780px] p-8 border border-stone-300 shadow-sm text-stone-900 font-sans text-xs">
                         <div className="flex justify-between items-start border-b-2 border-stone-900 pb-3">
                             <div>
-                                <h1 className="text-base font-bold tracking-tight text-stone-900 uppercase">OMNIWAREHOUSE WMS</h1>
-                                <p className="text-[11px] text-stone-600">Distribution Center • Gudang {session.warehouse_code || 'DC'}</p>
-                                <p className="text-[10px] text-stone-400">SOP-INV-04: Form Pemeriksaan Fisik Barang (Blind Count)</p>
+                                <h1 className="text-base font-bold tracking-tight text-stone-900 uppercase">{t("OMNIWAREHOUSE WMS")}</h1>
+                                <p className="text-[11px] text-stone-600">{t("Distribution Center • Gudang")}{' '}{session.warehouse_code || t("DC")}</p>
+                                <p className="text-[10px] text-stone-400">{t("SOP-INV-04: Form Pemeriksaan Fisik Barang (Blind Count)")}</p>
                             </div>
                             <div className="text-right font-mono">
-                                <span className="text-[10px] uppercase text-stone-400 block font-bold">No. Sesi Opname</span>
+                                <span className="text-[10px] uppercase text-stone-400 block font-bold">{t("No. Sesi Opname")}</span>
                                 <span className="text-sm font-bold text-stone-900">{session.session_code}</span>
-                                <span className="text-[10px] text-stone-500 block mt-0.5">Tanggal: {new Date().toLocaleDateString('id-ID')}</span>
+                                <span className="text-[10px] text-stone-500 block mt-0.5">{t("Tanggal:")}{' '}{new Date().toLocaleDateString('id-ID')}</span>
                             </div>
                         </div>
 
@@ -63,34 +65,33 @@ export function PrintSheetModal({ isOpen, session, items, onClose }: PrintSheetM
                             <tbody>
                                 <tr className="bg-stone-50">
                                     <td className="p-2 border-r border-stone-300 w-1/3">
-                                        <span className="text-stone-400 block text-[10px]">ZONA / LORONG AUDIT:</span>
+                                        <span className="text-stone-400 block text-[10px]">{t("ZONA / LORONG AUDIT:")}</span>
                                         <strong className="font-mono text-stone-800">{session.zone}</strong>
                                     </td>
                                     <td className="p-2 border-r border-stone-300 w-1/3">
-                                        <span className="text-stone-400 block text-[10px]">LEAD AUDITOR / SPV:</span>
-                                        <strong className="text-stone-800">{session.auditor_name || 'Supervisor WMS'}</strong>
+                                        <span className="text-stone-400 block text-[10px]">{t("LEAD AUDITOR / SPV:")}</span>
+                                        <strong className="text-stone-800">{session.auditor_name || t("Supervisor WMS")}</strong>
                                     </td>
                                     <td className="p-2 w-1/3">
-                                        <span className="text-stone-400 block text-[10px]">PETUGAS HITUNG LAPANGAN:</span>
-                                        <span className="font-mono text-stone-500">................................................</span>
+                                        <span className="text-stone-400 block text-[10px]">{t("PETUGAS HITUNG LAPANGAN:")}</span>
+                                        <span className="font-mono text-stone-500">{t("................................................")}</span>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
 
                         <div className="mb-3 px-3 py-1.5 bg-stone-100 border-l-2 border-stone-700 text-[10px] text-stone-600 italic">
-                            Petugas lapangan wajib menghitung unit fisik aktual di rak tanpa melihat estimasi sistem buku. Tuliskan jumlah fisik dan paraf di kolom kanan.
-                        </div>
+                            {t("Petugas lapangan wajib menghitung unit fisik aktual di rak tanpa melihat estimasi sistem buku. Tuliskan jumlah fisik dan paraf di kolom kanan.")}</div>
 
                         <table className="w-full border-collapse border border-stone-400 text-[11px]">
                             <thead>
                                 <tr className="bg-stone-100 text-stone-900 border-b border-stone-400 text-center font-bold">
-                                    <th className="p-2 border border-stone-400 w-8">No</th>
-                                    <th className="p-2 border border-stone-400 text-left">SKU / Nama Barang</th>
-                                    <th className="p-2 border border-stone-400 w-20">Rak</th>
-                                    <th className="p-2 border border-stone-400 w-24">Batch / Exp</th>
-                                    <th className="p-2 border border-stone-400 w-24">Hasil Hitung Fisik</th>
-                                    <th className="p-2 border border-stone-400 w-20">Paraf</th>
+                                    <th className="p-2 border border-stone-400 w-8">{t("No")}</th>
+                                    <th className="p-2 border border-stone-400 text-left">{t("SKU / Nama Barang")}</th>
+                                    <th className="p-2 border border-stone-400 w-20">{t("Rak")}</th>
+                                    <th className="p-2 border border-stone-400 w-24">{t("Batch / Exp")}</th>
+                                    <th className="p-2 border border-stone-400 w-24">{t("Hasil Hitung Fisik")}</th>
+                                    <th className="p-2 border border-stone-400 w-20">{t("Paraf")}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -99,11 +100,11 @@ export function PrintSheetModal({ isOpen, session, items, onClose }: PrintSheetM
                                         <td className="p-2 border border-stone-300 text-center">{idx + 1}</td>
                                         <td className="p-2 border border-stone-300 font-sans">
                                             <div className="font-bold text-stone-900">{item.name}</div>
-                                            <div className="font-mono text-[10px] text-stone-500">{item.sku} • {item.barcode}</div>
+                                            <div className="font-mono text-[10px] text-stone-500">{item.sku} {t("•")}{' '}{item.barcode}</div>
                                         </td>
                                         <td className="p-2 border border-stone-300 text-center font-bold">{item.rack}</td>
                                         <td className="p-2 border border-stone-300 text-center text-[10px]">{item.batch}<br />{item.exp_date}</td>
-                                        <td className="p-2 border border-stone-300 text-right text-stone-300 font-bold">....... {item.unit}</td>
+                                        <td className="p-2 border border-stone-300 text-right text-stone-300 font-bold">{t(".......")}{' '}{item.unit}</td>
                                         <td className="p-2 border border-stone-300 text-center"></td>
                                     </tr>
                                 ))}

@@ -2,7 +2,8 @@ import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Checkbox } from '@/components/ui/checkbox';import { useTranslation } from '@/context/language-context';
+
 import { ArrowLeftCircleIcon, ChevronDown, ChevronUp } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
@@ -12,6 +13,7 @@ interface Permission {
 }
 
 export default function CreateRole({ permissions = [] }: { permissions: Permission[] }) {
+    const { t } = useTranslation();
     const { current_tenant, auth } = usePage().props as any;
     const currentPathSlug = window.location.pathname.split('/')[1];
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
@@ -74,20 +76,18 @@ export default function CreateRole({ permissions = [] }: { permissions: Permissi
 
     return (
         <>
-            <Head title="Create Tenant Role" />
+            <Head title={t("Create Tenant Role")} />
 
             <div className="space-y-6 p-4 sm:p-6">
                 <div className="rounded-2xl border border-border bg-card p-6 shadow-sm flex items-center justify-between text-card-foreground">
                     <div>
-                        <h2 className="text-xl font-bold tracking-tight">Create New Role</h2>
+                        <h2 className="text-xl font-bold tracking-tight">{t("Create New Role")}</h2>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                            Define custom operational capabilities for this tenant organization.
-                        </p>
+                            {t("Define custom operational capabilities for this tenant organization.")}</p>
                     </div>
                     <Button asChild variant="outline" className="rounded-xl border-border">
                         <Link href={`/${tenantSlug}/settings/users-roles?tab=roles`}>
-                            <ArrowLeftCircleIcon className="mr-2 h-4 w-4 text-blue-600" /> Back
-                        </Link>
+                            <ArrowLeftCircleIcon className="mr-2 h-4 w-4 text-blue-600" /> {t("Back")}</Link>
                     </Button>
                 </div>
 
@@ -95,13 +95,12 @@ export default function CreateRole({ permissions = [] }: { permissions: Permissi
                     <form onSubmit={submit} className="max-w-4xl space-y-6">
                         <div className="max-w-xl space-y-1.5">
                             <Label htmlFor="name" className="text-xs font-semibold">
-                                Role Name
-                            </Label>
+                                {t("Role Name")}</Label>
                             <Input
                                 id="name"
                                 value={data.name}
                                 onChange={(e) => setData('name', e.target.value)}
-                                placeholder="e.g. Supervisor Gudang"
+                                placeholder={t("e.g. Supervisor Gudang")}
                                 className="h-10 text-xs border-border bg-background rounded-xl"
                             />
                             {errors.name && (
@@ -112,7 +111,7 @@ export default function CreateRole({ permissions = [] }: { permissions: Permissi
                         </div>
 
                         <div className="space-y-4">
-                            <Label className="text-sm font-bold tracking-tight">Assign Permissions</Label>
+                            <Label className="text-sm font-bold tracking-tight">{t("Assign Permissions")}</Label>
 
                             <div className="space-y-4">
                                 {Object.entries(groupedPermissions).map(([groupName, perms]) => {
@@ -140,8 +139,7 @@ export default function CreateRole({ permissions = [] }: { permissions: Permissi
                                                         )}
                                                     </button>
                                                     <h3 className="font-bold text-xs uppercase tracking-wider text-foreground">
-                                                        {groupName.replace('_', ' ')} Management
-                                                    </h3>
+                                                        {groupName.replace('_', ' ')} {t("Management")}</h3>
                                                 </div>
 
                                                 <div className="flex items-center space-x-2 rounded-lg border border-border bg-card px-3 py-1">
@@ -156,8 +154,7 @@ export default function CreateRole({ permissions = [] }: { permissions: Permissi
                                                         htmlFor={`all-${groupName}`}
                                                         className="cursor-pointer text-[10px] font-bold tracking-wider text-muted-foreground uppercase"
                                                     >
-                                                        Check All
-                                                    </label>
+                                                        {t("Check All")}</label>
                                                 </div>
                                             </div>
 
@@ -208,7 +205,7 @@ export default function CreateRole({ permissions = [] }: { permissions: Permissi
                                 className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-6 py-2.5 rounded-xl shadow-md shadow-blue-600/20"
                                 disabled={processing}
                             >
-                                {processing ? 'Saving...' : 'Save Role'}
+                                {processing ? t("Saving...") : t("Save Role")}
                             </Button>
                         </div>
                     </form>
@@ -220,8 +217,8 @@ export default function CreateRole({ permissions = [] }: { permissions: Permissi
 
 CreateRole.layout = {
     breadcrumbs: [
-        { title: 'Settings', href: '#' },
-        { title: 'User & Roles', href: '#' },
-        { title: 'Create Role', href: '#' },
+        { title: "Settings", href: '#' },
+        { title: "User & Roles", href: '#' },
+        { title: "Create Role", href: '#' },
     ],
 };

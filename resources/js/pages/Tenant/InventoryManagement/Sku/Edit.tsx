@@ -9,7 +9,8 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@/components/ui/select';
+} from '@/components/ui/select';import { useTranslation } from '@/context/language-context';
+
 import { ArrowLeftCircleIcon, Save } from 'lucide-react';
 import { SkuItem } from './Index';
 
@@ -31,6 +32,7 @@ interface EditProps {
 }
 
 export default function SkuEdit({ sku, products, units }: EditProps) {
+    const { t } = useTranslation();
     const { current_tenant, auth } = usePage().props as any;
     const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
@@ -59,16 +61,14 @@ export default function SkuEdit({ sku, products, units }: EditProps) {
                 <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-6 shadow-sm text-card-foreground">
                     <div>
                         <h2 className="text-xl font-bold tracking-tight">
-                            Edit SKU: <span className="text-blue-600">{sku.sku_code}</span>
+                            {t("Edit SKU:")}{' '}<span className="text-blue-600">{sku.sku_code}</span>
                         </h2>
                         <p className="mt-0.5 text-xs text-muted-foreground">
-                            Perbarui detail varian barang, harga modal, dan ambang stok.
-                        </p>
+                            {t("Perbarui detail varian barang, harga modal, dan ambang stok.")}</p>
                     </div>
                     <Button asChild variant="outline" className="rounded-xl border-border">
                         <Link href={`/${tenantSlug}/inventory/skus`}>
-                            <ArrowLeftCircleIcon className="mr-2 h-4 w-4 text-blue-600" /> Back
-                        </Link>
+                            <ArrowLeftCircleIcon className="mr-2 h-4 w-4 text-blue-600" /> {t("Back")}</Link>
                     </Button>
                 </div>
 
@@ -79,14 +79,14 @@ export default function SkuEdit({ sku, products, units }: EditProps) {
                             {/* Product Select */}
                             <div className="space-y-1.5">
                                 <Label htmlFor="product_id" className="text-xs font-semibold">
-                                    Produk Induk <span className="text-red-500">*</span>
+                                    {t("Produk Induk")}{' '}<span className="text-red-500">{t("*")}</span>
                                 </Label>
                                 <Select
                                     value={data.product_id}
                                     onValueChange={(val) => setData('product_id', val)}
                                 >
                                     <SelectTrigger className="h-10 text-xs border-border bg-background rounded-xl">
-                                        <SelectValue placeholder="Pilih Produk" />
+                                        <SelectValue placeholder={t("Pilih Produk")} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {products.map((product) => (
@@ -104,20 +104,19 @@ export default function SkuEdit({ sku, products, units }: EditProps) {
                             {/* Unit Select */}
                             <div className="space-y-1.5">
                                 <Label htmlFor="unit_id" className="text-xs font-semibold">
-                                    Satuan (Unit) <span className="text-red-500">*</span>
+                                    {t("Satuan (Unit)")}{' '}<span className="text-red-500">{t("*")}</span>
                                 </Label>
                                 <Select
                                     value={data.unit_id}
                                     onValueChange={(val) => setData('unit_id', val)}
                                 >
                                     <SelectTrigger className="h-10 text-xs border-border bg-background rounded-xl">
-                                        <SelectValue placeholder="Pilih Satuan" />
+                                        <SelectValue placeholder={t("Pilih Satuan")} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {units.map((unit) => (
                                             <SelectItem key={unit.id} value={String(unit.id)}>
-                                                {unit.name} ({unit.symbol})
-                                            </SelectItem>
+                                                {unit.name} {t("(")}{unit.symbol}{t(")")}</SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
@@ -131,7 +130,7 @@ export default function SkuEdit({ sku, products, units }: EditProps) {
                             {/* SKU Code */}
                             <div className="space-y-1.5">
                                 <Label htmlFor="sku_code" className="text-xs font-semibold">
-                                    Kode SKU <span className="text-red-500">*</span>
+                                    {t("Kode SKU")}{' '}<span className="text-red-500">{t("*")}</span>
                                 </Label>
                                 <Input
                                     id="sku_code"
@@ -148,8 +147,7 @@ export default function SkuEdit({ sku, products, units }: EditProps) {
                             {/* Barcode */}
                             <div className="space-y-1.5">
                                 <Label htmlFor="barcode" className="text-xs font-semibold">
-                                    Barcode / EAN-13
-                                </Label>
+                                    {t("Barcode / EAN-13")}</Label>
                                 <Input
                                     id="barcode"
                                     value={data.barcode}
@@ -165,7 +163,7 @@ export default function SkuEdit({ sku, products, units }: EditProps) {
                         {/* Base Cost */}
                         <div className="space-y-1.5">
                             <Label htmlFor="base_cost" className="text-xs font-semibold">
-                                Harga Modal / Base Cost (Rp) <span className="text-red-500">*</span>
+                                {t("Harga Modal / Base Cost (Rp)")}{' '}<span className="text-red-500">{t("*")}</span>
                             </Label>
                             <Input
                                 id="base_cost"
@@ -185,8 +183,7 @@ export default function SkuEdit({ sku, products, units }: EditProps) {
                             {/* Current Stock */}
                             <div className="space-y-1.5">
                                 <Label htmlFor="current_stock" className="text-xs font-semibold">
-                                    Stok Saat Ini
-                                </Label>
+                                    {t("Stok Saat Ini")}</Label>
                                 <Input
                                     id="current_stock"
                                     type="number"
@@ -203,8 +200,7 @@ export default function SkuEdit({ sku, products, units }: EditProps) {
                             {/* Min Stock */}
                             <div className="space-y-1.5">
                                 <Label htmlFor="min_stock" className="text-xs font-semibold">
-                                    Stok Minimum
-                                </Label>
+                                    {t("Stok Minimum")}</Label>
                                 <Input
                                     id="min_stock"
                                     type="number"
@@ -227,10 +223,10 @@ export default function SkuEdit({ sku, products, units }: EditProps) {
                                 className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-6 py-2.5 rounded-xl shadow-md shadow-blue-600/20 flex items-center gap-2"
                             >
                                 <Save className="h-4 w-4" />
-                                {processing ? 'Updating...' : 'Update'}
+                                {processing ? t("Updating...") : t("Update")}
                             </Button>
                             <Button asChild variant="ghost" className="rounded-xl text-xs">
-                                <Link href={`/${tenantSlug}/inventory/skus`}>Cancel</Link>
+                                <Link href={`/${tenantSlug}/inventory/skus`}>{t("Cancel")}</Link>
                             </Button>
                         </div>
                     </form>
@@ -242,8 +238,8 @@ export default function SkuEdit({ sku, products, units }: EditProps) {
 
 SkuEdit.layout = {
     breadcrumbs: [
-        { title: 'Inventory Management', href: '#' },
-        { title: 'Master SKU', href: '#' },
-        { title: 'Edit SKU', href: '#' },
+        { title: "Inventory Management", href: '#' },
+        { title: "Master SKU", href: '#' },
+        { title: "Edit SKU", href: '#' },
     ],
 };

@@ -1,5 +1,6 @@
 import React from 'react';
 import { FileText, Printer, X } from 'lucide-react';
+import { useTranslation } from '@/context/language-context';
 import type { OutboundItem, OutboundManifest } from '@/types/outbound';
 
 interface SuratJalanPreviewModalProps {
@@ -15,6 +16,7 @@ export const SuratJalanPreviewModal: React.FC<SuratJalanPreviewModalProps> = ({
     manifest,
     items,
 }) => {
+    const { t } = useTranslation();
     if (!isOpen) return null;
 
     return (
@@ -25,11 +27,10 @@ export const SuratJalanPreviewModal: React.FC<SuratJalanPreviewModalProps> = ({
                     <div>
                         <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
                             <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                            <span>Preview Surat Jalan Resmi (Delivery Note)</span>
+                            <span>{t("Preview Surat Jalan Resmi (Delivery Note)")}</span>
                         </h2>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                            Dokumen sah serah terima barang ke kurir pengiriman
-                        </p>
+                            {t("Dokumen sah serah terima barang ke kurir pengiriman")}</p>
                     </div>
                     <button
                         onClick={onClose}
@@ -44,21 +45,18 @@ export const SuratJalanPreviewModal: React.FC<SuratJalanPreviewModalProps> = ({
                     <div className="flex items-start justify-between border-b border-border pb-4">
                         <div>
                             <div className="font-bold text-foreground text-base">
-                                OMNIWAREHOUSE SYSTEM
-                            </div>
+                                {t("OMNIWAREHOUSE SYSTEM")}</div>
                             <div className="text-muted-foreground text-[11px]">
-                                DC Cakung Utama, Blok B-4, Jakarta Timur
-                            </div>
+                                {t("DC Cakung Utama, Blok B-4, Jakarta Timur")}</div>
                             <div className="font-mono text-muted-foreground/70 text-[10px] mt-1">
-                                Ref: SURAT-JALAN-{manifest.manifest_code}
+                                {t("Ref: SURAT-JALAN-")}{manifest.manifest_code}
                             </div>
                         </div>
                         <div className="text-right">
                             <span className="inline-block px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 rounded font-mono font-bold text-[11px]">
-                                SURAT JALAN SAH
-                            </span>
+                                {t("SURAT JALAN SAH")}</span>
                             <div className="text-muted-foreground text-[11px] mt-1 font-mono">
-                                Tanggal: {manifest.created_at || 'Hari ini'}
+                                {t("Tanggal:")}{' '}{manifest.created_at || t("Hari ini")}
                             </div>
                         </div>
                     </div>
@@ -66,13 +64,13 @@ export const SuratJalanPreviewModal: React.FC<SuratJalanPreviewModalProps> = ({
                     <div className="grid grid-cols-2 gap-4 bg-muted/30 p-3 rounded-lg border border-border text-[11px]">
                         <div>
                             <div>
-                                Customer / Penerima:{' '}
+                                {t("Customer / Penerima:")}{' '}
                                 <strong className="text-foreground">
                                     {manifest.customer_name || '-'}
                                 </strong>
                             </div>
                             <div>
-                                No. Sales Order (SO):{' '}
+                                {t("No. Sales Order (SO):")}{' '}
                                 <strong className="font-mono text-foreground">
                                     {manifest.so_number || manifest.manifest_code}
                                 </strong>
@@ -80,16 +78,14 @@ export const SuratJalanPreviewModal: React.FC<SuratJalanPreviewModalProps> = ({
                         </div>
                         <div>
                             <div>
-                                Kendaraan:{' '}
+                                {t("Kendaraan:")}{' '}
                                 <strong className="font-mono text-foreground">
-                                    {manifest.vehicle_no || '-'} ({manifest.vehicle_type || '-'})
-                                </strong>
+                                    {manifest.vehicle_no || '-'} {t("(")}{manifest.vehicle_type || '-'}{t(")")}</strong>
                             </div>
                             <div>
-                                Kurir / Driver:{' '}
+                                {t("Kurir / Driver:")}{' '}
                                 <strong className="text-foreground">
-                                    {manifest.driver_name || '-'} ({manifest.driver_phone || '-'})
-                                </strong>
+                                    {manifest.driver_name || '-'} {t("(")}{manifest.driver_phone || '-'}{t(")")}</strong>
                             </div>
                         </div>
                     </div>
@@ -97,10 +93,10 @@ export const SuratJalanPreviewModal: React.FC<SuratJalanPreviewModalProps> = ({
                     <table className="w-full text-left border border-border rounded-lg text-[11px] overflow-hidden">
                         <thead className="bg-muted/60 text-foreground font-semibold border-b border-border">
                             <tr>
-                                <th className="p-2">Item SKU</th>
-                                <th className="p-2 text-right">Target SO</th>
-                                <th className="p-2 text-right">Fisik Packed</th>
-                                <th className="p-2">Keterangan Dus</th>
+                                <th className="p-2">{t("Item SKU")}</th>
+                                <th className="p-2 text-right">{t("Target SO")}</th>
+                                <th className="p-2 text-right">{t("Fisik Packed")}</th>
+                                <th className="p-2">{t("Keterangan Dus")}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
@@ -108,22 +104,20 @@ export const SuratJalanPreviewModal: React.FC<SuratJalanPreviewModalProps> = ({
                                 items.map((item) => (
                                     <tr key={item.id}>
                                         <td className="p-2 font-mono font-medium text-foreground">
-                                            {item.sku} ({item.product_name})
-                                        </td>
+                                            {item.sku} {t("(")}{item.product_name}{t(")")}</td>
                                         <td className="p-2 text-right font-mono text-foreground">{item.so_qty}</td>
                                         <td className="p-2 text-right font-mono text-emerald-700 dark:text-emerald-400 font-bold">
                                             {item.packed_qty}
                                         </td>
                                         <td className="p-2 text-muted-foreground">
-                                            {item.issue_note || 'Segel Dus Utuh & Lolos Verifikasi'}
+                                            {item.issue_note || t("Segel Dus Utuh & Lolos Verifikasi")}
                                         </td>
                                     </tr>
                                 ))
                             ) : (
                                 <tr>
                                     <td colSpan={4} className="p-4 text-center text-muted-foreground">
-                                        Belum ada item terdaftar pada manifest pengiriman ini.
-                                    </td>
+                                        {t("Belum ada item terdaftar pada manifest pengiriman ini.")}</td>
                                 </tr>
                             )}
                         </tbody>
@@ -131,41 +125,38 @@ export const SuratJalanPreviewModal: React.FC<SuratJalanPreviewModalProps> = ({
 
                     <div className="grid grid-cols-2 gap-8 pt-4 mt-2 border-t border-border text-center text-[11px]">
                         <div>
-                            <div className="text-muted-foreground mb-10">Pihak Kurir / Ekspedisi</div>
+                            <div className="text-muted-foreground mb-10">{t("Pihak Kurir / Ekspedisi")}</div>
                             <div className="font-bold text-foreground underline">
-                                {manifest.driver_name || 'Driver Pengirim'}
+                                {manifest.driver_name || t("Driver Pengirim")}
                             </div>
-                            <div className="text-muted-foreground/70 text-[10px]">Tanda Tangan &amp; Nama Jelas</div>
+                            <div className="text-muted-foreground/70 text-[10px]">{t("Tanda Tangan & Nama Jelas")}</div>
                         </div>
                         <div>
-                            <div className="text-muted-foreground mb-10">Pemberi Barang (Lead Shipping)</div>
+                            <div className="text-muted-foreground mb-10">{t("Pemberi Barang (Lead Shipping)")}</div>
                             <div className="font-bold text-foreground underline">
-                                {manifest.operator_name || 'Operator Gudang'}
+                                {manifest.operator_name || t("Operator Gudang")}
                             </div>
                             <div className="text-muted-foreground/70 text-[10px]">
-                                OmniWarehouse DC
-                            </div>
+                                {t("OmniWarehouse DC")}</div>
                         </div>
                     </div>
                 </div>
 
                 <div className="px-6 py-3 border-t border-border bg-muted/40 flex items-center justify-between">
                     <span className="text-[11px] text-muted-foreground font-mono">
-                        Format PDF A4 Siap Cetak
-                    </span>
+                        {t("Format PDF A4 Siap Cetak")}</span>
                     <div className="flex items-center gap-2">
                         <button
                             onClick={onClose}
                             className="h-9 px-3 bg-card hover:bg-muted border border-border rounded-lg text-xs font-semibold text-foreground transition-all cursor-pointer"
                         >
-                            Tutup
-                        </button>
+                            {t("Tutup")}</button>
                         <button
                             onClick={() => window.print()}
                             className="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
                         >
                             <Printer className="w-3.5 h-3.5" />
-                            <span>Cetak Surat Jalan</span>
+                            <span>{t("Cetak Surat Jalan")}</span>
                         </button>
                     </div>
                 </div>

@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowLeft, ChevronDown, ChevronUp, Save, RotateCcw } from 'lucide-react';
-import { PageHeader } from '@/components/page-header';
+import { PageHeader } from '@/components/page-header';import { useTranslation } from '@/context/language-context';
+
 
 interface Permission {
     id: number;
@@ -19,6 +20,7 @@ interface Role {
 }
 
 export default function Edit({ role, permissions }: { role: Role; permissions: Permission[] }) {
+    const { t } = useTranslation();
     const { data, setData, put, processing, errors, reset } = useForm({
         name: role.name || '',
         permissions: role.permissions?.map((p) => p.name) || [],
@@ -87,12 +89,11 @@ export default function Edit({ role, permissions }: { role: Role; permissions: P
             <div className="space-y-6 p-4 sm:p-6">
                 <PageHeader
                     title={`Edit Role: ${role.name}`}
-                    description="Update central admin role title and adjust mapped system capabilities."
+                    description={t("Update central admin role title and adjust mapped system capabilities.")}
                     renderAction={
                         <Button asChild variant="outline" size="sm" className="h-9 gap-1.5 border-border text-xs">
                             <Link href="/roles">
-                                <ArrowLeft className="h-4 w-4" /> Back
-                            </Link>
+                                <ArrowLeft className="h-4 w-4" /> {t("Back")}</Link>
                         </Button>
                     }
                 />
@@ -101,12 +102,12 @@ export default function Edit({ role, permissions }: { role: Role; permissions: P
                     <form onSubmit={submit}>
                         <div className="space-y-6 p-6 border-b border-border">
                             <div className="max-w-xl space-y-1.5">
-                                <Label htmlFor="name" className="text-xs font-semibold">Role Name <span className="text-red-500">*</span></Label>
+                                <Label htmlFor="name" className="text-xs font-semibold">{t("Role Name")}{' '}<span className="text-red-500">{t("*")}</span></Label>
                                 <Input
                                     id="name"
                                     value={data.name}
                                     onChange={(e) => setData('name', e.target.value)}
-                                    placeholder="e.g. Finance Administrator"
+                                    placeholder={t("e.g. Finance Administrator")}
                                     className="h-9 text-xs"
                                 />
                                 {errors.name && <span className="text-[11px] text-red-500">{errors.name}</span>}
@@ -114,8 +115,7 @@ export default function Edit({ role, permissions }: { role: Role; permissions: P
 
                             <div className="space-y-3 pt-2">
                                 <Label className="text-xs font-bold text-foreground uppercase tracking-wider">
-                                    Update Permissions Mapping ({data.permissions.length} selected)
-                                </Label>
+                                    {t("Update Permissions Mapping (")}{data.permissions.length} {t("selected)")}</Label>
 
                                 <div className="space-y-3">
                                     {Object.entries(groupedPermissions).map(([groupName, perms]) => {
@@ -145,8 +145,7 @@ export default function Edit({ role, permissions }: { role: Role; permissions: P
                                                             onCheckedChange={(checked) => toggleGroup(groupName, !!checked)}
                                                         />
                                                         <label htmlFor={`all-${groupName}`} className="cursor-pointer text-[10px] font-bold text-muted-foreground uppercase">
-                                                            Check All
-                                                        </label>
+                                                            {t("Check All")}</label>
                                                     </div>
                                                 </div>
 
@@ -191,15 +190,14 @@ export default function Edit({ role, permissions }: { role: Role; permissions: P
                                 onClick={() => reset()}
                                 className="h-9 gap-1.5 border-border text-xs"
                             >
-                                <RotateCcw className="h-3.5 w-3.5" /> Reset
-                            </Button>
+                                <RotateCcw className="h-3.5 w-3.5" /> {t("Reset")}</Button>
                             <Button
                                 type="submit"
                                 size="sm"
                                 disabled={processing}
                                 className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700 text-xs"
                             >
-                                <Save className="mr-1.5 h-4 w-4" /> {processing ? 'Updating...' : 'Update Role'}
+                                <Save className="mr-1.5 h-4 w-4" /> {processing ? t("Updating...") : t("Update Role")}
                             </Button>
                         </div>
                     </form>
@@ -211,7 +209,7 @@ export default function Edit({ role, permissions }: { role: Role; permissions: P
 
 Edit.layout = {
     breadcrumbs: [
-        { title: 'Roles Management', href: '/roles' },
-        { title: 'Edit Role', href: '#' },
+        { title: "Roles Management", href: '/roles' },
+        { title: "Edit Role", href: '#' },
     ],
 };

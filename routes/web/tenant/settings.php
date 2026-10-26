@@ -14,3 +14,4 @@ Route::get('settings/security', [SecurityController::class, 'edit'])->name('tena
 Route::put('settings/password', [SecurityController::class, 'update'])->name('tenant.password.update');
 
 Route::inertia('settings/appearance', 'Tenant/Settings/Appearance')->name('tenant.appearance.edit');
+Route::inertia('settings/language', 'Tenant/Settings/Language')->name('tenant.language.edit');

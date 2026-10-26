@@ -18,6 +18,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { DollarSign, Boxes, ShoppingCart, Calculator, FileText, FileSpreadsheet } from 'lucide-react';
+import { useTranslation } from '@/context/language-context';
 import { usePermission } from '@/utils/permission';
 
 interface Warehouse {
@@ -61,6 +62,7 @@ interface ValuationAssetProps {
 }
 
 export default function Index({ reports, summary, warehouses, categories, filters }: ValuationAssetProps) {
+    const { t } = useTranslation();
     const { flash, current_tenant, auth } = usePage().props as any;
     const { can } = usePermission();
 
@@ -202,23 +204,23 @@ export default function Index({ reports, summary, warehouses, categories, filter
     const canExport = can('tenant.valuation_asset.export') || can('valuation_asset.export');
 
     const tableHeaders: Array<string | HeaderConfig> = [
-        { label: 'SKU CODE', sortField: 'sku_id' },
-        { label: 'PRODUCT NAME', sortField: 'product_name' },
+        { label: t("SKU CODE"), sortField: 'sku_id' },
+        { label: t("PRODUCT NAME"), sortField: 'product_name' },
         'LOCATION',
         'CATEGORY',
-        { label: 'QTY ON HAND', sortField: 'quantity' },
-        { label: 'BASE COST / UNIT', sortField: 'base_cost' },
-        { label: 'TOTAL ASSET VALUE', sortField: 'total_value' },
+        { label: t("QTY ON HAND"), sortField: 'quantity' },
+        { label: t("BASE COST / UNIT"), sortField: 'base_cost' },
+        { label: t("TOTAL ASSET VALUE"), sortField: 'total_value' },
     ];
 
     return (
         <>
-            <Head title="Valuation & Asset Report" />
+            <Head title={t("Valuation & Asset Report")} />
 
             <div className="space-y-6 p-4 sm:p-6">
                 <PageHeader
-                    title="Valuation & Asset Report"
-                    description="Financial valuation of inventory stocks categorized by location and item base costs."
+                    title={t("Valuation & Asset Report")}
+                    description={t("Financial valuation of inventory stocks categorized by location and item base costs.")}
                     renderAction={
                         <div className="flex items-center gap-2">
                             {canExport && (
@@ -229,16 +231,14 @@ export default function Index({ reports, summary, warehouses, categories, filter
                                         onClick={handleExportPdf}
                                         className="h-9 gap-1.5 border-red-200 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
                                     >
-                                        <FileText size={15} /> Export PDF
-                                    </Button>
+                                        <FileText size={15} /> {t("Export PDF")}</Button>
                                     <Button
                                         variant="outline"
                                         size="sm"
                                         onClick={handleExportExcel}
                                         className="h-9 gap-1.5 border-emerald-200 text-xs text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
                                     >
-                                        <FileSpreadsheet size={15} /> Export Excel
-                                    </Button>
+                                        <FileSpreadsheet size={15} /> {t("Export Excel")}</Button>
                                 </>
                             )}
                         </div>
@@ -249,7 +249,7 @@ export default function Index({ reports, summary, warehouses, categories, filter
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Total Asset Value</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Total Asset Value")}</p>
                             <h3 className="mt-1 text-xl font-bold text-emerald-600 dark:text-emerald-400">
                                 {formatRp(summary.total_asset_value)}
                             </h3>
@@ -261,7 +261,7 @@ export default function Index({ reports, summary, warehouses, categories, filter
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Total Active SKUs</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Total Active SKUs")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-foreground">
                                 {summary.total_skus.toLocaleString()}
                             </h3>
@@ -273,7 +273,7 @@ export default function Index({ reports, summary, warehouses, categories, filter
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Total Units On Hand</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Total Units On Hand")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-foreground">
                                 {summary.total_quantity.toLocaleString()}
                             </h3>
@@ -285,7 +285,7 @@ export default function Index({ reports, summary, warehouses, categories, filter
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Average Unit Cost</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Average Unit Cost")}</p>
                             <h3 className="mt-1 text-xl font-bold text-foreground">
                                 {formatRp(summary.avg_unit_cost)}
                             </h3>
@@ -305,11 +305,11 @@ export default function Index({ reports, summary, warehouses, categories, filter
                     <FilterDropdown onApply={handleApplyFilter} onReset={handleResetFilter}>
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <Label className="text-xs font-semibold">Warehouse</Label>
+                                <Label className="text-xs font-semibold">{t("Warehouse")}</Label>
                                 <Select value={tempWarehouse} onValueChange={setTempWarehouse}>
-                                    <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="All Warehouse" /></SelectTrigger>
+                                    <SelectTrigger className="h-9 text-xs"><SelectValue placeholder={t("All Warehouse")} /></SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Warehouse</SelectItem>
+                                        <SelectItem value="all">{t("All Warehouse")}</SelectItem>
                                         {warehouses?.map((w) => (
                                             <SelectItem key={w.id} value={w.id.toString()}>{w.name}</SelectItem>
                                         ))}
@@ -318,11 +318,11 @@ export default function Index({ reports, summary, warehouses, categories, filter
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-xs font-semibold">Category</Label>
+                                <Label className="text-xs font-semibold">{t("Category")}</Label>
                                 <Select value={tempCategory} onValueChange={setTempCategory}>
-                                    <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="All Category" /></SelectTrigger>
+                                    <SelectTrigger className="h-9 text-xs"><SelectValue placeholder={t("All Category")} /></SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Category</SelectItem>
+                                        <SelectItem value="all">{t("All Category")}</SelectItem>
                                         {categories?.map((c) => (
                                             <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
                                         ))}
@@ -332,7 +332,7 @@ export default function Index({ reports, summary, warehouses, categories, filter
 
                             <div className="grid grid-cols-2 gap-2">
                                 <div className="space-y-1">
-                                    <Label className="text-xs font-semibold">Updated From</Label>
+                                    <Label className="text-xs font-semibold">{t("Updated From")}</Label>
                                     <Input
                                         type="date"
                                         value={tempDateFrom}
@@ -341,7 +341,7 @@ export default function Index({ reports, summary, warehouses, categories, filter
                                     />
                                 </div>
                                 <div className="space-y-1">
-                                    <Label className="text-xs font-semibold">Updated To</Label>
+                                    <Label className="text-xs font-semibold">{t("Updated To")}</Label>
                                     <Input
                                         type="date"
                                         value={tempDateTo}
@@ -390,7 +390,7 @@ export default function Index({ reports, summary, warehouses, categories, filter
 
 Index.layout = {
     breadcrumbs: [
-        { title: 'Reports', href: '#' },
-        { title: 'Valuation & Asset', href: '#' },
+        { title: "Reports", href: '#' },
+        { title: "Valuation & Asset", href: '#' },
     ],
 };

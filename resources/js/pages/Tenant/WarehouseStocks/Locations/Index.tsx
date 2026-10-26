@@ -19,6 +19,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Layers, Plus, FileText, FileSpreadsheet, CheckCircle2, XCircle } from 'lucide-react';
+import { useTranslation } from '@/context/language-context';
 import { usePermission } from '@/utils/permission';
 
 interface Warehouse {
@@ -63,6 +64,7 @@ interface LocationIndexProps {
 }
 
 export default function Index({ locations, warehouses, summary, filters }: LocationIndexProps) {
+    const { t } = useTranslation();
     const { flash, current_tenant, auth } = usePage().props as any;
     const { can } = usePermission();
 
@@ -184,22 +186,22 @@ export default function Index({ locations, warehouses, summary, filters }: Locat
     const canExport = can('tenant.locations.export') || can('locations.export');
 
     const tableHeaders: Array<string | HeaderConfig> = [
-        { label: 'KODE RAK', sortField: 'rack_code' },
-        { label: 'GUDANG', sortField: 'warehouse_name' },
-        { label: 'ZONA', sortField: 'zone' },
+        { label: t("KODE RAK"), sortField: 'rack_code' },
+        { label: t("GUDANG"), sortField: 'warehouse_name' },
+        { label: t("ZONA"), sortField: 'zone' },
         'DESKRIPSI',
-        { label: 'STATUS', sortField: 'is_active' },
+        { label: t("STATUS"), sortField: 'is_active' },
         'ACTIONS',
     ];
 
     return (
         <>
-            <Head title="Rack & Stock Location" />
+            <Head title={t("Rack & Stock Location")} />
 
             <div className="space-y-6 p-4 sm:p-6">
                 <PageHeader
-                    title="Rack & Stock Location"
-                    description="Kelola pemetaan zona dan titik penyimpanan fisik barang (rak, etalase, slot) di seluruh gudang."
+                    title={t("Rack & Stock Location")}
+                    description={t("Kelola pemetaan zona dan titik penyimpanan fisik barang (rak, etalase, slot) di seluruh gudang.")}
                     renderAction={
                         <div className="flex items-center gap-2">
                             {canExport && (
@@ -210,23 +212,20 @@ export default function Index({ locations, warehouses, summary, filters }: Locat
                                         onClick={handleExportPdf}
                                         className="h-9 gap-1.5 border-border text-xs"
                                     >
-                                        <FileText size={15} className="text-red-500" /> Export PDF
-                                    </Button>
+                                        <FileText size={15} className="text-red-500" /> {t("Export PDF")}</Button>
                                     <Button
                                         variant="outline"
                                         size="sm"
                                         onClick={handleExportExcel}
                                         className="h-9 gap-1.5 border-border text-xs"
                                     >
-                                        <FileSpreadsheet size={15} className="text-emerald-500" /> Export Excel
-                                    </Button>
+                                        <FileSpreadsheet size={15} className="text-emerald-500" /> {t("Export Excel")}</Button>
                                 </>
                             )}
                             {canCreate && (
                                 <Button asChild className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700">
                                     <Link href={`/${tenantSlug}/locations/create`}>
-                                        <Plus className="mr-1.5 h-4 w-4" /> Add Location
-                                    </Link>
+                                        <Plus className="mr-1.5 h-4 w-4" /> {t("Add Location")}</Link>
                                 </Button>
                             )}
                         </div>
@@ -237,7 +236,7 @@ export default function Index({ locations, warehouses, summary, filters }: Locat
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Total Locations</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Total Locations")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-foreground">
                                 {summary?.total_locations ?? locations.total ?? 0}
                             </h3>
@@ -249,7 +248,7 @@ export default function Index({ locations, warehouses, summary, filters }: Locat
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Active Locations</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Active Locations")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-foreground">
                                 {summary?.active_locations ?? 0}
                             </h3>
@@ -261,7 +260,7 @@ export default function Index({ locations, warehouses, summary, filters }: Locat
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Inactive Locations</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Inactive Locations")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-foreground">
                                 {summary?.inactive_locations ?? 0}
                             </h3>
@@ -281,14 +280,14 @@ export default function Index({ locations, warehouses, summary, filters }: Locat
                     <FilterDropdown onApply={handleApplyFilter} onReset={handleResetFilter}>
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <Label className="text-xs font-semibold">Gudang</Label>
+                                <Label className="text-xs font-semibold">{t("Gudang")}</Label>
                                 <Select value={tempWarehouseId} onValueChange={setTempWarehouseId}>
-                                    <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="All Warehouses" /></SelectTrigger>
+                                    <SelectTrigger className="h-9 text-xs"><SelectValue placeholder={t("All Warehouses")} /></SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Warehouses</SelectItem>
+                                        <SelectItem value="all">{t("All Warehouses")}</SelectItem>
                                         {warehouses.map((wh) => (
                                             <SelectItem key={wh.id} value={String(wh.id)}>
-                                                {wh.code} - {wh.name}
+                                                {wh.code} {t("-")}{' '}{wh.name}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -320,7 +319,7 @@ export default function Index({ locations, warehouses, summary, filters }: Locat
                                             : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/50 dark:text-rose-400'
                                     }
                                 >
-                                    {item.is_active ? 'Active' : 'Inactive'}
+                                    {item.is_active ? t("Active") : t("Inactive")}
                                 </Badge>
                             </TableCell>
                             <TableCell className="text-right">
@@ -344,7 +343,7 @@ export default function Index({ locations, warehouses, summary, filters }: Locat
 
 Index.layout = {
     breadcrumbs: [
-        { title: 'Warehouse & Stocks', href: '#' },
-        { title: 'Rack & Locations', href: '#' },
+        { title: "Warehouse & Stocks", href: '#' },
+        { title: "Rack & Locations", href: '#' },
     ],
 };

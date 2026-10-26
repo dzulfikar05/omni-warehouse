@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { debounce } from 'lodash';
+import { useTranslation } from '@/context/language-context';
 import { usePermission } from '@/utils/permission';
 import {
     Plus,
@@ -58,6 +59,7 @@ interface IndexProps {
 }
 
 export default function UnitIndex({ units, stats, filters }: IndexProps) {
+    const { t } = useTranslation();
     const { flash, current_tenant, auth } = usePage().props as any;
     const { can } = usePermission();
 
@@ -136,21 +138,21 @@ export default function UnitIndex({ units, stats, filters }: IndexProps) {
     const canCreate = can('tenant.units.create') || can('units.create');
 
     const tableHeaders: Array<string | HeaderConfig> = [
-        { label: 'UNIT ID', sortField: 'id' },
-        { label: 'UNIT NAME', sortField: 'name' },
-        { label: 'SYMBOL', sortField: 'symbol' },
-        { label: 'DATE ADDED', sortField: 'created_at' },
+        { label: t("UNIT ID"), sortField: 'id' },
+        { label: t("UNIT NAME"), sortField: 'name' },
+        { label: t("SYMBOL"), sortField: 'symbol' },
+        { label: t("DATE ADDED"), sortField: 'created_at' },
         'ACTIONS',
     ];
 
     return (
         <>
-            <Head title="Units of Measurement" />
+            <Head title={t("Units of Measurement")} />
 
             <div className="space-y-6 p-4 font-sans sm:p-6">
                 <PageHeader
-                    title="Measurement Units"
-                    description="Manage standard inventory quantities and measurement notation."
+                    title={t("Measurement Units")}
+                    description={t("Manage standard inventory quantities and measurement notation.")}
                     renderAction={
                         <div className="flex items-center gap-2">
                             {canExport && (
@@ -161,24 +163,21 @@ export default function UnitIndex({ units, stats, filters }: IndexProps) {
                                         onClick={handleExportPdf}
                                         className="h-9 gap-1.5 border-border text-xs"
                                     >
-                                        <FileText size={15} className="text-red-500" /> Export PDF
-                                    </Button>
+                                        <FileText size={15} className="text-red-500" /> {t("Export PDF")}</Button>
                                     <Button
                                         variant="outline"
                                         size="sm"
                                         onClick={handleExportExcel}
                                         className="h-9 gap-1.5 border-border text-xs"
                                     >
-                                        <FileSpreadsheet size={15} className="text-emerald-500" /> Export Excel
-                                    </Button>
+                                        <FileSpreadsheet size={15} className="text-emerald-500" /> {t("Export Excel")}</Button>
                                 </>
                             )}
 
                             {canCreate && (
                                 <Button asChild className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700">
                                     <Link href={`/${tenantSlug}/inventory/units/create`}>
-                                        <Plus className="mr-1.5 h-4 w-4" /> Add Unit
-                                    </Link>
+                                        <Plus className="mr-1.5 h-4 w-4" /> {t("Add Unit")}</Link>
                                 </Button>
                             )}
                         </div>
@@ -189,9 +188,9 @@ export default function UnitIndex({ units, stats, filters }: IndexProps) {
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Total Units</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Total Units")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-foreground">{totalUnits}</h3>
-                            <p className="mt-0.5 text-[11px] text-muted-foreground">Standard Definitions</p>
+                            <p className="mt-0.5 text-[11px] text-muted-foreground">{t("Standard Definitions")}</p>
                         </div>
                         <div className="rounded-xl bg-blue-50 p-3 text-blue-600 dark:bg-blue-950/50">
                             <Ruler size={22} />
@@ -200,9 +199,9 @@ export default function UnitIndex({ units, stats, filters }: IndexProps) {
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Standard Notation</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Standard Notation")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-foreground">{shortSymbols}</h3>
-                            <p className="mt-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">≤ 3 Characters</p>
+                            <p className="mt-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">{t("≤ 3 Characters")}</p>
                         </div>
                         <div className="rounded-xl bg-emerald-50 p-3 text-emerald-600 dark:bg-emerald-950/50">
                             <Tag size={22} />
@@ -211,9 +210,9 @@ export default function UnitIndex({ units, stats, filters }: IndexProps) {
 
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <div>
-                            <p className="text-xs font-medium text-muted-foreground">Custom Notation</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("Custom Notation")}</p>
                             <h3 className="mt-1 text-2xl font-bold text-foreground">{customSymbols}</h3>
-                            <p className="mt-0.5 text-[11px] text-muted-foreground">&gt; 3 Characters</p>
+                            <p className="mt-0.5 text-[11px] text-muted-foreground">{t("&gt; 3 Characters")}</p>
                         </div>
                         <div className="rounded-xl bg-indigo-50 p-3 text-indigo-600 dark:bg-indigo-950/50">
                             <Scale size={22} />
@@ -246,7 +245,7 @@ export default function UnitIndex({ units, stats, filters }: IndexProps) {
                     renderRow={(unit: UnitItem) => (
                         <>
                             <TableCell className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400">
-                                UNIT-00{unit.id}
+                                {t("UNIT-00")}{unit.id}
                             </TableCell>
 
                             <TableCell className="text-xs font-bold text-foreground">
@@ -284,7 +283,7 @@ export default function UnitIndex({ units, stats, filters }: IndexProps) {
 
 UnitIndex.layout = {
     breadcrumbs: [
-        { title: 'Inventory Management', href: '#' },
-        { title: 'Units', href: '#' },
+        { title: "Inventory Management", href: '#' },
+        { title: "Units", href: '#' },
     ],
 };

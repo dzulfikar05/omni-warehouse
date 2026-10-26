@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Plus, Minus } from 'lucide-react';
+import { Plus, Minus } from 'lucide-react';import { useTranslation } from '@/context/language-context';
+
 
 export default function FaqSection() {
+    const { t } = useTranslation();
     const [openFaq, setOpenFaq] = useState<number | null>(0);
 
     const faqs = [
@@ -36,13 +38,12 @@ export default function FaqSection() {
             <div className="max-w-3xl mx-auto">
                 {/* Header Section */}
                 <div className="text-center mb-14">
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-[#2B7FFF] dark:text-blue-400 mb-3">FAQ</p>
-                    <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Pertanyaan umum</h2>
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-[#2B7FFF] dark:text-blue-400 mb-3">{t("FAQ")}</p>
+                    <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">{t("Pertanyaan umum")}</h2>
                     <p className="text-slate-500 dark:text-slate-400 text-sm mt-3">
-                        Masih ada pertanyaan lain?{' '}
+                        {t("Masih ada pertanyaan lain?")}{' '}
                         <a href="mailto:support@omniwarehouse.id" className="text-[#2B7FFF] dark:text-blue-400 font-semibold hover:underline">
-                            Hubungi tim kami.
-                        </a>
+                            {t("Hubungi tim kami.")}</a>
                     </p>
                 </div>
 

@@ -4,6 +4,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import type { BreadcrumbItem } from '@/types';
 // 1. Import komponen Export Notification Dropdown
 import { ExportNotificationDropdown } from '@/components/export-notification-dropdown';
+import { LanguageDropdown } from './language-dropdown';
 
 export function AppSidebarHeader({
     breadcrumbs = [],
@@ -21,6 +22,7 @@ export function AppSidebarHeader({
             {/* Bagian Kanan: Ikon Notifikasi Export */}
             <div className="flex items-center gap-2">
                 <ExportNotificationDropdown />
+                <LanguageDropdown />
             </div>
         </header>
     );
