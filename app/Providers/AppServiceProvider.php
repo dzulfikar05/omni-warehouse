@@ -24,6 +24,7 @@ use App\Contracts\TenantContract;
 use App\Contracts\TenantUserRoleContract;
 use App\Contracts\UnitContract;
 use App\Contracts\UserContract;
+use App\Models\User;
 use App\Services\CategoryService;
 use App\Services\CentralDashboardService;
 use App\Services\CompanyProfileService;
@@ -47,6 +48,7 @@ use App\Services\UnitService;
 use App\Services\UserService;
 use App\Services\ValuationAssetReportService;
 use Carbon\CarbonImmutable;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
@@ -89,6 +91,18 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+
+       ResetPassword::createUrlUsing(function (User $user, string $token) {
+            $currentTenant = app()->bound('current_tenant') ? app('current_tenant') : null;
+            
+            $tenantSlug = $user->tenant?->slug ?? $currentTenant?->slug;
+
+            if ($tenantSlug) {
+                return url("/{$tenantSlug}/reset-password/{$token}?email=" . urlencode($user->email));
+            }
+
+            return url("/reset-password/{$token}?email=" . urlencode($user->email));
+        });
     }
 
     /**

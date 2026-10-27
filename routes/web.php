@@ -90,6 +90,15 @@ Route::prefix('{tenant_slug}')->middleware(['identify_tenant'])->group(function 
     Route::get('/login', [TenantAuthController::class, 'showLoginForm'])->name('tenant.login');
     Route::post('/login', [TenantAuthController::class, 'login']);
 
+    Route::get('/forgot-password', [TenantAuthController::class, 'showForgotPasswordForm'])->name('tenant.password.request');
+    Route::post('/forgot-password', [TenantAuthController::class, 'sendResetLink'])->middleware('throttle:6,1')->name('tenant.password.email');
+
+    Route::get('/reset-password/{token}', [TenantAuthController::class, 'showResetPasswordForm'])
+        ->name('tenant.password.reset');
+
+    Route::post('/reset-password', [TenantAuthController::class, 'resetPassword'])
+        ->name('tenant.password.update');
+
     // Authenticated Tenant Routes
     Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/logout', [TenantAuthController::class, 'logout'])->name('tenant.logout');

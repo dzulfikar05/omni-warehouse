@@ -8,11 +8,16 @@ use App\Http\Requests\Web\TenantRegisterRequest;
 use App\Models\Plan;
 use App\Models\Tenant;
 use App\Models\User;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Password;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password as PasswordRule;
 
 class AuthController extends Controller
 {
@@ -137,5 +142,98 @@ class AuthController extends Controller
             ],
             'email' => $email,
         ]);
+    }
+
+    public function showForgotPasswordForm($tenant_slug): Response
+    {
+        $tenant = app('current_tenant');
+
+        return Inertia::render('Tenant/Auth/ForgotPassword', [
+            'tenant' => $tenant,
+            'status' => session('status'),
+        ]);
+    }
+
+    public function sendResetLink(Request $request, $tenant_slug): RedirectResponse
+    {
+        $tenant = app('current_tenant');
+
+        $request->validate([
+            'email' => ['required', 'email'],
+        ]);
+
+        // Verifikasi keberadaan pengguna khusus pada tenant ini
+        $user = User::where('tenant_id', $tenant->id)
+            ->where('email', $request->email)
+            ->first();
+
+        if (!$user) {
+            return back()->withErrors([
+                'email' => __('We cannot find a user with that email address in this company workspace.'),
+            ]);
+        }
+
+        // Kirim token reset password
+        $status = Password::broker()->sendResetLink(
+            $request->only('email')
+        );
+
+        return $status === Password::RESET_LINK_SENT
+            ? back()->with('status', __($status))
+            : back()->withErrors(['email' => __($status)]);
+    }
+
+    public function showResetPasswordForm(Request $request, $tenant_slug): Response
+    {
+        $tenant = app('current_tenant');
+
+        return Inertia::render('Tenant/Auth/ResetPassword', [
+            'tenant' => $tenant,
+            'token' => $request->route('token'),
+            'email' => $request->email,
+        ]);
+    }
+
+    /**
+     * Handle an incoming new password request for Tenant.
+     */
+    public function resetPassword(Request $request, $tenant_slug): RedirectResponse
+    {
+        $tenant = app('current_tenant');
+
+        $request->validate([
+            'token' => ['required'],
+            'email' => ['required', 'email'],
+            'password' => ['required', 'confirmed', PasswordRule::defaults()],
+        ]);
+
+        // Verifikasi bahwa user milik tenant ini
+        $user = User::where('tenant_id', $tenant->id)
+            ->where('email', $request->email)
+            ->first();
+
+        if (!$user) {
+            return back()->withErrors([
+                'email' => __('We cannot find a user with that email address in this workspace.'),
+            ]);
+        }
+
+        // Eksekusi reset password melalui Password Broker
+        $status = Password::broker()->reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function (User $user, string $password) {
+                $user->forceFill([
+                    'password' => Hash::make($password),
+                    'remember_token' => Str::random(60),
+                ])->save();
+
+                event(new PasswordReset($user));
+            }
+        );
+
+        return $status === Password::PASSWORD_RESET
+            ? redirect()->route('tenant.login', ['tenant_slug' => $tenant->slug])
+                ->with('status', __($status))
+            : back()->withErrors(['email' => __($status)]);
     }
 }

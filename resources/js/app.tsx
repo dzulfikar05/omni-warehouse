@@ -25,6 +25,10 @@ createInertiaApp({
             case pageName.includes('tenant/auth/login') ||
                 pageName.includes('user/confirm-password') ||
                 pageName.includes('confirm-password') ||
+                pageName.includes('forgot-password') ||
+                pageName.includes('forgotpassword') ||
+                pageName.includes('reset-password') ||
+                pageName.includes('resetpassword') ||
                 pageName.includes('auth/login') ||
                 pageName.includes('tenant/auth/register') ||
                 pageName.includes('auth/register') ||
