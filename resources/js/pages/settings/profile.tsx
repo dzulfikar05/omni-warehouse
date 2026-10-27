@@ -104,6 +104,7 @@ export default function Profile({
 
                             <div className="flex items-center gap-4">
                                 <Button
+                                    className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700"
                                     disabled={processing}
                                     data-test="update-profile-button"
                                 >

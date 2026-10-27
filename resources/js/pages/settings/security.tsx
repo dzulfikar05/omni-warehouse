@@ -1,6 +1,7 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form, Head, usePage } from '@inertiajs/react';
 import { ShieldCheck } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import SecurityController from '@/actions/App/Http/Controllers/Settings/SecurityController';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
@@ -29,17 +30,31 @@ export default function Security({
     const passwordInput = useRef<HTMLInputElement>(null);
     const currentPasswordInput = useRef<HTMLInputElement>(null);
 
+    // 1. Ambil flash props dari Inertia
+    const { flash } = usePage<{ flash: { success?: string; message?: string } }>().props;
+    const lastShownFlash = useRef<string | null>(null);
+
+    // 2. Effect Listener untuk Menampilkan Toast Notification
+    useEffect(() => {
+        const messageToShow = flash?.success || flash?.message;
+        if (messageToShow && lastShownFlash.current !== messageToShow) {
+            toast.success(t(messageToShow));
+            lastShownFlash.current = messageToShow;
+        }
+    }, [flash?.success, flash?.message, t]);
+
     const {
         qrCodeSvg,
         hasSetupData,
         manualSetupKey,
-        clearSetupData,
         clearTwoFactorAuthData,
+        clearSetupData,
         fetchSetupData,
         recoveryCodesList,
         fetchRecoveryCodes,
         errors,
     } = useTwoFactorAuth();
+
     const [showSetupModal, setShowSetupModal] = useState<boolean>(false);
     const prevTwoFactorEnabled = useRef(twoFactorEnabled);
 
@@ -90,7 +105,8 @@ export default function Security({
                         <>
                             <div className="grid gap-2">
                                 <Label htmlFor="current_password">
-                                    {t("Current password")}</Label>
+                                    {t("Current password")}
+                                </Label>
 
                                 <PasswordInput
                                     id="current_password"
@@ -121,7 +137,8 @@ export default function Security({
 
                             <div className="grid gap-2">
                                 <Label htmlFor="password_confirmation">
-                                    {t("Confirm password")}</Label>
+                                    {t("Confirm password")}
+                                </Label>
 
                                 <PasswordInput
                                     id="password_confirmation"
@@ -138,10 +155,12 @@ export default function Security({
 
                             <div className="flex items-center gap-4">
                                 <Button
+                                    className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700"
                                     disabled={processing}
                                     data-test="update-password-button"
                                 >
-                                    {t("Save password")}</Button>
+                                    {t("Save password")}
+                                </Button>
                             </div>
                         </>
                     )}
@@ -158,17 +177,20 @@ export default function Security({
                     {twoFactorEnabled ? (
                         <div className="flex flex-col items-start justify-start space-y-4">
                             <p className="text-sm text-muted-foreground">
-                                {t("You will be prompted for a secure, random pin during login, which you can retrieve from the TOTP-supported application on your phone.")}</p>
+                                {t("You will be prompted for a secure, random pin during login, which you can retrieve from the TOTP-supported application on your phone.")}
+                            </p>
 
                             <div className="relative inline">
                                 <Form {...disable.form()}>
                                     {({ processing }) => (
                                         <Button
+                                            className="h-9 bg-red-600 text-white shadow-md hover:bg-red-700"
                                             variant="destructive"
                                             type="submit"
                                             disabled={processing}
                                         >
-                                            {t("Disable 2FA")}</Button>
+                                            {t("Disable 2FA")}
+                                        </Button>
                                     )}
                                 </Form>
                             </div>
@@ -182,7 +204,8 @@ export default function Security({
                     ) : (
                         <div className="flex flex-col items-start justify-start space-y-4">
                             <p className="text-sm text-muted-foreground">
-                                {t("When you enable two-factor authentication, you will be prompted for a secure pin during login. This pin can be retrieved from a TOTP-supported application on your phone.")}</p>
+                                {t("When you enable two-factor authentication, you will be prompted for a secure pin during login. This pin can be retrieved from a TOTP-supported application on your phone.")}
+                            </p>
 
                             <div>
                                 {hasSetupData ? (
@@ -190,7 +213,8 @@ export default function Security({
                                         onClick={() => setShowSetupModal(true)}
                                     >
                                         <ShieldCheck />
-                                        {t("Continue setup")}</Button>
+                                        {t("Continue setup")}
+                                    </Button>
                                 ) : (
                                     <Form
                                         {...enable.form()}
@@ -200,10 +224,12 @@ export default function Security({
                                     >
                                         {({ processing }) => (
                                             <Button
+                                                className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700"
                                                 type="submit"
                                                 disabled={processing}
                                             >
-                                                {t("Enable 2FA")}</Button>
+                                                {t("Enable 2FA")}
+                                            </Button>
                                         )}
                                     </Form>
                                 )}

@@ -25,6 +25,7 @@ export default function Language() {
                     <div className="flex flex-wrap gap-2">
                         <Button
                             type="button"
+                            className={locale === 'id' ? 'h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700' : 'h-9 bg-transparent text-gray-700 border border-gray-300 rounded-md hover:bg-gray-100'}
                             variant={locale === 'id' ? 'default' : 'outline'}
                             aria-pressed={locale === 'id'}
                             onClick={() => setLocale('id')}
@@ -33,6 +34,7 @@ export default function Language() {
                         </Button>
                         <Button
                             type="button"
+                            className={locale === 'en' ? 'h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700' : 'h-9 bg-transparent text-gray-700 border border-gray-300 rounded-md hover:bg-gray-100'}
                             variant={locale === 'en' ? 'default' : 'outline'}
                             aria-pressed={locale === 'en'}
                             onClick={() => setLocale('en')}
