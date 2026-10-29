@@ -48,7 +48,7 @@ export default function TenantCreate({ plans }: Props) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post('/admin/tenants', { forceFormData: true });
+        post('/tenants', { forceFormData: true });
     };
 
     return (
@@ -61,7 +61,7 @@ export default function TenantCreate({ plans }: Props) {
                     description={t("Register a new organization tenant and configure subscription plan.")}
                     renderAction={
                         <Button asChild variant="outline" size="sm" className="h-9 gap-1.5 border-border text-xs">
-                            <Link href="/admin/tenants">
+                            <Link href="/tenants">
                                 <ArrowLeft className="h-4 w-4" /> {t("Back")}</Link>
                         </Button>
                     }
@@ -238,7 +238,7 @@ export default function TenantCreate({ plans }: Props) {
 TenantCreate.layout = {
     breadcrumbs: [
         { title: "Admin", href: '#' },
-        { title: "Tenants Management", href: '/admin/tenants' },
+        { title: "Tenants Management", href: '/tenants' },
         { title: "Add Tenant", href: '#' },
     ],
 };

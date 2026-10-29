@@ -56,7 +56,7 @@ export default function TenantEdit({ tenant, plans }: Props) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        router.post(`/admin/tenants/${tenant.id}`, {
+        router.post(`/tenants/${tenant.id}`, {
             _method: 'PUT',
             ...data,
         });
@@ -72,7 +72,7 @@ export default function TenantEdit({ tenant, plans }: Props) {
                     description={`Modify organization records and active subscription plan for ${tenant.name}.`}
                     renderAction={
                         <Button asChild variant="outline" size="sm" className="h-9 gap-1.5 border-border text-xs">
-                            <Link href="/admin/tenants">
+                            <Link href="/tenants">
                                 <ArrowLeft className="h-4 w-4" /> {t("Back")}</Link>
                         </Button>
                     }
@@ -242,7 +242,7 @@ export default function TenantEdit({ tenant, plans }: Props) {
 TenantEdit.layout = {
     breadcrumbs: [
         { title: "Admin", href: '#' },
-        { title: "Tenants Management", href: '/admin/tenants' },
+        { title: "Tenants Management", href: '/tenants' },
         { title: "Edit Tenant", href: '#' },
     ],
 };

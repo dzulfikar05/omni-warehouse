@@ -52,10 +52,10 @@ export default function TenantShow({ tenant }: Props) {
 
     const confirmDelete = () => {
         setIsDeleting(true);
-        router.delete(`/admin/tenants/${tenant.id}`, {
+        router.delete(`/tenants/${tenant.id}`, {
             onSuccess: () => {
                 setIsDeleting(false);
-                router.visit('/admin/tenants');
+                router.visit('/tenants');
             },
             onError: () => setIsDeleting(false),
         });
@@ -71,7 +71,7 @@ export default function TenantShow({ tenant }: Props) {
                     description={`View profile, compliance, and active subscription details for ${tenant.name}.`}
                     renderAction={
                         <Button asChild variant="outline" size="sm" className="h-9 gap-1.5 border-border text-xs">
-                            <Link href="/admin/tenants">
+                            <Link href="/tenants">
                                 <ArrowLeft className="h-4 w-4" /> {t("Back")}</Link>
                         </Button>
                     }
@@ -160,7 +160,7 @@ export default function TenantShow({ tenant }: Props) {
                             <Trash2 className="h-4 w-4" /> {t("Delete Tenant")}</Button>
 
                         <Button asChild size="sm" className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700">
-                            <Link href={`/admin/tenants/${tenant.id}/edit`}>
+                            <Link href={`/tenants/${tenant.id}/edit`}>
                                 <Pencil className="mr-1.5 h-4 w-4" /> {t("Edit Tenant Data")}</Link>
                         </Button>
                     </div>
@@ -216,7 +216,7 @@ export default function TenantShow({ tenant }: Props) {
 TenantShow.layout = {
     breadcrumbs: [
         { title: "Admin", href: '#' },
-        { title: "Tenants Management", href: '/admin/tenants' },
+        { title: "Tenants Management", href: '/tenants' },
         { title: "Tenant Details", href: '#' },
     ],
 };
