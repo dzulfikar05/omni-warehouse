@@ -2,6 +2,7 @@ import {
     createContext,
     useCallback,
     useContext,
+    useEffect,
     useSyncExternalStore,
 } from 'react';
 import type { PropsWithChildren } from 'react';
@@ -56,8 +57,19 @@ export function LanguageProvider({ children }: PropsWithChildren) {
         getServerLocaleSnapshot,
     );
 
+    useEffect(() => {
+        const secureAttribute =
+            window.location.protocol === 'https:' ? ';Secure' : '';
+
+        document.cookie = `${storageKey}=${locale};path=/;max-age=31536000;SameSite=Lax${secureAttribute}`;
+    }, [locale]);
+
     const setLocale = useCallback((nextLocale: Locale) => {
         window.localStorage.setItem(storageKey, nextLocale);
+        const secureAttribute =
+            window.location.protocol === 'https:' ? ';Secure' : '';
+
+        document.cookie = `${storageKey}=${nextLocale};path=/;max-age=31536000;SameSite=Lax${secureAttribute}`;
 
         for (const listener of localeSubscribers) {
             listener();

@@ -198,7 +198,7 @@ class StockTransferService implements StockTransferContract
                     ->first();
 
                 if (!$originStock || $originStock->quantity < $item['quantity']) {
-                    throw new \Exception("Stok untuk salah satu SKU tidak mencukupi atau tidak ditemukan di rak asal.");
+                    throw new \Exception(__('Stock is insufficient or unavailable for one of the SKUs in the source location.'));
                 }
 
                 DB::table('inventory_stocks')
@@ -231,7 +231,9 @@ class StockTransferService implements StockTransferContract
 
         return [
             'success' => true,
-            'message' => 'Batch mutasi transfer stok (' . count($data['items']) . ' SKU) berhasil dicatat ke database!',
+            'message' => __('Stock transfer batch of :count SKUs recorded successfully.', [
+                'count' => count($data['items']),
+            ]),
         ];
     }
 }

@@ -66,7 +66,7 @@ class InboundController extends Controller
     {
         $this->service->commitInbound($tenant_slug);
 
-        return back()->with('success', 'Hasil bongkar inbound berhasil disimpan ke rak & stok diperbarui!');
+        return back()->with('success', __('Inbound unloading results saved successfully. Storage locations and stock have been updated.'));
     }
 
     public function hold(Request $request, string $tenant_slug): RedirectResponse
@@ -77,6 +77,6 @@ class InboundController extends Controller
 
         $this->service->holdInboundSession($tenant_slug, $request->input('reason', 'Penundaan Operator'));
 
-        return back()->with('warning', 'Sesi bongkar muat inbound berhasil di-hold.');
+        return back()->with('warning', __('Inbound unloading session put on hold successfully.'));
     }
 }

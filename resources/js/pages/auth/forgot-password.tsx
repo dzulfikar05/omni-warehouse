@@ -76,7 +76,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
                                             required
                                             autoFocus
                                             autoComplete="email"
-                                            placeholder={t("admin@naratel.com")}
+                                            placeholder="admin@naratel.com"
                                             className="h-11 border-slate-200/80 bg-slate-50/50 text-sm text-slate-900 transition-all focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:bg-slate-900 dark:focus:border-blue-500"
                                         />
                                         <InputError message={errors.email} />

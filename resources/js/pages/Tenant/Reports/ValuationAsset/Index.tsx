@@ -204,13 +204,13 @@ export default function Index({ reports, summary, warehouses, categories, filter
     const canExport = can('tenant.valuation_asset.export') || can('valuation_asset.export');
 
     const tableHeaders: Array<string | HeaderConfig> = [
-        { label: t("SKU CODE"), sortField: 'sku_id' },
-        { label: t("PRODUCT NAME"), sortField: 'product_name' },
+        { label: "SKU CODE", sortField: 'sku_id' },
+        { label: "PRODUCT NAME", sortField: 'product_name' },
         'LOCATION',
         'CATEGORY',
-        { label: t("QTY ON HAND"), sortField: 'quantity' },
-        { label: t("BASE COST / UNIT"), sortField: 'base_cost' },
-        { label: t("TOTAL ASSET VALUE"), sortField: 'total_value' },
+        { label: "QTY ON HAND", sortField: 'quantity' },
+        { label: "BASE COST / UNIT", sortField: 'base_cost' },
+        { label: "TOTAL ASSET VALUE", sortField: 'total_value' },
     ];
 
     return (

@@ -69,7 +69,7 @@ class TenantUserRoleController extends Controller
         $this->service->storeTenantUser($tenant_slug, $request->validated());
 
         return to_route('tenant.settings.users-roles', ['tenant_slug' => $tenant_slug, 'tab' => 'users'])
-            ->with('success', 'Member created successfully.');
+            ->with('success', __('Team member created successfully.'));
     }
 
     public function showUser(string $tenant_slug, string $id): Response
@@ -122,7 +122,7 @@ class TenantUserRoleController extends Controller
         $this->service->updateTenantUser($id, $request->validated());
 
         return to_route('tenant.settings.users-roles', ['tenant_slug' => $tenant_slug, 'tab' => 'users'])
-            ->with('success', 'Member updated successfully.');
+            ->with('success', __('Team member updated successfully.'));
     }
 
     public function destroyUser(string $tenant_slug, string $id): RedirectResponse
@@ -130,7 +130,7 @@ class TenantUserRoleController extends Controller
         $this->service->deleteTenantUser($id);
 
         return to_route('tenant.settings.users-roles', ['tenant_slug' => $tenant_slug, 'tab' => 'users'])
-            ->with('success', 'Member deleted successfully.');
+            ->with('success', __('Team member deleted successfully.'));
     }
 
     // --- ROLE MANAGEMENT ---
@@ -150,7 +150,7 @@ class TenantUserRoleController extends Controller
         $this->service->storeTenantRole($tenant_slug, $request->validated());
 
         return to_route('tenant.settings.users-roles', ['tenant_slug' => $tenant_slug, 'tab' => 'roles'])
-            ->with('success', 'Role created successfully.');
+            ->with('success', __('Role created successfully.'));
     }
 
     public function showRole(string $tenant_slug, string $id): Response
@@ -190,7 +190,7 @@ class TenantUserRoleController extends Controller
         $this->service->updateTenantRole($id, $request->validated());
 
         return to_route('tenant.settings.users-roles', ['tenant_slug' => $tenant_slug, 'tab' => 'roles'])
-            ->with('success', 'Role updated successfully.');
+            ->with('success', __('Role updated successfully.'));
     }
 
     public function destroyRole(string $tenant_slug, string $id): RedirectResponse
@@ -198,6 +198,6 @@ class TenantUserRoleController extends Controller
         $this->service->deleteTenantRole($id);
 
         return to_route('tenant.settings.users-roles', ['tenant_slug' => $tenant_slug, 'tab' => 'roles'])
-            ->with('success', 'Role deleted successfully.');
+            ->with('success', __('Role deleted successfully.'));
     }
 }

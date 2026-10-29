@@ -106,8 +106,8 @@ export default function CategoryForm({
                     {form.processing
                         ? t("Saving...")
                         : isEdit
-                          ? 'Update Category'
-                          : 'Create Category'}
+                          ? t('Update Category')
+                          : t('Create Category')}
                 </Button>
             </div>
         </form>

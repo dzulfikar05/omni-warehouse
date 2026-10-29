@@ -300,14 +300,14 @@ export default function Index({ tenant_slug, skus, categories, units, filters }:
                         <table className="w-full text-left border-collapse text-xs">
                             <thead className="bg-muted/40 text-muted-foreground font-semibold border-b border-border">
                                 <tr>
-                                    <th className="py-3 px-5">{t("Kode SKU / Barcode")}</th>
-                                    <th className="py-3 px-5">{t("Nama Produk")}</th>
-                                    <th className="py-3 px-5">{t("Kategori")}</th>
-                                    <th className="py-3 px-5">{t("Satuan")}</th>
-                                    <th className="py-3 px-5 text-right">{t("Base Cost (Rp)")}</th>
-                                    <th className="py-3 px-5 text-center">{t("Stok Aktual")}</th>
-                                    <th className="py-3 px-5 text-center">{t("Tanggal Dibuat")}</th>
-                                    <th className="py-3 px-4 text-center">{t("Aksi")}</th>
+                                    <th className="py-3 px-5">{"Kode SKU / Barcode"}</th>
+                                    <th className="py-3 px-5">{"Nama Produk"}</th>
+                                    <th className="py-3 px-5">{"Kategori"}</th>
+                                    <th className="py-3 px-5">{"Satuan"}</th>
+                                    <th className="py-3 px-5 text-right">{"Base Cost (Rp)"}</th>
+                                    <th className="py-3 px-5 text-center">{"Stok Aktual"}</th>
+                                    <th className="py-3 px-5 text-center">{"Tanggal Dibuat"}</th>
+                                    <th className="py-3 px-4 text-center">{"Aksi"}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border text-foreground">

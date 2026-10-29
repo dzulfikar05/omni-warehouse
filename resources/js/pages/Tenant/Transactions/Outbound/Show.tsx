@@ -344,14 +344,14 @@ export default function Show({ manifest: initialManifest, items: initialItems }:
                         <table className="w-full text-left text-xs">
                             <thead className="bg-muted/40 text-muted-foreground font-semibold border-b border-border">
                                 <tr>
-                                    <th className="py-3 px-5 whitespace-nowrap">{t("SKU & Barcode")}</th>
-                                    <th className="py-3 px-5 whitespace-nowrap">{t("Nama Produk")}</th>
-                                    <th className="py-3 px-5 whitespace-nowrap">{t("Lokasi Rak Asal")}</th>
-                                    <th className="py-3 px-5 text-right whitespace-nowrap">{t("Target SO")}</th>
-                                    <th className="py-3 px-5 text-right whitespace-nowrap">{t("Diambil (Picked)")}</th>
-                                    <th className="py-3 px-5 text-right whitespace-nowrap">{t("Packed")}</th>
-                                    <th className="py-3 px-5 text-center whitespace-nowrap">{t("Status")}</th>
-                                    <th className="py-3 px-5 text-center whitespace-nowrap">{t("Aksi")}</th>
+                                    <th className="py-3 px-5 whitespace-nowrap">{"SKU & Barcode"}</th>
+                                    <th className="py-3 px-5 whitespace-nowrap">{"Nama Produk"}</th>
+                                    <th className="py-3 px-5 whitespace-nowrap">{"Lokasi Rak Asal"}</th>
+                                    <th className="py-3 px-5 text-right whitespace-nowrap">{"Target SO"}</th>
+                                    <th className="py-3 px-5 text-right whitespace-nowrap">{"Diambil (Picked)"}</th>
+                                    <th className="py-3 px-5 text-right whitespace-nowrap">{"Packed"}</th>
+                                    <th className="py-3 px-5 text-center whitespace-nowrap">{"Status"}</th>
+                                    <th className="py-3 px-5 text-center whitespace-nowrap">{"Aksi"}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border text-foreground">

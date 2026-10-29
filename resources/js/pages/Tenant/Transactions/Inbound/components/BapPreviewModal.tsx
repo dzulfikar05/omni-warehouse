@@ -94,11 +94,11 @@ export const BapPreviewModal: React.FC<BapPreviewModalProps> = ({
                     <table className="w-full text-left border border-border rounded-lg text-[11px] overflow-hidden">
                         <thead className="bg-muted/60 text-foreground font-semibold border-b border-border">
                             <tr>
-                                <th className="p-2">{t("Item SKU")}</th>
-                                <th className="p-2 text-right">{t("PO")}</th>
-                                <th className="p-2 text-right">{t("Fisik Baik")}</th>
-                                <th className="p-2 text-right text-red-600 dark:text-red-400">{t("Rusak")}</th>
-                                <th className="p-2">{t("Keterangan")}</th>
+                                <th className="p-2">{"Item SKU"}</th>
+                                <th className="p-2 text-right">{"PO"}</th>
+                                <th className="p-2 text-right">{"Fisik Baik"}</th>
+                                <th className="p-2 text-right text-red-600 dark:text-red-400">{"Rusak"}</th>
+                                <th className="p-2">{"Keterangan"}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
@@ -119,10 +119,10 @@ export const BapPreviewModal: React.FC<BapPreviewModalProps> = ({
                                     <td className="p-2 text-muted-foreground">
                                         {item.damage_note ||
                                             (item.status === 'valid'
-                                                ? 'Lengkap & Segel Sempurna'
+                                                ? t('Complete and seals intact')
                                                 : item.status === 'process'
-                                                  ? 'Proses Scan'
-                                                  : 'Menunggu Scan')}
+                                                  ? t('Scanning in progress')
+                                                  : t('Waiting to be scanned'))}
                                     </td>
                                 </tr>
                             ))}

@@ -50,7 +50,7 @@ class UserController extends Controller
     {
         $this->userService->storeUser($request->validated());
 
-        return to_route('users.index')->with('success', 'User created successfully.');
+        return to_route('users.index')->with('success', __('User created successfully.'));
     }
 
     public function show(string $id): Response
@@ -83,14 +83,14 @@ class UserController extends Controller
     {
         $this->userService->updateUser($id, $request->validated());
 
-        return to_route('users.index')->with('success', 'User updated successfully.');
+        return to_route('users.index')->with('success', __('User updated successfully.'));
     }
 
     public function destroy(string $id): RedirectResponse
     {
         $this->userService->deleteUser($id);
 
-        return to_route('users.index')->with('success', 'User deleted successfully.');
+        return to_route('users.index')->with('success', __('User deleted successfully.'));
     }
 
     public function exportPdf(Request $request): RedirectResponse
@@ -105,7 +105,7 @@ class UserController extends Controller
 
         ExportUserPdfJob::dispatch($log->id, $request->only(['search']));
 
-        return back()->with('success', 'Added to export queue. Check the bell/download icon in the navbar.');
+        return back()->with('success', __('Export added to the queue. Check the notification or download icon in the navigation bar.'));
     }
 
     public function exportExcel(Request $request): RedirectResponse
@@ -120,6 +120,6 @@ class UserController extends Controller
 
         ExportUserExcelJob::dispatch($log->id, $request->only(['search']));
 
-        return back()->with('success', 'Added to export queue. Check the bell/download icon in the navbar.');
+        return back()->with('success', __('Export added to the queue. Check the notification or download icon in the navigation bar.'));
     }
 }

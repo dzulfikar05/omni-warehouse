@@ -35,10 +35,10 @@ class UnitRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required'   => 'Unit name is required.',
-            'name.string'     => 'Unit name must be a valid string.',
-            'symbol.required' => 'Unit symbol is required.',
-            'symbol.max'      => 'Unit symbol must not exceed 10 characters.',
+            'name.required'   => __('A unit name is required.'),
+            'name.string'     => __('The unit name must be text.'),
+            'symbol.required' => __('A unit symbol is required.'),
+            'symbol.max'      => __('The unit symbol may not exceed 10 characters.'),
         ];
     }
 }

@@ -179,12 +179,12 @@ export default function TenantIndex({ tenants, stats, plans, filters }: PageProp
     const canCreate = can('central.tenants.create');
 
     const tableHeaders: Array<string | HeaderConfig> = [
-        { label: t("#"), sortField: 'id' },
-        { label: t("TENANT NAME"), sortField: 'name' },
+        { label: "#", sortField: 'id' },
+        { label: "TENANT NAME", sortField: 'name' },
         'PLAN TIER',
         'PHONE / EMAIL',
-        { label: t("TAX ID / NPWP"), sortField: 'tax_number' },
-        { label: t("STATUS"), sortField: 'status' },
+        { label: "TAX ID / NPWP", sortField: 'tax_number' },
+        { label: "STATUS", sortField: 'status' },
         'ACTIONS',
     ];
 

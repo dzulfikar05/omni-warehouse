@@ -230,9 +230,9 @@ export default function Dashboard({
                                 <table className="w-full border-collapse text-left text-xs">
                                     <thead>
                                         <tr className="border-b border-border bg-muted/30 font-semibold text-muted-foreground">
-                                            <th className="py-2.5 px-3">{t("TENANT")}</th>
-                                            <th className="py-2.5 px-3">{t("PLAN")}</th>
-                                            <th className="py-2.5 px-3">{t("STATUS")}</th>
+                                            <th className="py-2.5 px-3">{"TENANT"}</th>
+                                            <th className="py-2.5 px-3">{"PLAN"}</th>
+                                            <th className="py-2.5 px-3">{"STATUS"}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-border">
@@ -290,9 +290,9 @@ export default function Dashboard({
                                 <table className="w-full border-collapse text-left text-xs">
                                     <thead>
                                         <tr className="border-b border-border bg-muted/30 font-semibold text-muted-foreground">
-                                            <th className="py-2.5 px-3">{t("TENANT")}</th>
-                                            <th className="py-2.5 px-3">{t("PLAN & PRICE")}</th>
-                                            <th className="py-2.5 px-3">{t("STATUS")}</th>
+                                            <th className="py-2.5 px-3">{"TENANT"}</th>
+                                            <th className="py-2.5 px-3">{"PLAN & PRICE"}</th>
+                                            <th className="py-2.5 px-3">{"STATUS"}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-border">

@@ -36,9 +36,9 @@ class CategoryRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'Category name is required.',
-            'name.string'   => 'Category name must be a string.',
-            'name.max'      => 'Category name cannot exceed 255 characters.',
+            'name.required' => __('The category name is required.'),
+            'name.string'   => __('The category name must be text.'),
+            'name.max'      => __('The category name may not exceed 255 characters.'),
         ];
     }
 }

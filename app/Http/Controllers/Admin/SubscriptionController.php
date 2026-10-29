@@ -107,7 +107,7 @@ class SubscriptionController extends Controller
         Invoice::create($validated);
 
         return redirect()->route('admin.subscriptions.index')
-            ->with('success', 'Manual invoice berhasil diterbitkan.');
+            ->with('success', __('Manual invoice issued successfully.'));
     }
 
     public function exportPdf(Request $request): RedirectResponse
@@ -124,7 +124,7 @@ class SubscriptionController extends Controller
 
         ExportSubscriptionPdfJob::dispatch($log->id, $filters);
 
-        return back()->with('success', 'Added to export queue. Check the bell/download icon in the navbar.');
+        return back()->with('success', __('Export added to the queue. Check the notification or download icon in the navigation bar.'));
     }
 
     public function exportExcel(Request $request): RedirectResponse
@@ -141,7 +141,7 @@ class SubscriptionController extends Controller
 
         ExportSubscriptionExcelJob::dispatch($log->id, $filters);
 
-        return back()->with('success', 'Added to export queue. Check the bell/download icon in the navbar.');
+        return back()->with('success', __('Export added to the queue. Check the notification or download icon in the navigation bar.'));
     }
 
     public function getExportNotifications(): JsonResponse

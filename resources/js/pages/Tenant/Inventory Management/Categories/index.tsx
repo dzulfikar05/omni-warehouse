@@ -252,20 +252,20 @@ export default function Index({
                             <thead>
                                 <tr className="border-b border-border bg-muted/50 text-muted-foreground">
                                     <th className="p-4 font-semibold">
-                                        {t("Category ID")}</th>
+                                        {"Category ID"}</th>
 
                                     <th className="p-4 font-semibold">
-                                        {t("Category Name")}</th>
+                                        {"Category Name"}</th>
 
                                     {/* <th className="p-4 font-semibold">
                                         Description
                                     </th> */}
 
                                     <th className="p-4 font-semibold">
-                                        {t("Date Added")}</th>
+                                        {"Date Added"}</th>
 
                                     <th className="p-4 text-right font-semibold">
-                                        {t("Actions")}</th>
+                                        {"Actions"}</th>
                                 </tr>
                             </thead>
 

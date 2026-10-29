@@ -201,14 +201,14 @@ export default function Index({ reports, summary, warehouses, categories, filter
     const canExport = can('tenant.inbound_outbound.export') || can('inbound_outbound.export');
 
     const tableHeaders: Array<string | HeaderConfig> = [
-        { label: t("DATE"), sortField: 'created_at' },
-        { label: t("TRANSACTION REF"), sortField: 'transaction_id' },
-        { label: t("FLOW TYPE"), sortField: 'transaction_type' },
+        { label: "DATE", sortField: 'created_at' },
+        { label: "TRANSACTION REF", sortField: 'transaction_id' },
+        { label: "FLOW TYPE", sortField: 'transaction_type' },
         'CONTACT',
-        { label: t("SKU CODE"), sortField: 'sku_id' },
-        { label: t("PRODUCT NAME"), sortField: 'product_name' },
-        { label: t("QTY"), sortField: 'quantity' },
-        { label: t("STATUS"), sortField: 'status' },
+        { label: "SKU CODE", sortField: 'sku_id' },
+        { label: "PRODUCT NAME", sortField: 'product_name' },
+        { label: "QTY", sortField: 'quantity' },
+        { label: "STATUS", sortField: 'status' },
     ];
 
     return (

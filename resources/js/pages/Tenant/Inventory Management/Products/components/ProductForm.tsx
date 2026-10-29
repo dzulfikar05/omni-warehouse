@@ -106,8 +106,8 @@ export default function ProductForm({
                     {form.processing
                         ? t("Saving...")
                         : isEdit
-                          ? 'Update Product'
-                          : 'Create Product'}
+                          ? t('Update Product')
+                          : t('Create Product')}
                 </Button>
             </div>
         </form>

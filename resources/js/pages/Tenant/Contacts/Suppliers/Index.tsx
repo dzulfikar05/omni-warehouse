@@ -123,11 +123,11 @@ export default function SupplierIndex({ suppliers, stats, filters }: PageProps) 
     const canCreate = can('tenant.contacts.suppliers.create') || can('suppliers.create');
 
     const tableHeaders: Array<string | HeaderConfig> = [
-        { label: t("#"), sortField: 'id' },
-        { label: t("SUPPLIER NAME"), sortField: 'name' },
-        { label: t("PIC"), sortField: 'pic' },
-        { label: t("CONTACT INFO"), sortField: 'phone' },
-        { label: t("TAX ID"), sortField: 'tax_number' },
+        { label: "#", sortField: 'id' },
+        { label: "SUPPLIER NAME", sortField: 'name' },
+        { label: "PIC", sortField: 'pic' },
+        { label: "CONTACT INFO", sortField: 'phone' },
+        { label: "TAX ID", sortField: 'tax_number' },
         'ACTIONS',
     ];
 

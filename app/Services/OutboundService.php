@@ -50,7 +50,9 @@ class OutboundService implements OutboundContract
     {
         return [
             'success' => true,
-            'message' => "Item outbound dengan barcode {$barcode} tervalidasi!",
+            'message' => __('Item with barcode :barcode validated successfully.', [
+                'barcode' => $barcode,
+            ]),
         ];
     }
 
@@ -58,7 +60,7 @@ class OutboundService implements OutboundContract
     {
         return [
             'success' => true,
-            'message' => 'Status packing & verifikasi item berhasil diperbarui.',
+            'message' => __('Packing status and item verification updated successfully.'),
         ];
     }
 

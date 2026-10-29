@@ -178,18 +178,18 @@ export default function Index({ users, roles, filters }: PageProps) {
     };
 
     const userTableHeaders: Array<string | HeaderConfig> = [
-        { label: t("#"), sortField: 'id' },
-        { label: t("USER"), sortField: 'name' },
+        { label: "#", sortField: 'id' },
+        { label: "USER", sortField: 'name' },
         'ROLE',
         'STATUS',
-        { label: t("LAST LOGIN"), sortField: 'last_login_at' },
+        { label: "LAST LOGIN", sortField: 'last_login_at' },
         'ACTIONS',
     ];
 
     const roleTableHeaders: Array<string | HeaderConfig> = [
-        { label: t("#"), sortField: 'id' },
-        { label: t("ROLE NAME"), sortField: 'name' },
-        { label: t("ATTACHED PERMISSIONS"), sortField: 'permissions_count' },
+        { label: "#", sortField: 'id' },
+        { label: "ROLE NAME", sortField: 'name' },
+        { label: "ATTACHED PERMISSIONS", sortField: 'permissions_count' },
         'ACTIONS',
     ];
 

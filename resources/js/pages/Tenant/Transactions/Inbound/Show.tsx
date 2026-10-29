@@ -505,19 +505,19 @@ export default function Show({
                         <table className="w-full text-left border-collapse text-xs">
                             <thead className="bg-muted/40 text-muted-foreground font-semibold border-b border-border">
                                 <tr>
-                                    <th className="py-3 px-5 whitespace-nowrap">{t("SKU / Barcode")}</th>
+                                    <th className="py-3 px-5 whitespace-nowrap">{"SKU / Barcode"}</th>
                                     <th className="py-3 px-5 whitespace-nowrap">
-                                        {t("Deskripsi Produk & Kategori")}</th>
+                                        {"Deskripsi Produk & Kategori"}</th>
                                     <th className="py-3 px-5 whitespace-nowrap">
-                                        {t("Batch & Kadaluarsa")}</th>
+                                        {"Batch & Kadaluarsa"}</th>
                                     <th className="py-3 px-5 text-right whitespace-nowrap">
-                                        {t("PO Target")}</th>
+                                        {"PO Target"}</th>
                                     <th className="py-3 px-5 text-right whitespace-nowrap">
-                                        {t("Fisik Diterima")}</th>
-                                    <th className="py-3 px-5 whitespace-nowrap">{t("Rekomendasi Rak")}</th>
+                                        {"Fisik Diterima"}</th>
+                                    <th className="py-3 px-5 whitespace-nowrap">{"Rekomendasi Rak"}</th>
                                     <th className="py-3 px-5 text-center whitespace-nowrap">
-                                        {t("Status Validasi")}</th>
-                                    <th className="py-3 px-4 text-center whitespace-nowrap">{t("Aksi")}</th>
+                                        {"Status Validasi"}</th>
+                                    <th className="py-3 px-4 text-center whitespace-nowrap">{"Aksi"}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border text-foreground">

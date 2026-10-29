@@ -126,7 +126,7 @@ export default function LocationShow({
                         <div className="space-y-1.5">
                             <Label className="text-xs font-semibold">{t("Zona Area")}</Label>
                             <Input
-                                value={location.zone || 'General Storage Zone'}
+                                value={location.zone || t('General storage zone')}
                                 readOnly
                                 className="h-10 rounded-xl border-border bg-muted/30 text-xs font-semibold"
                             />

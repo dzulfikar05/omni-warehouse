@@ -39,7 +39,7 @@ class StockOpnameController extends Controller
         $this->service->createSession($tenant_slug, $request->validated());
 
         return to_route('tenant.stock-opname.index', ['tenant_slug' => $tenant_slug])
-            ->with('success', 'Sesi Stock Opname Baru berhasil diterbitkan!');
+            ->with('success', __('Stocktake session created successfully.'));
     }
 
     public function verifyCount(StockOpnameRequest $request, string $tenant_slug): RedirectResponse
@@ -47,7 +47,7 @@ class StockOpnameController extends Controller
         $this->service->updateItemPhysicalQty($tenant_slug, $request->validated());
 
         return to_route('tenant.stock-opname.index', ['tenant_slug' => $tenant_slug])
-            ->with('success', 'Hasil hitung fisik berhasil disimpan!');
+            ->with('success', __('Physical count results saved successfully.'));
     }
 
     public function executeAdjustment(StockOpnameRequest $request, string $tenant_slug): RedirectResponse
@@ -56,7 +56,7 @@ class StockOpnameController extends Controller
         $this->service->executeAdjustment($tenant_slug, (int) $validated['session_id']);
 
         return to_route('tenant.stock-opname.index', ['tenant_slug' => $tenant_slug])
-            ->with('success', 'Adjustment stok berhasil dieksekusi ke database!');
+            ->with('success', __('Stock adjustment executed successfully.'));
     }
 
     public function exportPdf(Request $request, string $tenant_slug): RedirectResponse
@@ -74,7 +74,7 @@ class StockOpnameController extends Controller
 
         ExportStockOpnamePdfJob::dispatch($log->id, $data);
 
-        return back()->with('success', 'Added to export queue. Check the bell/download icon in navbar.');
+        return back()->with('success', __('Export added to the queue. Check the notification or download icon in the navigation bar.'));
     }
 
     public function exportExcel(Request $request, string $tenant_slug): RedirectResponse
@@ -92,6 +92,6 @@ class StockOpnameController extends Controller
 
         ExportStockOpnameExcelJob::dispatch($log->id, $data);
 
-        return back()->with('success', 'Added to export queue. Check the bell/download icon in navbar.');
+        return back()->with('success', __('Export added to the queue. Check the notification or download icon in the navigation bar.'));
     }
 }

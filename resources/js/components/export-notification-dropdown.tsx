@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { usePage } from '@inertiajs/react';
 import { Download, Loader2, CheckCircle2, AlertCircle, FileText, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/context/language-context';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -19,6 +20,7 @@ interface ExportLog {
 
 export function ExportNotificationDropdown() {
     const { current_tenant, auth } = usePage().props as any;
+    const { t } = useTranslation();
     const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
 
     // Ambil segmen pertama dari path URL (misal: "dashboard" atau "nama-tenant")
@@ -98,12 +100,12 @@ export function ExportNotificationDropdown() {
 
             <DropdownMenuContent align="end" className="w-80 p-2 space-y-1">
                 <div className="text-xs font-semibold px-2 py-1.5 border-b border-border flex justify-between items-center">
-                    <span>Export Queue Progress</span>
+                    <span>{t('Export Queue Progress')}</span>
                     {hasActive && <Loader2 size={12} className="animate-spin text-blue-600" />}
                 </div>
 
                 {exports.length === 0 ? (
-                    <p className="text-xs text-muted-foreground p-3 text-center">Belum ada riwayat unduhan.</p>
+                    <p className="text-xs text-muted-foreground p-3 text-center">{t('No download history yet.')}</p>
                 ) : (
                     exports.map((item) => (
                         <div key={item.id} className="p-2 text-xs rounded-lg hover:bg-muted flex items-center justify-between gap-2 border border-border/50">
@@ -123,7 +125,7 @@ export function ExportNotificationDropdown() {
                                     rel="noreferrer"
                                     className="p-1.5 rounded-md bg-blue-50 dark:bg-blue-950 text-blue-600 hover:bg-blue-100 flex items-center gap-1 text-[11px]"
                                 >
-                                    <CheckCircle2 size={14} /> Unduh
+                                    <CheckCircle2 size={14} /> {t('Download')}
                                 </a>
                             )}
 

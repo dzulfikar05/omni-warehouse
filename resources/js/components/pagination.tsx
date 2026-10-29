@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/context/language-context';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Props {
@@ -10,10 +11,18 @@ interface Props {
 }
 
 export function Pagination({ links, from, to, total }: Props) {
+    const { t } = useTranslation();
+
     return (
         <div className="flex flex-col gap-4 px-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="text-xs text-muted-foreground">
-                Showing <span className="font-semibold text-foreground">{from ?? 0}</span> to <span className="font-semibold text-foreground">{to ?? 0}</span> of <span className="font-semibold text-foreground">{total ?? 0}</span> entries
+                {t('Showing')}{' '}
+                <span className="font-semibold text-foreground">{from ?? 0}</span>{' '}
+                {t('to')}{' '}
+                <span className="font-semibold text-foreground">{to ?? 0}</span>{' '}
+                {t('of')}{' '}
+                <span className="font-semibold text-foreground">{total ?? 0}</span>{' '}
+                {t('entries')}
             </div>
             <div className="flex flex-wrap items-center gap-1">
                 {links.map((link, index) => {
@@ -36,11 +45,11 @@ export function Pagination({ links, from, to, total }: Props) {
                             {link.url ? (
                                 <Link href={link.url} preserveScroll>
                                     {isPrev && <ChevronLeft className="mr-1 h-3.5 w-3.5" />}
-                                    {isPrev ? 'Prev' : isNext ? 'Next' : link.label}
+                                    {isPrev ? t('Previous') : isNext ? t('Next') : link.label}
                                     {isNext && <ChevronRight className="ml-1 h-3.5 w-3.5" />}
                                 </Link>
                             ) : (
-                                <span>{isPrev ? 'Prev' : isNext ? 'Next' : link.label}</span>
+                                <span>{isPrev ? t('Previous') : isNext ? t('Next') : link.label}</span>
                             )}
                         </Button>
                     );

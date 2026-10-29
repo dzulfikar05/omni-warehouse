@@ -1,8 +1,9 @@
 import React from 'react';
 import { Link } from '@inertiajs/react';
-import AppLogo from '@/components/app-logo';import { useTranslation } from '@/context/language-context';
-
 import { ArrowRight } from 'lucide-react';
+import AppLogo from '@/components/app-logo';
+import { LanguageDropdown } from '@/components/language-dropdown';
+import { useTranslation } from '@/context/language-context';
 
 export default function Navbar() {
     const { t } = useTranslation();
@@ -21,11 +22,13 @@ export default function Navbar() {
                 </div>
 
                 <div className="flex items-center gap-4">
+                    {/* <LanguageDropdown /> */}
                     <Link
                         href="/find-tenant"
                         className="text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition-colors"
                     >
-                        {t("Sign In")}</Link>
+                        {t("Sign In")}
+                    </Link>
                     <Link
                         href="/register-tenant"
                         className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 text-white text-xs font-bold h-9 px-4 rounded-lg transition-all shadow-sm"

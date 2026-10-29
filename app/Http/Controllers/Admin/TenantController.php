@@ -46,7 +46,7 @@ class TenantController extends Controller
 
         $this->tenantService->createTenant($request->validated());
 
-        return redirect()->route('admin.tenants.index')->with('success', 'Tenant successfully created!');
+        return redirect()->route('admin.tenants.index')->with('success', __('Tenant created successfully.'));
     }
 
     public function show(Tenant $tenant): Response
@@ -77,7 +77,7 @@ class TenantController extends Controller
 
         $this->tenantService->updateTenant($tenant, $request->validated());
 
-        return redirect()->route('admin.tenants.index')->with('success', 'Tenant details successfully updated!');
+        return redirect()->route('admin.tenants.index')->with('success', __('Tenant details updated successfully.'));
     }
 
     public function destroy(Tenant $tenant): RedirectResponse
@@ -85,7 +85,7 @@ class TenantController extends Controller
 
         $this->tenantService->deleteTenant($tenant);
 
-        return redirect()->back()->with('success', 'Tenant permanently deleted!');
+        return redirect()->back()->with('success', __('Tenant permanently deleted successfully.'));
     }
 
     public function exportExcel(): RedirectResponse
@@ -101,7 +101,7 @@ class TenantController extends Controller
 
         ExportTenantExcelJob::dispatch($log->id);
 
-        return back()->with('success', 'Export process queued. Check system notifications.');
+        return back()->with('success', __('Export queued successfully. Check system notifications.'));
     }
 
     public function exportPdf(): RedirectResponse
@@ -117,6 +117,6 @@ class TenantController extends Controller
 
         ExportTenantPdfJob::dispatch($log->id);
 
-        return back()->with('success', 'PDF generation queued. Check system notifications.');
+        return back()->with('success', __('PDF generation queued successfully. Check system notifications.'));
     }
 }

@@ -122,11 +122,11 @@ export default function CustomerIndex({ customers, stats, filters }: PageProps) 
     const canCreate = can('tenant.contacts.customers.create') || can('customers.create');
 
     const tableHeaders: Array<string | HeaderConfig> = [
-        { label: t("#"), sortField: 'id' },
-        { label: t("CUSTOMER NAME"), sortField: 'name' },
-        { label: t("PHONE"), sortField: 'phone' },
-        { label: t("EMAIL"), sortField: 'email' },
-        { label: t("TAX ID / NPWP"), sortField: 'tax_number' },
+        { label: "#", sortField: 'id' },
+        { label: "CUSTOMER NAME", sortField: 'name' },
+        { label: "PHONE", sortField: 'phone' },
+        { label: "EMAIL", sortField: 'email' },
+        { label: "TAX ID / NPWP", sortField: 'tax_number' },
         'ACTIONS',
     ];
 

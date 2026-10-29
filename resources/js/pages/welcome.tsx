@@ -1,5 +1,6 @@
 import React from 'react';
 import { Head } from '@inertiajs/react';
+import FloatingLanguageSwitcher from '@/components/floating-language-switcher';
 
 // Section imports from co-located welcome/ directory
 import { WelcomeProps } from './welcome/types';
@@ -11,8 +12,8 @@ import SocialProof from './welcome/social-proof';
 import PricingSection from './welcome/pricing-section';
 import CtaBanner from './welcome/cta-banner';
 import FaqSection from './welcome/faq-section';
-import Footer from './welcome/footer';import { useTranslation } from '@/context/language-context';
-
+import Footer from './welcome/footer';
+import { useTranslation } from '@/context/language-context';
 
 export default function Welcome({ plans = [] }: WelcomeProps) {
     const { t } = useTranslation();
@@ -35,6 +36,7 @@ export default function Welcome({ plans = [] }: WelcomeProps) {
 
                 <Footer />
             </div>
+            <FloatingLanguageSwitcher />
         </>
     );
 }

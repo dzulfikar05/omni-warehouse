@@ -65,7 +65,7 @@ class CustomerController extends Controller
         $this->service->storeCustomer($tenant_slug, $request->validated());
 
         return to_route('tenant.contacts.customers.index', ['tenant_slug' => $tenant_slug])
-            ->with('success', 'Customer created successfully.');
+            ->with('success', __('Customer created successfully.'));
     }
 
     public function show(string $tenant_slug, string $id): Response
@@ -100,7 +100,7 @@ class CustomerController extends Controller
         $this->service->updateCustomer($tenant_slug, $id, $request->validated());
 
         return to_route('tenant.contacts.customers.index', ['tenant_slug' => $tenant_slug])
-            ->with('success', 'Customer updated successfully.');
+            ->with('success', __('Customer updated successfully.'));
     }
 
     public function destroy(string $tenant_slug, string $id): RedirectResponse
@@ -108,7 +108,7 @@ class CustomerController extends Controller
         $this->service->deleteCustomer($tenant_slug, $id);
 
         return to_route('tenant.contacts.customers.index', ['tenant_slug' => $tenant_slug])
-            ->with('success', 'Customer deleted successfully.');
+            ->with('success', __('Customer deleted successfully.'));
     }
 
     public function exportPdf(string $tenant_slug): RedirectResponse
@@ -125,7 +125,7 @@ class CustomerController extends Controller
 
         ExportCustomerPdfJob::dispatch($log->id);
 
-        return back()->with('success', 'Added to export queue. Check the bell/download icon in the navbar.');
+        return back()->with('success', __('Export added to the queue. Check the notification or download icon in the navigation bar.'));
     }
 
     public function exportExcel(string $tenant_slug): RedirectResponse
@@ -142,7 +142,7 @@ class CustomerController extends Controller
 
         ExportCustomerExcelJob::dispatch($log->id);
 
-        return back()->with('success', 'Added to export queue. Check the bell/download icon in the navbar.');
+        return back()->with('success', __('Export added to the queue. Check the notification or download icon in the navigation bar.'));
     }
 
     public function getExportNotifications(): JsonResponse

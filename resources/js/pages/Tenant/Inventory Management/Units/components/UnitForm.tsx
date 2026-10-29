@@ -104,8 +104,8 @@ export default function UnitForm({
                     {form.processing
                         ? t("Saving...")
                         : isEdit
-                          ? 'Update Unit'
-                          : 'Create Unit'}
+                          ? t('Update Unit')
+                          : t('Create Unit')}
                 </Button>
             </div>
         </form>

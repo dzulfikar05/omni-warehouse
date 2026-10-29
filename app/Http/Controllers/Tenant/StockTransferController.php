@@ -45,9 +45,9 @@ class StockTransferController extends Controller
 
         try {
             $res = $this->stockTransferService->createStockTransfer($tenant_slug, $validated);
-            return redirect()->back()->with('success', $res['message']);
+            return redirect()->back()->with('success', __($res['message']));
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return redirect()->back()->with('error', __($e->getMessage()));
         }
     }
 }

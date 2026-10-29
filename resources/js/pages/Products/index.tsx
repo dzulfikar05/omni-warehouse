@@ -75,12 +75,12 @@ export default function Index({ products }: { products: Product[] }) {
                         <table className="w-full border-collapse text-left text-sm">
                             <thead>
                                 <tr className="border-b border-border bg-muted/50 text-muted-foreground">
-                                    <th className="p-4 font-semibold">{t("Product ID")}</th>
-                                    <th className="p-4 font-semibold">{t("Product Name")}</th>
-                                    <th className="p-4 font-semibold">{t("Category")}</th>
-                                    <th className="p-4 font-semibold">{t("Created By")}</th>
-                                    <th className="p-4 font-semibold">{t("Date Added")}</th>
-                                    <th className="p-4 font-semibold text-right">{t("Actions")}</th>
+                                    <th className="p-4 font-semibold">{"Product ID"}</th>
+                                    <th className="p-4 font-semibold">{"Product Name"}</th>
+                                    <th className="p-4 font-semibold">{"Category"}</th>
+                                    <th className="p-4 font-semibold">{"Created By"}</th>
+                                    <th className="p-4 font-semibold">{"Date Added"}</th>
+                                    <th className="p-4 font-semibold text-right">{"Actions"}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border">

@@ -46,7 +46,7 @@ class CompanyProfileController extends Controller
         $newSlug = $updatedTenant->slug ?? $tenant_slug;
 
         return to_route('tenant.settings.company-profile.edit', ['tenant_slug' => $newSlug])
-            ->with('success', 'Company profile updated successfully.');
+            ->with('success', __('Company profile updated successfully.'));
     }
 
     public function destroyLogo(string $tenant_slug): RedirectResponse
@@ -54,6 +54,6 @@ class CompanyProfileController extends Controller
         $this->service->deleteCompanyLogo($tenant_slug);
 
         return to_route('tenant.settings.company-profile.edit', ['tenant_slug' => $tenant_slug])
-            ->with('success', 'Company logo removed successfully.');
+            ->with('success', __('Company logo removed successfully.'));
     }
 }

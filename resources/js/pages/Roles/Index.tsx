@@ -125,9 +125,9 @@ export default function Index({ roles, filters }: RolesProps) {
     const canExport = can('central.roles.export');
 
     const tableHeaders: Array<string | HeaderConfig> = [
-        { label: t("ID"), sortField: 'id' },
-        { label: t("Role Name"), sortField: 'name' },
-        { label: t("Permissions Count"), sortField: 'permissions_count' },
+        { label: "ID", sortField: 'id' },
+        { label: "Role Name", sortField: 'name' },
+        { label: "Permissions Count", sortField: 'permissions_count' },
         'Action',
     ];
 

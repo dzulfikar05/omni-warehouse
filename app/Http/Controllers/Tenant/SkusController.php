@@ -127,7 +127,7 @@ class SkusController extends Controller
         ]));
 
         return to_route('tenant.inventory.skus.index', ['tenant_slug' => $tenant_slug])
-            ->with('success', 'SKU baru berhasil dibuat.');
+            ->with('success', __('SKU created successfully.'));
     }
 
     public function show(Request $request, string $tenant_slug, Sku $sku): Response
@@ -158,7 +158,7 @@ class SkusController extends Controller
         $sku->update($request->validated());
 
         return to_route('tenant.inventory.skus.index', ['tenant_slug' => $tenant_slug])
-            ->with('success', 'Data SKU berhasil diperbarui.');
+            ->with('success', __('SKU updated successfully.'));
     }
 
     public function destroy(Request $request, string $tenant_slug, Sku $sku): RedirectResponse
@@ -166,7 +166,7 @@ class SkusController extends Controller
         $sku->delete();
 
         return to_route('tenant.inventory.skus.index', ['tenant_slug' => $tenant_slug])
-            ->with('success', 'SKU berhasil dihapus.');
+            ->with('success', __('SKU deleted successfully.'));
     }
 
     public function exportPdf(Request $request, string $tenant_slug): RedirectResponse
@@ -184,7 +184,7 @@ class SkusController extends Controller
 
         ExportSkuPdfJob::dispatch($log->id, $skus);
 
-        return back()->with('success', 'Added to export queue. Check the bell/download icon in navbar.');
+        return back()->with('success', __('Export added to the queue. Check the notification or download icon in the navigation bar.'));
     }
 
     public function exportExcel(Request $request, string $tenant_slug): RedirectResponse
@@ -202,6 +202,6 @@ class SkusController extends Controller
 
         ExportSkuExcelJob::dispatch($log->id, $skus);
 
-        return back()->with('success', 'Added to export queue. Check the bell/download icon in navbar.');
+        return back()->with('success', __('Export added to the queue. Check the notification or download icon in the navigation bar.'));
     }
 }
