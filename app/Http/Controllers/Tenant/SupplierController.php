@@ -82,7 +82,7 @@ class SupplierController extends Controller
 
         ExportSupplierPdfJob::dispatch($log->id);
 
-        return back()->with('success', 'Added to export queue. Check the bell/download icon in the navbar.');
+        return back()->with('success', __('Export added to the queue. Check the notification or download icon in the navigation bar.'));
     }
 
     public function exportExcel(string $tenant_slug): RedirectResponse
@@ -99,7 +99,7 @@ class SupplierController extends Controller
 
         ExportSupplierExcelJob::dispatch($log->id);
 
-        return back()->with('success', 'Added to export queue. Check the bell/download icon in the navbar.');
+        return back()->with('success', __('Export added to the queue. Check the notification or download icon in the navigation bar.'));
     }
 
     public function create(string $tenant_slug): Response
@@ -112,7 +112,7 @@ class SupplierController extends Controller
         $this->service->storeSupplier($tenant_slug, $request->validated());
 
         return to_route('tenant.contacts.suppliers.index', ['tenant_slug' => $tenant_slug])
-            ->with('success', 'Supplier created successfully.');
+            ->with('success', __('Supplier created successfully.'));
     }
 
     public function show(string $tenant_slug, string $id): Response
@@ -147,7 +147,7 @@ class SupplierController extends Controller
         $this->service->updateSupplier($tenant_slug, $id, $request->validated());
 
         return to_route('tenant.contacts.suppliers.index', ['tenant_slug' => $tenant_slug])
-            ->with('success', 'Supplier updated successfully.');
+            ->with('success', __('Supplier updated successfully.'));
     }
 
     public function destroy(string $tenant_slug, string $id): RedirectResponse
@@ -155,6 +155,6 @@ class SupplierController extends Controller
         $this->service->deleteSupplier($tenant_slug, $id);
 
         return to_route('tenant.contacts.suppliers.index', ['tenant_slug' => $tenant_slug])
-            ->with('success', 'Supplier deleted successfully.');
+            ->with('success', __('Supplier deleted successfully.'));
     }
 }

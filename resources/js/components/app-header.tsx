@@ -4,6 +4,7 @@ import AppLogo from '@/components/app-logo';
 import AppLogoIcon from '@/components/app-logo-icon';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { ExportNotificationDropdown } from '@/components/export-notification-dropdown';
+import { LanguageDropdown } from '@/components/language-dropdown';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -192,6 +193,7 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                             </Button>
 
                             <ExportNotificationDropdown />
+                            <LanguageDropdown />
 
                             <div className="ml-1 hidden gap-1 lg:flex">
                                 {rightNavItems.map((item) => (

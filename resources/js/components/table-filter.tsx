@@ -82,7 +82,7 @@ export function TableFilter({
                         <Select value={sortBy} onValueChange={handleFieldChange}>
                             <SelectTrigger className="w-[140px] text-xs">
                                 <ArrowUpDown className="mr-1.5 h-3.5 w-3.5 text-muted-foreground" />
-                                <SelectValue placeholder="Sort by..." />
+                                <SelectValue placeholder={t('Sort by...')} />
                             </SelectTrigger>
                             <SelectContent>
                                 {sortOptions.map((option) => (

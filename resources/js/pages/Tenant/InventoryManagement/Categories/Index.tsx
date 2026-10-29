@@ -139,11 +139,11 @@ export default function CategoryIndex({ categories, stats, filters }: IndexProps
     const canCreate = can('tenant.categories.create') || can('categories.create');
 
     const tableHeaders: Array<string | HeaderConfig> = [
-        { label: t("CATEGORY ID"), sortField: 'id' },
-        { label: t("CATEGORY NAME"), sortField: 'name' },
-        { label: t("DESCRIPTION"), sortField: 'desc' },
-        { label: t("PRODUCTS COUNT"), sortField: 'products_count' },
-        { label: t("DATE ADDED"), sortField: 'created_at' },
+        { label: "CATEGORY ID", sortField: 'id' },
+        { label: "CATEGORY NAME", sortField: 'name' },
+        { label: "DESCRIPTION", sortField: 'desc' },
+        { label: "PRODUCTS COUNT", sortField: 'products_count' },
+        { label: "DATE ADDED", sortField: 'created_at' },
         'ACTIONS',
     ];
 

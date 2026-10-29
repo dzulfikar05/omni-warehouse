@@ -176,11 +176,11 @@ export default function Index({ warehouses, summary, filters }: WarehouseIndexPr
     const canExport = can('tenant.warehouses.export') || can('warehouses.export');
 
     const tableHeaders: Array<string | HeaderConfig> = [
-        { label: t("KODE GUDANG"), sortField: 'code' },
-        { label: t("NAMA WAREHOUSE"), sortField: 'name' },
+        { label: "KODE GUDANG", sortField: 'code' },
+        { label: "NAMA WAREHOUSE", sortField: 'name' },
         'ALAMAT / DESKRIPSI',
-        { label: t("TANGGAL DIBUAT"), sortField: 'created_at' },
-        { label: t("STATUS"), sortField: 'is_active' },
+        { label: "TANGGAL DIBUAT", sortField: 'created_at' },
+        { label: "STATUS", sortField: 'is_active' },
         'ACTIONS',
     ];
 

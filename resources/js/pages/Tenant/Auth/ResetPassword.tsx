@@ -54,7 +54,7 @@ export default function TenantResetPassword({ token, email, tenant: propTenant }
                             {t("Set New Password")}
                         </h1>
                         <p className="mt-1 text-xs font-semibold text-blue-600 dark:text-blue-400">
-                            {tenantDisplayName} Workspace
+                            {tenantDisplayName}                             {t('Workspace')}
                         </p>
 
                         <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400 px-2">

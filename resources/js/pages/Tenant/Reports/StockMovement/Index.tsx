@@ -201,13 +201,13 @@ export default function Index({ reports, summary, warehouses, categories, filter
     const canExport = can('tenant.stock_movement.export') || can('stock_movement.export');
 
     const tableHeaders: Array<string | HeaderConfig> = [
-        { label: t("DATE & TIME"), sortField: 'created_at' },
-        { label: t("SKU CODE"), sortField: 'sku_id' },
-        { label: t("PRODUCT NAME"), sortField: 'product_name' },
-        { label: t("TYPE"), sortField: 'transaction_type' },
+        { label: "DATE & TIME", sortField: 'created_at' },
+        { label: "SKU CODE", sortField: 'sku_id' },
+        { label: "PRODUCT NAME", sortField: 'product_name' },
+        { label: "TYPE", sortField: 'transaction_type' },
         'SOURCE',
         'DESTINATION',
-        { label: t("MOVED QTY"), sortField: 'quantity' },
+        { label: "MOVED QTY", sortField: 'quantity' },
         'OPERATOR',
     ];
 

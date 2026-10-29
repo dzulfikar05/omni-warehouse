@@ -284,10 +284,10 @@ export default function SubscriptionIndex({ subscriptions, stats, plans, filters
                                     {st === 'all'
                                         ? t("All")
                                         : st === 'active'
-                                        ? 'Active'
+                                        ? t('Active')
                                         : st === 'past_due'
-                                        ? 'Past Due'
-                                        : 'Canceled'}
+                                        ? t('Past Due')
+                                        : t('Canceled')}
                                 </button>
                             ))}
                         </div>
@@ -362,12 +362,12 @@ export default function SubscriptionIndex({ subscriptions, stats, plans, filters
                         <table className="w-full border-collapse text-left text-xs">
                             <thead className="border-b border-border bg-muted/50 font-semibold text-muted-foreground">
                                 <tr>
-                                    <th className="py-3 px-4">{t("TENANT ORGANIZATION")}</th>
-                                    <th className="py-3 px-4">{t("PLAN TIER")}</th>
-                                    <th className="py-3 px-4">{t("PRICE / MONTH")}</th>
-                                    <th className="py-3 px-4">{t("STATUS")}</th>
-                                    <th className="py-3 px-4">{t("EXPIRATION / END DATE")}</th>
-                                    <th className="py-3 px-4">{t("CREATED AT")}</th>
+                                    <th className="py-3 px-4">{"TENANT ORGANIZATION"}</th>
+                                    <th className="py-3 px-4">{"PLAN TIER"}</th>
+                                    <th className="py-3 px-4">{"PRICE / MONTH"}</th>
+                                    <th className="py-3 px-4">{"STATUS"}</th>
+                                    <th className="py-3 px-4">{"EXPIRATION / END DATE"}</th>
+                                    <th className="py-3 px-4">{"CREATED AT"}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border">

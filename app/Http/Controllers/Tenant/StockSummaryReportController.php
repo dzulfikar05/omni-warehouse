@@ -138,7 +138,7 @@ class StockSummaryReportController extends Controller
 
         ExportStockSummaryPdfJob::dispatch($log->id, $request->all());
 
-        return back()->with('success', 'Added to export queue. Check the bell/download icon in navbar.');
+        return back()->with('success', __('Export added to the queue. Check the notification or download icon in the navigation bar.'));
     }
 
     public function exportExcel(Request $request, string $tenant_slug): RedirectResponse
@@ -155,6 +155,6 @@ class StockSummaryReportController extends Controller
 
         ExportStockSummaryExcelJob::dispatch($log->id, $request->all());
 
-        return back()->with('success', 'Added to export queue. Check the bell/download icon in navbar.');
+        return back()->with('success', __('Export added to the queue. Check the notification or download icon in the navigation bar.'));
     }
 }

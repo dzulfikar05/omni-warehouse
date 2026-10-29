@@ -213,15 +213,15 @@ export default function Index({ reports, summary, warehouses, categories, filter
     const canExport = can('tenant.stock_summary.export') || can('stock_summary.export');
 
     const tableHeaders: Array<string | HeaderConfig> = [
-        { label: t("SKU CODE"), sortField: 'sku_id' },
-        { label: t("PRODUCT NAME"), sortField: 'product_name' },
-        { label: t("BATCH NO"), sortField: 'batch_number' },
+        { label: "SKU CODE", sortField: 'sku_id' },
+        { label: "PRODUCT NAME", sortField: 'product_name' },
+        { label: "BATCH NO", sortField: 'batch_number' },
         'WAREHOUSE',
         'LOCATION',
-        { label: t("STOCK QTY"), sortField: 'quantity' },
-        { label: t("BASE COST"), sortField: 'base_cost' },
-        { label: t("TOTAL VALUE"), sortField: 'total_value' },
-        { label: t("STATUS"), sortField: 'status' },
+        { label: "STOCK QTY", sortField: 'quantity' },
+        { label: "BASE COST", sortField: 'base_cost' },
+        { label: "TOTAL VALUE", sortField: 'total_value' },
+        { label: "STATUS", sortField: 'status' },
     ];
 
     return (

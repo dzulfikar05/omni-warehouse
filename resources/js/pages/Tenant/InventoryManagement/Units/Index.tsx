@@ -138,10 +138,10 @@ export default function UnitIndex({ units, stats, filters }: IndexProps) {
     const canCreate = can('tenant.units.create') || can('units.create');
 
     const tableHeaders: Array<string | HeaderConfig> = [
-        { label: t("UNIT ID"), sortField: 'id' },
-        { label: t("UNIT NAME"), sortField: 'name' },
-        { label: t("SYMBOL"), sortField: 'symbol' },
-        { label: t("DATE ADDED"), sortField: 'created_at' },
+        { label: "UNIT ID", sortField: 'id' },
+        { label: "UNIT NAME", sortField: 'name' },
+        { label: "SYMBOL", sortField: 'symbol' },
+        { label: "DATE ADDED", sortField: 'created_at' },
         'ACTIONS',
     ];
 

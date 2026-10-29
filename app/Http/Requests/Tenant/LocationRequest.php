@@ -35,10 +35,10 @@ class LocationRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'warehouse_id.required' => 'Gudang target wajib dipilih.',
-            'warehouse_id.exists'   => 'Gudang yang dipilih tidak valid.',
-            'rack_code.required'    => 'Kode rak wajib diisi.',
-            'rack_code.unique'      => 'Kode rak sudah digunakan, gunakan kode lain.',
+            'warehouse_id.required' => __('A warehouse is required.'),
+            'warehouse_id.exists'   => __('The selected warehouse is invalid.'),
+            'rack_code.required'    => __('A rack code is required.'),
+            'rack_code.unique'      => __('This rack code is already in use. Choose a different code.'),
         ];
     }
 }

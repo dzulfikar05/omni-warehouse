@@ -181,13 +181,13 @@ export default function SkuIndex({ skus, stats, categories, units, filters }: In
     const canCreate = can('tenant.skus.create') || can('skus.create');
 
     const tableHeaders: Array<string | HeaderConfig> = [
-        { label: t("KODE SKU / BARCODE"), sortField: 'sku_code' },
-        { label: t("NAMA PRODUK"), sortField: 'product_id' },
+        { label: "KODE SKU / BARCODE", sortField: 'sku_code' },
+        { label: "NAMA PRODUK", sortField: 'product_id' },
         'KATEGORI',
         'SATUAN',
-        { label: t("BASE COST (HPP)"), sortField: 'base_cost' },
-        { label: t("STOK AKTUAL"), sortField: 'current_stock' },
-        { label: t("TANGGAL DIBUAT"), sortField: 'created_at' },
+        { label: "BASE COST (HPP)", sortField: 'base_cost' },
+        { label: "STOK AKTUAL", sortField: 'current_stock' },
+        { label: "TANGGAL DIBUAT", sortField: 'created_at' },
         'ACTIONS',
     ];
 

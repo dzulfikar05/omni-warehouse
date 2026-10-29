@@ -54,7 +54,7 @@ class CategoryController extends Controller
         $this->categoryService->createCategory($request->validated());
 
         return to_route('tenant.inventory.categories.index', ['tenant_slug' => $tenant_slug])
-            ->with('success', 'Category created successfully.');
+            ->with('success', __('Category created successfully.'));
     }
 
     public function show(Request $request, string $tenant_slug, Category $category): Response
@@ -83,7 +83,7 @@ class CategoryController extends Controller
         $this->categoryService->updateCategory($category, $request->validated());
 
         return to_route('tenant.inventory.categories.index', ['tenant_slug' => $tenant_slug])
-            ->with('success', 'Category updated successfully.');
+            ->with('success', __('Category updated successfully.'));
     }
 
     public function destroy(Request $request, string $tenant_slug, Category $category): RedirectResponse
@@ -91,20 +91,20 @@ class CategoryController extends Controller
         $this->categoryService->deleteCategory($category);
 
         return to_route('tenant.inventory.categories.index', ['tenant_slug' => $tenant_slug])
-            ->with('success', 'Category deleted successfully.');
+            ->with('success', __('Category deleted successfully.'));
     }
 
     public function exportPdf(Request $request, string $tenant_slug): RedirectResponse
     {
         $this->categoryService->exportPdf($tenant_slug);
 
-        return back()->with('success', 'Added to export queue. Check the notification icon in navbar.');
+        return back()->with('success', __('Export added to the queue. Check the notification or download icon in the navigation bar.'));
     }
 
     public function exportExcel(Request $request, string $tenant_slug): RedirectResponse
     {
         $this->categoryService->exportExcel($tenant_slug);
 
-        return back()->with('success', 'Added to export queue. Check the notification icon in navbar.');
+        return back()->with('success', __('Export added to the queue. Check the notification or download icon in the navigation bar.'));
     }
 }

@@ -43,17 +43,17 @@ class SkuRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'product_id.required'    => 'Produk induk wajib dipilih.',
-            'product_id.exists'      => 'Produk yang dipilih tidak ditemukan.',
-            'unit_id.required'       => 'Satuan (Unit) wajib dipilih.',
-            'unit_id.exists'         => 'Satuan yang dipilih tidak valid.',
-            'sku_code.required'      => 'Kode SKU wajib diisi.',
-            'sku_code.unique'        => 'Kode SKU ini sudah digunakan oleh barang lain.',
-            'barcode.unique'         => 'Barcode ini sudah terdaftar di sistem.',
-            'base_cost.required'     => 'Harga dasar (Cost) wajib diisi.',
-            'base_cost.numeric'      => 'Harga dasar harus berupa angka.',
-            'current_stock.required' => 'Jumlah stok awal wajib diisi.',
-            'current_stock.integer'  => 'Jumlah stok harus berupa angka bulat.',
+            'product_id.required'    => __('A product is required.'),
+            'product_id.exists'      => __('The selected product is invalid.'),
+            'unit_id.required'       => __('A unit is required.'),
+            'unit_id.exists'         => __('The selected unit is invalid.'),
+            'sku_code.required'      => __('An SKU code is required.'),
+            'sku_code.unique'        => __('This SKU code is already in use.'),
+            'barcode.unique'         => __('This barcode is already registered.'),
+            'base_cost.required'     => __('A base cost is required.'),
+            'base_cost.numeric'      => __('The base cost must be a number.'),
+            'current_stock.required' => __('An opening stock quantity is required.'),
+            'current_stock.integer'  => __('The stock quantity must be a whole number.'),
         ];
     }
 }

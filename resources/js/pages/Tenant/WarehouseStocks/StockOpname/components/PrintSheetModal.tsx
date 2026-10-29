@@ -86,12 +86,12 @@ export function PrintSheetModal({ isOpen, session, items, onClose }: PrintSheetM
                         <table className="w-full border-collapse border border-stone-400 text-[11px]">
                             <thead>
                                 <tr className="bg-stone-100 text-stone-900 border-b border-stone-400 text-center font-bold">
-                                    <th className="p-2 border border-stone-400 w-8">{t("No")}</th>
-                                    <th className="p-2 border border-stone-400 text-left">{t("SKU / Nama Barang")}</th>
-                                    <th className="p-2 border border-stone-400 w-20">{t("Rak")}</th>
-                                    <th className="p-2 border border-stone-400 w-24">{t("Batch / Exp")}</th>
-                                    <th className="p-2 border border-stone-400 w-24">{t("Hasil Hitung Fisik")}</th>
-                                    <th className="p-2 border border-stone-400 w-20">{t("Paraf")}</th>
+                                    <th className="p-2 border border-stone-400 w-8">{"No"}</th>
+                                    <th className="p-2 border border-stone-400 text-left">{"SKU / Nama Barang"}</th>
+                                    <th className="p-2 border border-stone-400 w-20">{"Rak"}</th>
+                                    <th className="p-2 border border-stone-400 w-24">{"Batch / Exp"}</th>
+                                    <th className="p-2 border border-stone-400 w-24">{"Hasil Hitung Fisik"}</th>
+                                    <th className="p-2 border border-stone-400 w-20">{"Paraf"}</th>
                                 </tr>
                             </thead>
                             <tbody>

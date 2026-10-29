@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from '@/context/language-context';
 
 interface AppLogoProps extends React.SVGProps<SVGSVGElement> {
     size?: 'sm' | 'md' | 'lg' | 'xl' | number;
@@ -15,6 +16,7 @@ export default function AppLogo({
     className = '',
     ...props
 }: AppLogoProps) {
+    const { t } = useTranslation();
     const sizeMap = {
         sm: { icon: 24, text: 'text-xs', tenantText: 'text-sm' },
         md: { icon: 32, text: 'text-sm', tenantText: 'text-base' },
@@ -32,7 +34,7 @@ export default function AppLogo({
                 <div className="inline-flex shrink-0 items-center justify-center">
                     <img
                         src={logoUrl}
-                        alt={tenantName || 'Tenant Logo'}
+                        alt={tenantName || t('Tenant logo')}
                         style={{ width: iconSize, height: iconSize }}
                         className="object-contain"
                     />
@@ -111,7 +113,7 @@ export default function AppLogo({
                         {tenantName}
                     </span>
                     <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500">
-                        Warehouse Operations
+                        {t('Warehouse Operations')}
                     </span>
                 </div>
             )}

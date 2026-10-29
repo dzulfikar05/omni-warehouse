@@ -65,7 +65,7 @@ class OutboundController extends Controller
     {
         $this->service->commitOutbound($tenant_slug);
 
-        return back()->with('success', 'Hasil packing & outbound berhasil disubmit, stok live dipotong!');
+        return back()->with('success', __('Outbound packing results submitted successfully. Live stock has been updated.'));
     }
 
     public function hold(Request $request, string $tenant_slug): RedirectResponse
@@ -76,6 +76,6 @@ class OutboundController extends Controller
 
         $this->service->holdOutboundSession($tenant_slug, $request->input('reason', 'Penundaan Armada Pengiriman'));
 
-        return back()->with('warning', 'Sesi outbound pengiriman berhasil di-hold.');
+        return back()->with('warning', __('Outbound shipping session put on hold successfully.'));
     }
 }

@@ -126,9 +126,9 @@ export default function Index({ users, filters }: UsersProps) {
     const canExport = can('central.users.export');
 
     const tableHeaders: Array<string | HeaderConfig> = [
-        { label: t("ID"), sortField: 'id' },
-        { label: t("Name"), sortField: 'name' },
-        { label: t("Email"), sortField: 'email' },
+        { label: "ID", sortField: 'id' },
+        { label: "Name", sortField: 'name' },
+        { label: "Email", sortField: 'email' },
         'Roles',
         'Action',
     ];

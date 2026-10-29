@@ -43,14 +43,14 @@ class StockOpnameRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'warehouse_id.required' => 'Gudang target wajib dipilih.',
-            'warehouse_id.exists'   => 'Gudang yang dipilih tidak valid.',
-            'zone.required'         => 'Zona / Area audit wajib ditentukan.',
-            'audit_type.required'   => 'Tipe siklus audit wajib dipilih.',
-            'cut_off_date.required' => 'Batas waktu cut-off wajib diisi.',
-            'physical_qty.required' => 'Jumlah hitungan fisik wajib diisi.',
-            'physical_qty.min'      => 'Jumlah hitungan fisik tidak boleh bernilai negatif.',
-            'session_id.required'   => 'ID Sesi opname tidak ditemukan.',
+            'warehouse_id.required' => __('A warehouse is required.'),
+            'warehouse_id.exists'   => __('The selected warehouse is invalid.'),
+            'zone.required'         => __('An audit zone is required.'),
+            'audit_type.required'   => __('An audit type is required.'),
+            'cut_off_date.required' => __('A cut-off date is required.'),
+            'physical_qty.required' => __('A physical quantity is required.'),
+            'physical_qty.min'      => __('The physical quantity must be zero or greater.'),
+            'session_id.required'   => __('The stocktake session could not be found.'),
         ];
     }
 }

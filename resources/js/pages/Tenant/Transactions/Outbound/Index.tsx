@@ -223,13 +223,13 @@ export default function Index({ manifests: initialManifests }: OutboundIndexProp
                         <table className="w-full text-left border-collapse text-xs">
                             <thead className="bg-muted/40 text-muted-foreground font-semibold border-b border-border">
                                 <tr>
-                                    <th className="py-3.5 px-5 whitespace-nowrap">{t("Kode Shipping SO")}</th>
-                                    <th className="py-3.5 px-5 whitespace-nowrap">{t("Customer & Gudang")}</th>
-                                    <th className="py-3.5 px-5 whitespace-nowrap">{t("Armada & Supir")}</th>
-                                    <th className="py-3.5 px-5 whitespace-nowrap">{t("Shipping Dock")}</th>
-                                    <th className="py-3.5 px-5 text-right whitespace-nowrap">{t("Progress Packing")}</th>
-                                    <th className="py-3.5 px-5 text-center whitespace-nowrap">{t("Status Outbound")}</th>
-                                    <th className="py-3.5 px-5 text-center whitespace-nowrap">{t("Aksi")}</th>
+                                    <th className="py-3.5 px-5 whitespace-nowrap">{"Kode Shipping SO"}</th>
+                                    <th className="py-3.5 px-5 whitespace-nowrap">{"Customer & Gudang"}</th>
+                                    <th className="py-3.5 px-5 whitespace-nowrap">{"Armada & Supir"}</th>
+                                    <th className="py-3.5 px-5 whitespace-nowrap">{"Shipping Dock"}</th>
+                                    <th className="py-3.5 px-5 text-right whitespace-nowrap">{"Progress Packing"}</th>
+                                    <th className="py-3.5 px-5 text-center whitespace-nowrap">{"Status Outbound"}</th>
+                                    <th className="py-3.5 px-5 text-center whitespace-nowrap">{"Aksi"}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border text-foreground">

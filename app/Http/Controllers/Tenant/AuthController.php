@@ -79,7 +79,7 @@ class AuthController extends Controller
         }
 
         return back()->withErrors([
-            'email' => 'Invalid email or password for this company account.',
+            'email' => __('The email address or password is incorrect for this company workspace.'),
         ]);
     }
 
@@ -103,8 +103,8 @@ class AuthController extends Controller
             'tenant' => ['required', 'string', 'max:255'],
             'email'  => ['required', 'email'],
         ], [
-            'tenant.required' => 'Nama atau Slug Tenant wajib diisi.',
-            'email.required'  => 'Email akun Anda wajib diisi.',
+            'tenant.required' => __('Enter a tenant name or workspace slug.'),
+            'email.required'  => __('Enter your account email address.'),
         ]);
 
         $inputTenant = trim($request->input('tenant'));
@@ -117,7 +117,7 @@ class AuthController extends Controller
 
         if (!$tenant) {
             return back()->withErrors([
-                'tenant' => 'Workspace / Tenant tidak ditemukan dalam sistem.',
+                'tenant' => __('The workspace or tenant could not be found.'),
             ]);
         }
 
@@ -128,7 +128,10 @@ class AuthController extends Controller
 
         if (!$userExists) {
             return back()->withErrors([
-                'email' => "Akun email {$email} tidak terdaftar pada workspace {$tenant->name}.",
+                'email' => __('Account email :email is not registered in workspace :workspace.', [
+                    'email' => $email,
+                    'workspace' => $tenant->name,
+                ]),
             ]);
         }
 

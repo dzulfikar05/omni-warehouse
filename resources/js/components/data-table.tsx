@@ -2,6 +2,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Pagination } from './pagination';
 import { ReactNode } from 'react';
 import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+import { useTranslation } from '@/context/language-context';
 
 export interface HeaderConfig {
     label: string;
@@ -34,6 +35,8 @@ export function DataTable<T>({
     sortDirection = 'desc',
     onSortChange,
 }: Props<T>) {
+    const { t } = useTranslation();
+
     // Fungsi handler otomatis saat header diklik
     const handleHeaderClick = (sortField?: string) => {
         if (!sortField || !onSortChange) return;
@@ -109,7 +112,7 @@ export function DataTable<T>({
                                     colSpan={headers.length}
                                     className="h-24 text-center text-muted-foreground italic"
                                 >
-                                    No results found.
+                                    {t('No results found.')}
                                 </TableCell>
                             </TableRow>
                         )}

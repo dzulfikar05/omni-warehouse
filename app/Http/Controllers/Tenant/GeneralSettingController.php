@@ -39,6 +39,6 @@ class GeneralSettingController extends Controller
         $this->service->updateSettings($tenant_slug, $request->validated());
 
         return to_route('tenant.settings.general-settings.edit', ['tenant_slug' => $tenant_slug])
-            ->with('success', 'General & Document Settings updated successfully.');
+            ->with('success', __('General and document settings updated successfully.'));
     }
 }

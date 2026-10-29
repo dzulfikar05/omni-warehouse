@@ -54,7 +54,7 @@ class UnitsController extends Controller
         $this->unitService->createUnit($request->validated());
 
         return to_route('tenant.inventory.units.index', ['tenant_slug' => $tenant_slug])
-            ->with('success', 'Unit created successfully.');
+            ->with('success', __('Unit created successfully.'));
     }
 
     public function show(Request $request, string $tenant_slug, Unit $unit): Response
@@ -78,7 +78,7 @@ class UnitsController extends Controller
         $this->unitService->updateUnit($unit, $request->validated());
 
         return to_route('tenant.inventory.units.index', ['tenant_slug' => $tenant_slug])
-            ->with('success', 'Unit updated successfully.');
+            ->with('success', __('Unit updated successfully.'));
     }
 
     public function destroy(Request $request, string $tenant_slug, Unit $unit): RedirectResponse
@@ -86,20 +86,20 @@ class UnitsController extends Controller
         $this->unitService->deleteUnit($unit);
 
         return to_route('tenant.inventory.units.index', ['tenant_slug' => $tenant_slug])
-            ->with('success', 'Unit deleted successfully.');
+            ->with('success', __('Unit deleted successfully.'));
     }
 
     public function exportPdf(Request $request, string $tenant_slug): RedirectResponse
     {
         $this->unitService->exportPdf($tenant_slug);
 
-        return back()->with('success', 'Added to export queue. Check the notification icon in navbar.');
+        return back()->with('success', __('Export added to the queue. Check the notification or download icon in the navigation bar.'));
     }
 
     public function exportExcel(Request $request, string $tenant_slug): RedirectResponse
     {
         $this->unitService->exportExcel($tenant_slug);
 
-        return back()->with('success', 'Added to export queue. Check the notification icon in navbar.');
+        return back()->with('success', __('Export added to the queue. Check the notification or download icon in the navigation bar.'));
     }
 }

@@ -51,7 +51,7 @@ class RoleController extends Controller
     {
         $this->roleService->storeRole($request->validated());
 
-        return to_route('roles.index')->with('success', 'Role created successfully.');
+        return to_route('roles.index')->with('success', __('Role created successfully.'));
     }
 
     public function show(string $id): Response
@@ -78,14 +78,14 @@ class RoleController extends Controller
     {
         $this->roleService->updateRole($id, $request->validated());
 
-        return to_route('roles.index')->with('success', 'Role updated successfully.');
+        return to_route('roles.index')->with('success', __('Role updated successfully.'));
     }
 
     public function destroy(string $id): RedirectResponse
     {
         $this->roleService->deleteRole($id);
 
-        return to_route('roles.index')->with('success', 'Role deleted successfully.');
+        return to_route('roles.index')->with('success', __('Role deleted successfully.'));
     }
 
     public function exportPdf(Request $request): RedirectResponse
@@ -100,7 +100,7 @@ class RoleController extends Controller
 
         ExportRolePdfJob::dispatch($log->id, $request->only(['search']));
 
-        return back()->with('success', 'Added to export queue. Check the download icon in the navbar.');
+        return back()->with('success', __('Export added to the queue. Check the notification or download icon in the navigation bar.'));
     }
 
     public function exportExcel(Request $request): RedirectResponse
@@ -115,6 +115,6 @@ class RoleController extends Controller
 
         ExportRoleExcelJob::dispatch($log->id, $request->only(['search']));
 
-        return back()->with('success', 'Added to export queue. Check the download icon in the navbar.');
+        return back()->with('success', __('Export added to the queue. Check the notification or download icon in the navigation bar.'));
     }
 }

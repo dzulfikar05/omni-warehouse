@@ -93,10 +93,10 @@ export const SuratJalanPreviewModal: React.FC<SuratJalanPreviewModalProps> = ({
                     <table className="w-full text-left border border-border rounded-lg text-[11px] overflow-hidden">
                         <thead className="bg-muted/60 text-foreground font-semibold border-b border-border">
                             <tr>
-                                <th className="p-2">{t("Item SKU")}</th>
-                                <th className="p-2 text-right">{t("Target SO")}</th>
-                                <th className="p-2 text-right">{t("Fisik Packed")}</th>
-                                <th className="p-2">{t("Keterangan Dus")}</th>
+                                <th className="p-2">{"Item SKU"}</th>
+                                <th className="p-2 text-right">{"Target SO"}</th>
+                                <th className="p-2 text-right">{"Fisik Packed"}</th>
+                                <th className="p-2">{"Keterangan Dus"}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">

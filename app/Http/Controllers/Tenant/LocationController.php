@@ -90,7 +90,7 @@ class LocationController extends Controller
         $this->service->createLocation($tenant_slug, $data);
 
         return to_route('tenant.locations.index', ['tenant_slug' => $tenant_slug])
-            ->with('success', 'Lokasi rak berhasil ditambahkan!');
+            ->with('success', __('Storage location created successfully.'));
     }
 
     public function show(string $tenant_slug, Location $location): Response
@@ -119,7 +119,7 @@ class LocationController extends Controller
         $this->service->updateLocation($tenant_slug, $location->id, $request->validated());
 
         return to_route('tenant.locations.index', ['tenant_slug' => $tenant_slug])
-            ->with('success', 'Data lokasi rak berhasil diperbarui!');
+            ->with('success', __('Storage location updated successfully.'));
     }
 
     public function destroy(string $tenant_slug, Location $location): RedirectResponse
@@ -127,7 +127,7 @@ class LocationController extends Controller
         $this->service->deleteLocation($tenant_slug, $location->id);
 
         return to_route('tenant.locations.index', ['tenant_slug' => $tenant_slug])
-            ->with('success', 'Lokasi rak berhasil dihapus!');
+            ->with('success', __('Storage location deleted successfully.'));
     }
 
     public function exportPdf(Request $request, string $tenant_slug): RedirectResponse
@@ -144,7 +144,7 @@ class LocationController extends Controller
 
         ExportLocationPdfJob::dispatch($log->id, $request->all());
 
-        return back()->with('success', 'Added to export queue. Check the bell/download icon in navbar.');
+        return back()->with('success', __('Export added to the queue. Check the notification or download icon in the navigation bar.'));
     }
 
     public function exportExcel(Request $request, string $tenant_slug): RedirectResponse
@@ -161,6 +161,6 @@ class LocationController extends Controller
 
         ExportLocationExcelJob::dispatch($log->id, $request->all());
 
-        return back()->with('success', 'Added to export queue. Check the bell/download icon in navbar.');
+        return back()->with('success', __('Export added to the queue. Check the notification or download icon in the navigation bar.'));
     }
 }

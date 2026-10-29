@@ -62,7 +62,7 @@ class ProductsController extends Controller
         $this->productService->createProduct($request->validated());
 
         return to_route('tenant.inventory.products.index', ['tenant_slug' => $tenant_slug])
-            ->with('success', 'Produk baru berhasil dibuat.');
+            ->with('success', __('Product created successfully.'));
     }
 
     public function show(Request $request, string $tenant_slug, Product $product): Response
@@ -91,7 +91,7 @@ class ProductsController extends Controller
         $this->productService->updateProduct($product, $request->validated());
 
         return to_route('tenant.inventory.products.index', ['tenant_slug' => $tenant_slug])
-            ->with('success', 'Data produk berhasil diperbarui.');
+            ->with('success', __('Product updated successfully.'));
     }
 
     public function destroy(Request $request, string $tenant_slug, Product $product): RedirectResponse
@@ -99,18 +99,18 @@ class ProductsController extends Controller
         $this->productService->deleteProduct($product);
 
         return to_route('tenant.inventory.products.index', ['tenant_slug' => $tenant_slug])
-            ->with('success', 'Produk berhasil dihapus.');
+            ->with('success', __('Product deleted successfully.'));
     }
 
     public function exportPdf(Request $request, string $tenant_slug): RedirectResponse
     {
         $this->productService->exportPdf($tenant_slug);
-        return back()->with('success', 'Added to export queue. Check the bell/download icon in navbar.');
+        return back()->with('success', __('Export added to the queue. Check the notification or download icon in the navigation bar.'));
     }
 
     public function exportExcel(Request $request, string $tenant_slug): RedirectResponse
     {
         $this->productService->exportExcel($tenant_slug);
-        return back()->with('success', 'Added to export queue. Check the bell/download icon in navbar.');
+        return back()->with('success', __('Export added to the queue. Check the notification or download icon in the navigation bar.'));
     }
 }

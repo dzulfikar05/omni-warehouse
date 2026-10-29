@@ -58,7 +58,7 @@ class PlanController extends Controller
             }
         }
 
-        return redirect()->route('admin.plans.index')->with('success', 'Plan berhasil ditambahkan.');
+        return redirect()->route('admin.plans.index')->with('success', __('Plan added successfully.'));
     }
 
     public function edit($id)
@@ -104,7 +104,7 @@ class PlanController extends Controller
             }
         }
 
-        return redirect()->route('admin.plans.index')->with('success', 'Plan berhasil diperbarui.');
+        return redirect()->route('admin.plans.index')->with('success', __('Plan updated successfully.'));
     }
 
     public function destroy($id)
@@ -113,6 +113,6 @@ class PlanController extends Controller
         $plan->features()->delete();
         $plan->delete();
 
-        return redirect()->route('admin.plans.index')->with('success', 'Plan berhasil dihapus.');
+        return redirect()->route('admin.plans.index')->with('success', __('Plan deleted successfully.'));
     }
 }

@@ -186,11 +186,11 @@ export default function Index({ locations, warehouses, summary, filters }: Locat
     const canExport = can('tenant.locations.export') || can('locations.export');
 
     const tableHeaders: Array<string | HeaderConfig> = [
-        { label: t("KODE RAK"), sortField: 'rack_code' },
-        { label: t("GUDANG"), sortField: 'warehouse_name' },
-        { label: t("ZONA"), sortField: 'zone' },
+        { label: "KODE RAK", sortField: 'rack_code' },
+        { label: "GUDANG", sortField: 'warehouse_name' },
+        { label: "ZONA", sortField: 'zone' },
         'DESKRIPSI',
-        { label: t("STATUS"), sortField: 'is_active' },
+        { label: "STATUS", sortField: 'is_active' },
         'ACTIONS',
     ];
 

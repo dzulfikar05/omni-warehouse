@@ -238,14 +238,14 @@ export default function StockTransferIndex({
                         <table className="w-full text-left text-xs border-collapse">
                             <thead>
                                 <tr className="border-b border-border bg-muted/40 text-muted-foreground font-semibold uppercase tracking-wider">
-                                    <th className="py-3.5 px-5">{t("Kode Transfer")}</th>
-                                    <th className="py-3.5 px-5">{t("Produk / SKU")}</th>
-                                    <th className="py-3.5 px-5">{t("Lokasi Asal (Origin)")}</th>
-                                    <th className="py-3.5 px-5">{t("Lokasi Tujuan (Dest)")}</th>
-                                    <th className="py-3.5 px-5 text-center">{t("Qty")}</th>
-                                    <th className="py-3.5 px-5">{t("Status")}</th>
-                                    <th className="py-3.5 px-5">{t("Operator")}</th>
-                                    <th className="py-3.5 px-5 text-right">{t("Tanggal")}</th>
+                                    <th className="py-3.5 px-5">{"Kode Transfer"}</th>
+                                    <th className="py-3.5 px-5">{"Produk / SKU"}</th>
+                                    <th className="py-3.5 px-5">{"Lokasi Asal (Origin)"}</th>
+                                    <th className="py-3.5 px-5">{"Lokasi Tujuan (Dest)"}</th>
+                                    <th className="py-3.5 px-5 text-center">{"Qty"}</th>
+                                    <th className="py-3.5 px-5">{"Status"}</th>
+                                    <th className="py-3.5 px-5">{"Operator"}</th>
+                                    <th className="py-3.5 px-5 text-right">{"Tanggal"}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border/60">

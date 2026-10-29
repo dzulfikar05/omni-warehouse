@@ -20,9 +20,9 @@ export function LanguageDropdown() {
                     variant="ghost"
                     size="icon"
                     className="relative h-9 w-9 rounded-xl border border-border"
+                    aria-label={t('Change language')}
                 >
                     <Globe size={16} />
-                    {/* Badge Indikator Bahasa Aktif */}
                     <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground uppercase">
                         {locale}
                     </span>
@@ -31,7 +31,7 @@ export function LanguageDropdown() {
 
             <DropdownMenuContent align="end" className="w-48 p-2 space-y-1">
                 <div className="text-xs font-semibold px-2 py-1.5 border-b border-border flex justify-between items-center">
-                    <span>{t('Pilih Bahasa')}</span>
+                    <span>{t('Choose language')}</span>
                 </div>
 
                 <DropdownMenuItem
@@ -43,7 +43,7 @@ export function LanguageDropdown() {
                 >
                     <div className="flex items-center gap-2">
                         <span className="text-sm">🇮🇩</span>
-                        <span>Bahasa Indonesia</span>
+                        <span>{t('Bahasa Indonesia')}</span>
                     </div>
                     {locale === 'id' && <Check size={14} className="text-primary shrink-0" />}
                 </DropdownMenuItem>
@@ -57,7 +57,7 @@ export function LanguageDropdown() {
                 >
                     <div className="flex items-center gap-2">
                         <span className="text-sm">🇬🇧</span>
-                        <span>English</span>
+                        <span>{t('English')}</span>
                     </div>
                     {locale === 'en' && <Check size={14} className="text-primary shrink-0" />}
                 </DropdownMenuItem>

@@ -170,7 +170,13 @@ export default function SkuForm({ tenant_slug, products, units, sku, mode }: Sku
                     className="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold gap-1.5 shadow-md"
                 >
                     <Check className="w-3.5 h-3.5" />
-                    <span>{processing ? t("Menyimpan...") : mode === 'create' ? 'Simpan SKU' : 'Perbarui SKU'}</span>
+                    <span>
+                        {processing
+                            ? t("Menyimpan...")
+                            : mode === 'create'
+                              ? t('Save SKU')
+                              : t('Update SKU')}
+                    </span>
                 </Button>
             </div>
         </form>

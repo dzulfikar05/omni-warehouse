@@ -349,10 +349,10 @@ export default function TenantDashboard({
                                     <table className="w-full text-xs text-left">
                                         <thead>
                                             <tr className="border-b border-border bg-muted/50 text-muted-foreground font-semibold">
-                                                <th className="p-3">{t("SKU CODE")}</th>
-                                                <th className="p-3">{t("PRODUCT")}</th>
-                                                <th className="p-3">{t("CURRENT")}</th>
-                                                <th className="p-3">{t("MIN STOCK")}</th>
+                                                <th className="p-3">{"SKU CODE"}</th>
+                                                <th className="p-3">{"PRODUCT"}</th>
+                                                <th className="p-3">{"CURRENT"}</th>
+                                                <th className="p-3">{"MIN STOCK"}</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-border">
@@ -402,10 +402,10 @@ export default function TenantDashboard({
                                     <table className="w-full text-xs text-left">
                                         <thead>
                                             <tr className="border-b border-border bg-muted/50 text-muted-foreground font-semibold">
-                                                <th className="p-3">{t("SKU / ITEM")}</th>
-                                                <th className="p-3">{t("TYPE")}</th>
-                                                <th className="p-3">{t("QTY")}</th>
-                                                <th className="p-3">{t("TIME")}</th>
+                                                <th className="p-3">{"SKU / ITEM"}</th>
+                                                <th className="p-3">{"TYPE"}</th>
+                                                <th className="p-3">{"QTY"}</th>
+                                                <th className="p-3">{"TIME"}</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-border">

@@ -159,11 +159,11 @@ export default function ProductIndex({ products, stats, categories, filters }: I
     const canCreate = can('tenant.products.create') || can('products.create');
 
     const tableHeaders: Array<string | HeaderConfig> = [
-        { label: t("ID PRODUK"), sortField: 'id' },
-        { label: t("NAMA PRODUK"), sortField: 'name' },
-        { label: t("KATEGORI"), sortField: 'category_id' },
-        { label: t("STATUS"), sortField: 'status' },
-        { label: t("TANGGAL DIBUAT"), sortField: 'created_at' },
+        { label: "ID PRODUK", sortField: 'id' },
+        { label: "NAMA PRODUK", sortField: 'name' },
+        { label: "KATEGORI", sortField: 'category_id' },
+        { label: "STATUS", sortField: 'status' },
+        { label: "TANGGAL DIBUAT", sortField: 'created_at' },
         'ACTIONS',
     ];
 

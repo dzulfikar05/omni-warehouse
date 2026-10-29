@@ -24,10 +24,10 @@ class ProductRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'category_id.required' => 'Kategori produk wajib dipilih.',
-            'category_id.exists'   => 'Kategori tidak valid.',
-            'name.required'        => 'Nama produk wajib diisi.',
-            'status.required'      => 'Status produk wajib dipilih.',
+            'category_id.required' => __('A category is required.'),
+            'category_id.exists'   => __('The selected category is invalid.'),
+            'name.required'        => __('A product name is required.'),
+            'status.required'      => __('A product status is required.'),
         ];
     }
 }

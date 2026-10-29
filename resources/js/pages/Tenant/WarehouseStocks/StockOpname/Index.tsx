@@ -375,14 +375,14 @@ export default function Index({ session: initialSession, items: initialItems }: 
                         <table className="w-full text-left border-collapse text-xs">
                             <thead className="bg-muted/40 text-muted-foreground font-semibold border-b border-border">
                                 <tr>
-                                    <th className="py-3 px-5">{t("SKU / Barcode")}</th>
-                                    <th className="py-3 px-5">{t("Nama Barang & Batch")}</th>
-                                    <th className="py-3 px-5">{t("Rak")}</th>
-                                    <th className="py-3 px-5 text-right">{t("Stok Sistem")}</th>
-                                    <th className="py-3 px-5 text-right">{t("Fisik Lapangan")}</th>
-                                    <th className="py-3 px-5 text-center">{t("Selisih (Variance)")}</th>
-                                    <th className="py-3 px-5 text-center">{t("Status")}</th>
-                                    <th className="py-3 px-4 text-center">{t("Aksi")}</th>
+                                    <th className="py-3 px-5">{"SKU / Barcode"}</th>
+                                    <th className="py-3 px-5">{"Nama Barang & Batch"}</th>
+                                    <th className="py-3 px-5">{"Rak"}</th>
+                                    <th className="py-3 px-5 text-right">{"Stok Sistem"}</th>
+                                    <th className="py-3 px-5 text-right">{"Fisik Lapangan"}</th>
+                                    <th className="py-3 px-5 text-center">{"Selisih (Variance)"}</th>
+                                    <th className="py-3 px-5 text-center">{"Status"}</th>
+                                    <th className="py-3 px-4 text-center">{"Aksi"}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border text-foreground font-sans">

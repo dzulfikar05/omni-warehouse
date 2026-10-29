@@ -49,7 +49,9 @@ class InboundService implements InboundContract
     {
         return [
             'success' => true,
-            'message' => "Item dengan barcode {$barcode} tervalidasi!",
+            'message' => __('Item with barcode :barcode validated successfully.', [
+                'barcode' => $barcode,
+            ]),
         ];
     }
 
@@ -57,7 +59,7 @@ class InboundService implements InboundContract
     {
         return [
             'success' => true,
-            'message' => 'Alokasi rak & fisik berhasil diperbarui.',
+            'message' => __('Rack allocation and physical quantity updated successfully.'),
         ];
     }
 
