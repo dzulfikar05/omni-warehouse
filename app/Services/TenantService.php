@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Http\UploadedFile;
 use App\Services\UserService;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class TenantService implements TenantContract
 {
@@ -186,18 +188,38 @@ class TenantService implements TenantContract
                     ->toMediaCollection('logo');
             }
 
-            // 4. Buat akun admin perusahaan
+            // 4. Buat akun admin tenant
             $user = $this->userService->storeTenantAdmin(
                 $data,
                 $tenant->id
             );
 
-            // 5. Hubungkan pencatat pembuatan tenant dengan admin
+            // 5. Buat role superadmin khusus tenant ini
+            $superadminRole = Role::where('name', 'superadmin')
+                ->where('guard_name', 'web')
+                ->firstOrFail();
+
+            // 6. Ambil seluruh permission tenant
+            $tenantPermissions = Permission::where(
+                'name',
+                'LIKE',
+                'tenant.%'
+            )->get();
+
+            // 7. Berikan seluruh permission tenant ke superadmin
+            $superadminRole->syncPermissions(
+                $tenantPermissions
+            );
+
+            // 8. Assign role superadmin ke admin tenant
+            $user->syncRoles([$superadminRole]);
+
+            // 9. Hubungkan tenant dengan admin pembuat
             $tenant->update([
                 'created_by' => $user->id,
             ]);
 
-            // 6. Buat subscription
+            // 10. Buat subscription
             Subscription::create([
                 'tenant_id'  => $tenant->id,
                 'plan_id'    => $data['plan_id'],
@@ -206,10 +228,10 @@ class TenantService implements TenantContract
                 'created_by' => $user->id,
             ]);
 
-            // 7. Kembalikan hasil
+            // 11. Kembalikan hasil
             return [
                 'tenant' => $tenant->fresh(),
-                'user'   => $user,
+                'user'   => $user->fresh()->load('roles'),
             ];
         });
     }
