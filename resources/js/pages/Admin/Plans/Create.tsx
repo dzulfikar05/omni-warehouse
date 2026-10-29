@@ -31,7 +31,7 @@ export default function PlanCreate() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post('/admin/plans');
+        post('/plans');
     };
 
     return (
@@ -44,7 +44,7 @@ export default function PlanCreate() {
                     description={t("Create a new subscription tier along with feature limits.")}
                     renderAction={
                         <Button asChild variant="outline" size="sm" className="h-9 gap-1.5 border-border text-xs">
-                            <Link href="/admin/plans">
+                            <Link href="/plans">
                                 <ArrowLeft className="h-4 w-4" /> {t("Back")}</Link>
                         </Button>
                     }
@@ -162,7 +162,7 @@ export default function PlanCreate() {
 PlanCreate.layout = {
     breadcrumbs: [
         { title: "Admin", href: '#' },
-        { title: "Plans Management", href: '/admin/plans' },
+        { title: "Plans Management", href: '/plans' },
         { title: "Add Plan Tier", href: '#' },
     ],
 };

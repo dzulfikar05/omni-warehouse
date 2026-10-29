@@ -64,12 +64,12 @@ export default function PlanEdit({ plan }: Props) {
 
     const handleUpdate = (e: React.FormEvent) => {
         e.preventDefault();
-        put(`/admin/plans/${plan.id}`);
+        put(`/plans/${plan.id}`);
     };
 
     const handleDelete = () => {
         setIsDeleting(true);
-        router.delete(`/admin/plans/${plan.id}`, {
+        router.delete(`/plans/${plan.id}`, {
             onFinish: () => setIsDeleting(false),
         });
     };
@@ -87,7 +87,7 @@ export default function PlanEdit({ plan }: Props) {
                     renderAction={
                         <div className="flex items-center gap-2">
                             <Button asChild variant="outline" size="sm" className="h-9 gap-1.5 border-border text-xs">
-                                <Link href="/admin/plans">
+                                <Link href="/plans">
                                     <ArrowLeft className="h-4 w-4" /> {t("Back")}</Link>
                             </Button>
 
@@ -256,7 +256,7 @@ export default function PlanEdit({ plan }: Props) {
 PlanEdit.layout = {
     breadcrumbs: [
         { title: "Admin", href: '#' },
-        { title: "Plans Management", href: '/admin/plans' },
+        { title: "Plans Management", href: '/plans' },
         { title: "Edit Plan Tier", href: '#' },
     ],
 };

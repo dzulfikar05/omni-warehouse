@@ -80,7 +80,7 @@ export default function PlanIndex({ plans }: Props) {
                     renderAction={
                         canCreate && (
                             <Button asChild className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700">
-                                <Link href="/admin/plans/create">
+                                <Link href="/plans/create">
                                     <Plus className="mr-1.5 h-4 w-4" /> {t("Add New Plan")}</Link>
                             </Button>
                         )
@@ -232,7 +232,7 @@ export default function PlanIndex({ plans }: Props) {
                                                             : 'border-border text-foreground hover:bg-muted'
                                                     }`}
                                                 >
-                                                    <Link href={`/admin/plans/${plan.id}/edit`}>
+                                                    <Link href={`/plans/${plan.id}/edit`}>
                                                         <Edit className="mr-1.5 h-3.5 w-3.5" /> {t("Edit Plan Details")}</Link>
                                                 </Button>
                                             )}
@@ -256,6 +256,6 @@ export default function PlanIndex({ plans }: Props) {
 PlanIndex.layout = {
     breadcrumbs: [
         { title: "Admin", href: '#' },
-        { title: "Plans Management", href: '/admin/plans' },
+        { title: "Plans Management", href: '/plans' },
     ],
 };

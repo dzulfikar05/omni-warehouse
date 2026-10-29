@@ -155,7 +155,7 @@ export default function SubscriptionIndex({ subscriptions, stats, plans, filters
 
     // Handler Export terintegrasi filter aktif
     const handleExportPdf = () => {
-        router.post('/admin/subscriptions/export-pdf', {
+        router.post('/subscriptions/export-pdf', {
             search: search || undefined,
             status: activeTab !== 'all' ? activeTab : undefined,
             plan_id: selectedPlan || undefined,
@@ -165,7 +165,7 @@ export default function SubscriptionIndex({ subscriptions, stats, plans, filters
     };
 
     const handleExportExcel = () => {
-        router.post('/admin/subscriptions/export-excel', {
+        router.post('/subscriptions/export-excel', {
             search: search || undefined,
             status: activeTab !== 'all' ? activeTab : undefined,
             plan_id: selectedPlan || undefined,
@@ -207,7 +207,7 @@ export default function SubscriptionIndex({ subscriptions, stats, plans, filters
                             )}
                             {canCreateInvoice && (
                                 <Button asChild className="h-9 bg-blue-600 text-white shadow-md hover:bg-blue-700">
-                                    <Link href="/admin/subscriptions/create-invoice">
+                                    <Link href="/subscriptions/create-invoice">
                                         <Plus className="mr-1.5 h-4 w-4" /> {t("Create Manual Invoice")}</Link>
                                 </Button>
                             )}
@@ -451,6 +451,6 @@ export default function SubscriptionIndex({ subscriptions, stats, plans, filters
 SubscriptionIndex.layout = {
     breadcrumbs: [
         { title: "Admin", href: '#' },
-        { title: "Subscriptions Management", href: '/admin/subscriptions' },
+        { title: "Subscriptions Management", href: '/subscriptions' },
     ],
 };
