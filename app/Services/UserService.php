@@ -25,7 +25,7 @@ class UserService implements UserContract
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%");
+                        ->orWhere('email', 'like', "%{$search}%");
                 });
             })
             ->with('roles')
@@ -56,6 +56,21 @@ class UserService implements UserContract
         if (isset($data['role'])) {
             $user->assignRole($data['role']);
         }
+
+        return $user;
+    }
+
+    public function storeTenantAdmin(array $data, int $tenantId): User
+    {
+        $user = User::create([
+            'name'      => $data['name'],
+            'email'     => $data['email'],
+            'password'  => Hash::make($data['password']),
+            'tenant_id' => $tenantId,
+        ]);
+
+        // Assign role tenant admin jika role tersebut memang tersedia.
+        // Tambahkan assignRole() setelah memastikan nama role di database.
 
         return $user;
     }
