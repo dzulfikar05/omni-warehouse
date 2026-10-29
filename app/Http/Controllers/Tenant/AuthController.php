@@ -44,14 +44,19 @@ class AuthController extends Controller
         ]);
     }
 
-    public function register(TenantRegisterRequest $request): Response
-    {
-        $result = $this->tenantService->registerTenant($request->validated());
+    public function register(
+        TenantRegisterRequest $request
+    ): RedirectResponse {
+        $this->tenantService->registerTenant(
+            $request->validated()
+        );
 
-        return Inertia::render('Tenant/Auth/RegisterSuccess', [
-            'tenant' => $result['tenant'],
-            'user' => $result['user'],
-        ]);
+        return redirect()
+            ->route('login')
+            ->with(
+                'success',
+                'Registrasi berhasil. Silakan login menggunakan akun admin Anda.'
+            );
     }
 
     public function showLoginForm($tenant_slug): Response
@@ -112,7 +117,7 @@ class AuthController extends Controller
 
         $tenant = Tenant::where(function ($q) use ($inputTenant) {
             $q->where('slug', strtolower($inputTenant))
-              ->orWhere('name', 'ILIKE', "%{$inputTenant}%"); // ILIKE untuk PostgreSQL
+                ->orWhere('name', 'ILIKE', "%{$inputTenant}%"); // ILIKE untuk PostgreSQL
         })->first();
 
         if (!$tenant) {
@@ -236,7 +241,7 @@ class AuthController extends Controller
 
         return $status === Password::PASSWORD_RESET
             ? redirect()->route('tenant.login', ['tenant_slug' => $tenant->slug])
-                ->with('status', __($status))
+            ->with('status', __($status))
             : back()->withErrors(['email' => __($status)]);
     }
 }
