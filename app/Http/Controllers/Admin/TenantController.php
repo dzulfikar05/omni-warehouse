@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Contracts\TenantContract;
 use App\Http\Controllers\Controller;
-use App\HttpRequests\Web\TenantRequest;
+use App\Http\Requests\Web\TenantRequest;
 use App\Jobs\ExportTenantExcelJob;
 use App\Jobs\ExportTenantPdfJob;
 use App\Models\ExportLog;
