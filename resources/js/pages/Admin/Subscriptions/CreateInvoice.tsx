@@ -44,7 +44,7 @@ export default function CreateInvoice({ tenants, plans }: Props) {
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        post('/admin/subscriptions/invoices');
+        post('/subscriptions/invoices');
     };
 
     return (
@@ -57,7 +57,7 @@ export default function CreateInvoice({ tenants, plans }: Props) {
                     description={t("Issue custom or plan-based billing invoices directly to a tenant.")}
                     renderAction={
                         <Button asChild variant="outline" size="sm" className="h-9 gap-1.5 border-border text-xs">
-                            <Link href="/admin/subscriptions">
+                            <Link href="/subscriptions">
                                 <ArrowLeft className="h-4 w-4" /> {t("Back")}</Link>
                         </Button>
                     }
@@ -178,7 +178,7 @@ export default function CreateInvoice({ tenants, plans }: Props) {
 CreateInvoice.layout = {
     breadcrumbs: [
         { title: "Admin", href: '#' },
-        { title: "Subscriptions Management", href: '/admin/subscriptions' },
+        { title: "Subscriptions Management", href: '/subscriptions' },
         { title: "Create Invoice", href: '#' },
     ],
 };
