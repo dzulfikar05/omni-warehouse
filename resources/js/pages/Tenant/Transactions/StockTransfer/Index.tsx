@@ -1,313 +1,252 @@
-import React, { useState } from 'react';
 import { Head, usePage } from '@inertiajs/react';
+import { CheckCircle2, Clock, Layers, PackageCheck, Plus } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import {
-    ArrowRightLeft,
-    CheckCircle2,
-    Clock,
-    Layers,
-    PackageCheck,
-    Plus,
-    Search,
-    Warehouse as WarehouseIcon,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { PageHeader } from '@/components/page-header';
+import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/context/language-context';
+import type {
+    LocationOption,
+    SkuOption,
+    StockTransferItem,
+    StockTransferSummary,
+    WarehouseOption,
+} from '@/types/stock_transfer';
 import { usePermission } from '@/utils/permission';
-import type { LocationOption, SkuOption, StockTransferItem, StockTransferSummary, WarehouseOption } from '@/types/stock_transfer';
+import {
+    TransactionFilterBar,
+    transactionStatusLabel,
+} from '../components/TransactionFilterBar';
+import type { TransactionFilters } from '../components/TransactionFilterBar';
+import { TransactionPagination } from '../components/TransactionPagination';
 import { CreateTransferModal } from './components/CreateTransferModal';
+
+interface TransferPage {
+    data: StockTransferItem[];
+    current_page: number;
+    last_page: number;
+    total: number;
+}
 
 interface StockTransferIndexProps {
     tenant_slug: string;
-    transfers?: StockTransferItem[];
-    warehouses?: WarehouseOption[];
-    locations?: LocationOption[];
-    skus?: SkuOption[];
-    summary?: StockTransferSummary;
+    transfers: TransferPage;
+    warehouses: WarehouseOption[];
+    locations: LocationOption[];
+    skus: SkuOption[];
+    summary: StockTransferSummary;
+    statuses: string[];
+    filters: Partial<TransactionFilters>;
 }
 
 export default function StockTransferIndex({
-    transfers: initialTransfers = [],
-    warehouses = [],
-    locations = [],
-    skus = [],
-    summary: initialSummary,
+    tenant_slug,
+    transfers,
+    warehouses,
+    locations,
+    skus,
+    summary,
+    statuses,
+    filters,
 }: StockTransferIndexProps) {
     const { t } = useTranslation();
     const { current_tenant, auth, flash } = usePage().props as any;
     const { can } = usePermission();
-    const [transfers, setTransfers] = React.useState<StockTransferItem[]>(initialTransfers);
-    const [searchQuery, setSearchQuery] = useState<string>('');
-    const [statusFilter, setStatusFilter] = useState<'ALL' | 'COMPLETED' | 'IN_TRANSIT'>('ALL');
-    const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const lastShownFlash = useRef<string | null>(null);
+    const currentPathSlug =
+        typeof window !== 'undefined'
+            ? window.location.pathname.split('/')[1]
+            : tenant_slug;
+    const tenantSlug =
+        current_tenant?.slug ||
+        auth?.user?.tenant?.slug ||
+        tenant_slug ||
+        currentPathSlug;
+    const route = `/${tenantSlug}/transactions/stock-transfer`;
 
-    React.useEffect(() => {
-        setTransfers(initialTransfers);
-    }, [initialTransfers]);
-
-    React.useEffect(() => {
-        if (flash?.success) {
-            toast.success('Berhasil', { description: flash.success });
+    useEffect(() => {
+        if (flash?.success && lastShownFlash.current !== flash.success) {
+            toast.success(t('toast_success'), { description: flash.success });
+            lastShownFlash.current = flash.success;
         }
-        if (flash?.error) {
-            toast.error('Gagal', { description: flash.error });
+
+        if (flash?.error && lastShownFlash.current !== flash.error) {
+            toast.error(t('toast_error'), { description: flash.error });
+            lastShownFlash.current = flash.error;
         }
-    }, [flash]);
+    }, [flash?.error, flash?.success, t]);
 
-    const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : 'demo-tenant';
-    const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
-
-    const activeTenantName =
-        current_tenant?.name ||
-        auth?.user?.tenant_name ||
-        auth?.user?.tenant?.name ||
-        'Tenant Portal';
-
-    const filteredTransfers = transfers.filter((item) => {
-        const matchesSearch =
-            item.transfer_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.sku_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.product_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.from_location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.to_location.toLowerCase().includes(searchQuery.toLowerCase());
-
-        if (statusFilter === 'ALL') return matchesSearch;
-        return matchesSearch && item.status === statusFilter;
-    });
-
-    const totalTransfers = transfers.length;
-    const inTransitCount = transfers.filter((t) => t.status === 'IN_TRANSIT').length;
-    const completedCount = transfers.filter((t) => t.status === 'COMPLETED').length;
-    const totalUnitsMoved = transfers.reduce((acc, curr) => acc + curr.quantity, 0);
+    const stats = [
+        {
+            label: 'stat_total_transactions',
+            value: summary.total_transfers,
+            icon: Layers,
+        },
+        {
+            label: 'stat_pending_transactions',
+            value: summary.in_transit,
+            icon: Clock,
+        },
+        {
+            label: 'stat_completed_transactions',
+            value: summary.completed,
+            icon: CheckCircle2,
+        },
+        {
+            label: 'stat_total_units',
+            value: summary.total_units_moved,
+            icon: PackageCheck,
+        },
+    ];
 
     return (
         <>
-            <Head title={t("Stock Transfer Management (Pemindahan Barang)")} />
-
-            <div className="space-y-6 p-4 sm:p-6">
+            <Head title={t('page_stock_transfer_transactions')} />
+            <main className="space-y-6 p-4 font-sans sm:p-6">
                 <PageHeader
-                    title={t("Stock Transfer Management")}
-                    description={t("Kelola relokasi stok internal, replenishment rak penyimpanan, dan mutasi barang antar lokasi gudang.")}
+                    title={t('page_stock_transfer_transactions')}
+                    description={t(
+                        'Kelola relokasi stok internal, replenishment rak penyimpanan, dan mutasi barang antar lokasi gudang.',
+                    )}
                     renderAction={
-                        <div className="flex items-center gap-2.5 flex-wrap">
-                            <div className="h-9 px-3 bg-muted/60 border border-border rounded-xl flex items-center gap-2 text-xs font-semibold text-foreground">
-                                <WarehouseIcon className="w-3.5 h-3.5 text-muted-foreground" />
-                                <span>{activeTenantName}</span>
-                            </div>
-
-                            {can('tenant.stock_transfer.create') && (
-                                <Button
-                                    onClick={() => setIsCreateModalOpen(true)}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-4 h-9 rounded-xl shadow-md gap-1.5 cursor-pointer"
-                                >
-                                    <Plus className="w-4 h-4" />
-                                    <span>{t("Buat Transfer Stok")}</span>
-                                </Button>
-                            )}
-                        </div>
+                        can('tenant.stock_transfer.create') ? (
+                            <Button
+                                onClick={() => setIsCreateModalOpen(true)}
+                                className="h-9 gap-2 bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+                            >
+                                <Plus className="size-4" />
+                                {t('Buat Transfer Stok')}
+                            </Button>
+                        ) : null
                     }
                 />
 
-                {/* Stat Widgets */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between h-32 text-card-foreground">
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-muted-foreground">
-                                {t("Total Transfer Sesi")}</span>
-                            <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                                <Layers className="w-4 h-4" />
+                <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    {stats.map(({ label, value, icon: Icon }) => (
+                        <article
+                            key={label}
+                            className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-sm"
+                        >
+                            <div>
+                                <p className="text-xs font-medium text-muted-foreground">
+                                    {t(label)}
+                                </p>
+                                <p className="mt-1 text-2xl font-bold tracking-tight text-foreground">
+                                    {value.toLocaleString()}
+                                </p>
                             </div>
-                        </div>
-                        <div>
-                            <div className="text-3xl font-bold text-foreground tracking-tight">
-                                {totalTransfers}{' '}
-                                <span className="text-xs font-normal text-muted-foreground">{t("Mutasi")}</span>
+                            <div className="rounded-xl bg-muted p-3 text-primary">
+                                <Icon className="size-5" />
                             </div>
-                            <div className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1">
-                                {t("Sesi relokasi stok terdaftar")}</div>
-                        </div>
-                    </div>
+                        </article>
+                    ))}
+                </section>
 
-                    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between h-32 text-card-foreground">
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-muted-foreground">
-                                {t("Dalam Perjalanan (In Transit)")}</span>
-                            <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-                                <Clock className="w-4 h-4" />
-                            </div>
-                        </div>
-                        <div>
-                            <div className="text-3xl font-bold text-foreground tracking-tight">
-                                {inTransitCount}{' '}
-                                <span className="text-xs font-normal text-muted-foreground">{t("Proses")}</span>
-                            </div>
-                            <div className="text-xs text-amber-600 dark:text-amber-400 font-medium mt-1">
-                                {t("Sedang dipindahkan antar rak")}</div>
-                        </div>
-                    </div>
+                <TransactionFilterBar
+                    route={route}
+                    kind="stock-transfer"
+                    filters={filters}
+                    statuses={statuses}
+                    warehouses={warehouses}
+                />
 
-                    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between h-32 text-card-foreground">
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-muted-foreground">
-                                {t("Selesai (Completed)")}</span>
-                            <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                                <CheckCircle2 className="w-4 h-4" />
-                            </div>
-                        </div>
-                        <div>
-                            <div className="text-3xl font-bold text-foreground tracking-tight">
-                                {completedCount}{' '}
-                                <span className="text-xs font-normal text-muted-foreground">{t("Selesai")}</span>
-                            </div>
-                            <div className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1">
-                                {t("Stok aman di lokasi tujuan")}</div>
-                        </div>
-                    </div>
-
-                    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between h-32 text-card-foreground">
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-muted-foreground">
-                                {t("Total Unit Dipindahkan")}</span>
-                            <div className="w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-                                <PackageCheck className="w-4 h-4" />
-                            </div>
-                        </div>
-                        <div>
-                            <div className="text-3xl font-bold text-foreground tracking-tight">
-                                {totalUnitsMoved}{' '}
-                                <span className="text-xs font-normal text-muted-foreground">{t("Pcs")}</span>
-                            </div>
-                            <div className="text-xs text-purple-600 dark:text-purple-400 font-medium mt-1">
-                                {t("Akumulasi unit terelokasi")}</div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Main Filter & Table Card */}
-                <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden text-card-foreground">
-                    <div className="p-5 border-b border-border flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div className="relative w-full sm:w-80">
-                            <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
-                            <Input
-                                type="text"
-                                placeholder={t("Cari Kode Transfer, SKU, Lokasi...")}
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-9 bg-muted/50 border-input text-xs"
-                            />
-                        </div>
-
-                        <div className="flex items-center gap-1.5 p-1 bg-muted/40 rounded-xl border border-border w-full sm:w-auto">
-                            <button
-                                type="button"
-                                onClick={() => setStatusFilter('ALL')}
-                                className={`px-3 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-all ${
-                                    statusFilter === 'ALL'
-                                        ? 'bg-card text-foreground shadow-xs'
-                                        : 'text-muted-foreground hover:text-foreground'
-                                }`}
-                            >
-                                {t("Semua (")}{transfers.length}{t(")")}</button>
-                            <button
-                                type="button"
-                                onClick={() => setStatusFilter('IN_TRANSIT')}
-                                className={`px-3 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-all ${
-                                    statusFilter === 'IN_TRANSIT'
-                                        ? 'bg-card text-foreground shadow-xs'
-                                        : 'text-muted-foreground hover:text-foreground'
-                                }`}
-                            >
-                                {t("In Transit (")}{inTransitCount}{t(")")}</button>
-                            <button
-                                type="button"
-                                onClick={() => setStatusFilter('COMPLETED')}
-                                className={`px-3 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-all ${
-                                    statusFilter === 'COMPLETED'
-                                        ? 'bg-card text-foreground shadow-xs'
-                                        : 'text-muted-foreground hover:text-foreground'
-                                }`}
-                            >
-                                {t("Completed (")}{completedCount}{t(")")}</button>
-                        </div>
-                    </div>
-
-                    {/* Table View */}
+                <section className="overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-sm">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs border-collapse">
-                            <thead>
-                                <tr className="border-b border-border bg-muted/40 text-muted-foreground font-semibold uppercase tracking-wider">
-                                    <th className="py-3.5 px-5">{"Kode Transfer"}</th>
-                                    <th className="py-3.5 px-5">{"Produk / SKU"}</th>
-                                    <th className="py-3.5 px-5">{"Lokasi Asal (Origin)"}</th>
-                                    <th className="py-3.5 px-5">{"Lokasi Tujuan (Dest)"}</th>
-                                    <th className="py-3.5 px-5 text-center">{"Qty"}</th>
-                                    <th className="py-3.5 px-5">{"Status"}</th>
-                                    <th className="py-3.5 px-5">{"Operator"}</th>
-                                    <th className="py-3.5 px-5 text-right">{"Tanggal"}</th>
+                        <table className="w-full border-collapse text-left text-sm">
+                            <thead className="border-b border-border bg-muted/40 text-xs font-semibold text-muted-foreground">
+                                <tr>
+                                    <th className="px-5 py-3.5 whitespace-nowrap">
+                                        {t('table_reference')}
+                                    </th>
+                                    <th className="px-5 py-3.5 whitespace-nowrap">
+                                        {t('table_item_summary')}
+                                    </th>
+                                    <th className="px-5 py-3.5 whitespace-nowrap">
+                                        {t('filter_warehouse_origin')}
+                                    </th>
+                                    <th className="px-5 py-3.5 whitespace-nowrap">
+                                        {t('filter_warehouse_destination')}
+                                    </th>
+                                    <th className="px-5 py-3.5 whitespace-nowrap">
+                                        {t('table_status')}
+                                    </th>
+                                    <th className="px-5 py-3.5 whitespace-nowrap">
+                                        {t('table_created_at')}
+                                    </th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-border/60">
-                                {filteredTransfers.length > 0 ? (
-                                    filteredTransfers.map((item) => (
-                                        <tr key={item.id} className="hover:bg-muted/30 transition-colors">
-                                            <td className="py-4 px-5 font-mono font-semibold text-primary">
-                                                {item.transfer_code}
+                            <tbody className="divide-y divide-border">
+                                {transfers.data.length ? (
+                                    transfers.data.map((transfer) => (
+                                        <tr
+                                            key={transfer.id}
+                                            className="transition-colors hover:bg-muted/30"
+                                        >
+                                            <td className="px-5 py-4 font-mono text-xs font-semibold text-primary">
+                                                {transfer.transfer_code}
                                             </td>
-                                            <td className="py-4 px-5">
-                                                <div>
-                                                    <p className="font-semibold text-foreground text-xs">{item.product_name}</p>
-                                                    <p className="text-[11px] text-muted-foreground font-mono">{item.sku_code}</p>
-                                                </div>
+                                            <td className="px-5 py-4">
+                                                <p className="text-sm font-medium text-foreground">
+                                                    {transfer.product_name}
+                                                </p>
+                                                <p className="mt-0.5 font-mono text-xs text-muted-foreground">
+                                                    {transfer.sku_code} ·{' '}
+                                                    {t('table_quantity')}{' '}
+                                                    {transfer.quantity}
+                                                </p>
                                             </td>
-                                            <td className="py-4 px-5">
-                                                <div>
-                                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                                                        {item.from_location}
-                                                    </span>
-                                                    <p className="text-[11px] text-muted-foreground mt-0.5">{item.from_warehouse}</p>
-                                                </div>
+                                            <td className="px-5 py-4">
+                                                <p className="text-sm font-medium text-foreground">
+                                                    {transfer.from_warehouse}
+                                                </p>
+                                                <p className="mt-0.5 text-xs text-muted-foreground">
+                                                    {transfer.from_location}
+                                                </p>
                                             </td>
-                                            <td className="py-4 px-5">
-                                                <div>
-                                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
-                                                        {item.to_location}
-                                                    </span>
-                                                    <p className="text-[11px] text-muted-foreground mt-0.5">{item.to_warehouse}</p>
-                                                </div>
+                                            <td className="px-5 py-4">
+                                                <p className="text-sm font-medium text-foreground">
+                                                    {transfer.to_warehouse}
+                                                </p>
+                                                <p className="mt-0.5 text-xs text-muted-foreground">
+                                                    {transfer.to_location}
+                                                </p>
                                             </td>
-                                            <td className="py-4 px-5 text-center font-bold text-foreground text-sm">
-                                                {item.quantity}
+                                            <td className="px-5 py-4">
+                                                <span className="inline-flex rounded-lg border border-border bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
+                                                    {transactionStatusLabel(
+                                                        transfer.status,
+                                                        t,
+                                                    )}
+                                                </span>
                                             </td>
-                                            <td className="py-4 px-5">
-                                                {item.status === 'COMPLETED' ? (
-                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                                                        {t("Completed")}</span>
-                                                ) : (
-                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                                                        {t("In Transit")}</span>
-                                                )}
-                                            </td>
-                                            <td className="py-4 px-5 text-muted-foreground font-medium">{item.created_by}</td>
-                                            <td className="py-4 px-5 text-right text-muted-foreground font-mono text-[11px]">
-                                                {item.created_at}
+                                            <td className="px-5 py-4 text-xs whitespace-nowrap text-muted-foreground">
+                                                {transfer.created_at}
                                             </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan={8} className="text-center py-12 text-muted-foreground">
-                                            {t("Tidak ada transaksi transfer stok yang ditemukan.")}</td>
+                                        <td
+                                            colSpan={6}
+                                            className="px-5 py-14 text-center text-sm text-muted-foreground"
+                                        >
+                                            {t('empty_transfer_transactions')}
+                                        </td>
                                     </tr>
                                 )}
                             </tbody>
                         </table>
                     </div>
-                </div>
-            </div>
-
-            {/* Modal Create */}
+                    <TransactionPagination
+                        route={route}
+                        filters={filters}
+                        currentPage={transfers.current_page}
+                        lastPage={transfers.last_page}
+                        total={transfers.total}
+                    />
+                </section>
+            </main>
             <CreateTransferModal
                 isOpen={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}

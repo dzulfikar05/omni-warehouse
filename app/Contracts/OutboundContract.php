@@ -4,7 +4,7 @@ namespace App\Contracts;
 
 interface OutboundContract
 {
-    public function getOutboundManifestsList(string $tenant_slug): array;
+    public function getOutboundManifestsList(string $tenant_slug, array $filters = []): array;
 
     public function getManifestDetail(string $tenant_slug, string $manifest_code): array;
 

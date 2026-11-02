@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { ChevronDown, PauseCircle, X } from 'lucide-react';import { useTranslation } from '@/context/language-context';
+import { PauseCircle, X } from 'lucide-react';
+import { useTranslation } from '@/context/language-context';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 interface HoldSessionModalProps {
@@ -26,8 +28,8 @@ export const HoldSessionModal: React.FC<HoldSessionModalProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 font-sans">
-            <div className="bg-card text-card-foreground border border-border rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 font-sans">
+            <div className="bg-card text-card-foreground border border-border rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
                 <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-muted/40">
                     <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                         <PauseCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
@@ -42,23 +44,25 @@ export const HoldSessionModal: React.FC<HoldSessionModalProps> = ({
                         {t("Pilih alasan penundaan sesi receiving. Data scan sementara akan dibekukan tanpa memotong kuota PO.")}</p>
                     <div className="flex flex-col gap-1.5">
                         <label className="font-semibold text-foreground">{t("Alasan Penundaan")}</label>
-                        <div className="relative">
-                            <select
-                                value={reason}
-                                onChange={(e) => setReason(e.target.value)}
-                                className="w-full h-9 pl-3 pr-8 bg-muted/50 border border-input rounded-lg text-foreground outline-none cursor-pointer appearance-none"
-                            >
-                                <option value="Pergantian Shift Operator (Shift 1 ke Shift 2)">
-                                    {t("Pergantian Shift Operator (Shift 1 ke Shift 2)")}</option>
-                                <option value="Forklift Stacker mengalami kendala teknis">
-                                    {t("Forklift Stacker mengalami kendala teknis")}</option>
-                                <option value="Hujan lebat di area Loading Dock (Bongkar basah)">
-                                    {t("Hujan lebat di area Loading Dock (Bongkar basah)")}</option>
-                                <option value="Selisih fisik masif butuh konfirmasi Supplier">
-                                    {t("Selisih fisik masif butuh konfirmasi Supplier")}</option>
-                            </select>
-                            <ChevronDown className="w-3.5 h-3.5 text-muted-foreground absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                        </div>
+                        <Select value={reason} onValueChange={setReason}>
+                            <SelectTrigger className="h-9 w-full bg-background text-foreground">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="Pergantian Shift Operator (Shift 1 ke Shift 2)">
+                                    {t("Pergantian Shift Operator (Shift 1 ke Shift 2)")}
+                                </SelectItem>
+                                <SelectItem value="Forklift Stacker mengalami kendala teknis">
+                                    {t("Forklift Stacker mengalami kendala teknis")}
+                                </SelectItem>
+                                <SelectItem value="Hujan lebat di area Loading Dock (Bongkar basah)">
+                                    {t("Hujan lebat di area Loading Dock (Bongkar basah)")}
+                                </SelectItem>
+                                <SelectItem value="Selisih fisik masif butuh konfirmasi Supplier">
+                                    {t("Selisih fisik masif butuh konfirmasi Supplier")}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                 </div>
                 <div className="p-4 bg-muted/40 border-t border-border flex items-center justify-end gap-2">

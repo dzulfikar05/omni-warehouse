@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 
 class StockTransferService implements StockTransferContract
 {
-    public function getTransferLogsList(string $tenant_slug): array
+    public function getTransferLogsList(string $tenant_slug, array $filters = []): array
     {
         $tenant = Tenant::where('slug', $tenant_slug)->first();
 
@@ -20,6 +20,7 @@ class StockTransferService implements StockTransferContract
                 'warehouses' => [],
                 'locations' => [],
                 'skus' => [],
+                'statuses' => [],
                 'summary' => [
                     'total_transfers' => 0,
                     'in_transit' => 0,
@@ -92,19 +93,113 @@ class StockTransferService implements StockTransferContract
             })
             ->toArray();
 
-        // 4. Fetch Stock Transfer Transactions
-        $transactions = DB::table('transactions')
+        $statuses = DB::table('transactions')
+            ->where('tenant_id', $tenant->id)
+            ->where('transaction_type', 'TRANSFER')
+            ->whereNotNull('status')
+            ->distinct()
+            ->orderBy('status')
+            ->pluck('status')
+            ->map(fn ($status) => strtoupper($status))
+            ->values()
+            ->toArray();
+
+        $summary = DB::table('transactions')
             ->join('transaction_items', 'transactions.id', '=', 'transaction_items.transaction_id')
-            ->leftJoin('skus', 'transaction_items.sku_id', '=', 'skus.id')
-            ->leftJoin('products', 'skus.product_id', '=', 'products.id')
-            ->leftJoin('locations as from_loc', 'transaction_items.from_location_id', '=', 'from_loc.id')
-            ->leftJoin('warehouses as from_wh', 'from_loc.warehouse_id', '=', 'from_wh.id')
-            ->leftJoin('locations as to_loc', 'transaction_items.to_location_id', '=', 'to_loc.id')
-            ->leftJoin('warehouses as to_wh', 'to_loc.warehouse_id', '=', 'to_wh.id')
-            ->leftJoin('users', 'transactions.user_id', '=', 'users.id')
             ->where('transactions.tenant_id', $tenant->id)
             ->where('transactions.transaction_type', 'TRANSFER')
-            ->select(
+            ->selectRaw("
+                COUNT(*) as total_transfers,
+                SUM(CASE WHEN UPPER(transactions.status) IN ('IN_TRANSIT', 'PENDING') THEN 1 ELSE 0 END) as in_transit,
+                SUM(CASE WHEN UPPER(transactions.status) IN ('COMPLETED', 'SUCCESS') THEN 1 ELSE 0 END) as completed,
+                COALESCE(SUM(transaction_items.quantity), 0) as total_units_moved
+            ")
+            ->first();
+
+        // 4. Fetch Stock Transfer Transactions
+        $query = DB::table('transactions')
+            ->join('transaction_items', 'transactions.id', '=', 'transaction_items.transaction_id')
+            ->leftJoin('skus', 'transaction_items.sku_id', '=', 'skus.id')
+            ->leftJoin('products', function ($join) use ($tenant) {
+                $join->on('skus.product_id', '=', 'products.id')
+                    ->where('products.tenant_id', $tenant->id);
+            })
+            ->leftJoin('locations as from_loc', 'transaction_items.from_location_id', '=', 'from_loc.id')
+            ->leftJoin('warehouses as from_wh', function ($join) use ($tenant) {
+                $join->on('from_loc.warehouse_id', '=', 'from_wh.id')
+                    ->where('from_wh.tenant_id', $tenant->id);
+            })
+            ->leftJoin('locations as to_loc', 'transaction_items.to_location_id', '=', 'to_loc.id')
+            ->leftJoin('warehouses as to_wh', function ($join) use ($tenant) {
+                $join->on('to_loc.warehouse_id', '=', 'to_wh.id')
+                    ->where('to_wh.tenant_id', $tenant->id);
+            })
+            ->leftJoin('users', function ($join) use ($tenant) {
+                $join->on('transactions.user_id', '=', 'users.id')
+                    ->where('users.tenant_id', $tenant->id);
+            })
+            ->where('transactions.tenant_id', $tenant->id)
+            ->where('transactions.transaction_type', 'TRANSFER')
+            ->whereExists(function ($locationsQuery) use ($tenant) {
+                $locationsQuery->selectRaw('1')
+                    ->from('locations as source_locations')
+                    ->join('warehouses as source_warehouses', 'source_locations.warehouse_id', '=', 'source_warehouses.id')
+                    ->whereColumn('source_locations.id', 'transaction_items.from_location_id')
+                    ->where('source_warehouses.tenant_id', $tenant->id);
+            })
+            ->whereExists(function ($locationsQuery) use ($tenant) {
+                $locationsQuery->selectRaw('1')
+                    ->from('locations as destination_locations')
+                    ->join('warehouses as destination_warehouses', 'destination_locations.warehouse_id', '=', 'destination_warehouses.id')
+                    ->whereColumn('destination_locations.id', 'transaction_items.to_location_id')
+                    ->where('destination_warehouses.tenant_id', $tenant->id);
+            })
+            ->whereExists(function ($skuQuery) use ($tenant) {
+                $skuQuery->selectRaw('1')
+                    ->from('skus as transfer_skus')
+                    ->join('products as transfer_products', 'transfer_skus.product_id', '=', 'transfer_products.id')
+                    ->whereColumn('transfer_skus.id', 'transaction_items.sku_id')
+                    ->where('transfer_products.tenant_id', $tenant->id);
+            });
+
+        if (isset($filters['search']) && $filters['search'] !== '') {
+            $search = trim($filters['search']);
+            $referenceSearch = preg_replace('/^TRF-/i', '', $search);
+            $query->where(function ($searchQuery) use ($search, $referenceSearch) {
+                $searchQuery
+                    ->where('transactions.local_uuid', 'like', "%{$search}%");
+
+                if ($referenceSearch !== '') {
+                    $searchQuery->orWhereRaw(
+                        'UPPER(SUBSTR(transactions.local_uuid, 1, 8)) LIKE ?',
+                        ['%' . strtoupper($referenceSearch) . '%']
+                    );
+                }
+
+                $searchQuery
+                    ->orWhere('skus.sku_code', 'like', "%{$search}%")
+                    ->orWhere('products.name', 'like', "%{$search}%")
+                    ->orWhere('from_loc.rack_code', 'like', "%{$search}%")
+                    ->orWhere('to_loc.rack_code', 'like', "%{$search}%");
+            });
+        }
+        if (! empty($filters['date_from'])) {
+            $query->whereDate('transactions.created_at', '>=', $filters['date_from']);
+        }
+        if (! empty($filters['date_to'])) {
+            $query->whereDate('transactions.created_at', '<=', $filters['date_to']);
+        }
+        if (! empty($filters['status'])) {
+            $query->whereRaw('UPPER(transactions.status) = ?', [strtoupper($filters['status'])]);
+        }
+        if (! empty($filters['from_warehouse_id'])) {
+            $query->where('from_loc.warehouse_id', $filters['from_warehouse_id']);
+        }
+        if (! empty($filters['to_warehouse_id'])) {
+            $query->where('to_loc.warehouse_id', $filters['to_warehouse_id']);
+        }
+
+        $transactions = $query->select(
                 'transactions.id',
                 'transactions.local_uuid as transfer_code',
                 'skus.sku_code',
@@ -119,8 +214,9 @@ class StockTransferService implements StockTransferContract
                 'users.name as created_by'
             )
             ->orderBy('transactions.created_at', 'desc')
-            ->get()
-            ->map(function ($item) {
+            ->paginate(10)
+            ->withQueryString()
+            ->through(function ($item) {
                 return [
                     'id' => $item->id,
                     'transfer_code' => 'TRF-' . strtoupper(substr($item->transfer_code, 0, 8)),
@@ -135,23 +231,19 @@ class StockTransferService implements StockTransferContract
                     'created_at' => \Carbon\Carbon::parse($item->created_at)->timezone('Asia/Jakarta')->format('Y-m-d H:i'),
                     'created_by' => $item->created_by ?? 'System User',
                 ];
-            })
-            ->toArray();
-
-        $inTransitCount = count(array_filter($transactions, fn ($t) => $t['status'] === 'IN_TRANSIT' || $t['status'] === 'PENDING'));
-        $completedCount = count(array_filter($transactions, fn ($t) => $t['status'] === 'COMPLETED' || $t['status'] === 'SUCCESS'));
-        $totalUnits = array_reduce($transactions, fn ($acc, $t) => $acc + $t['quantity'], 0);
+            });
 
         return [
             'transfers' => $transactions,
             'warehouses' => $warehouses,
             'locations' => $locations,
             'skus' => $skus,
+            'statuses' => $statuses,
             'summary' => [
-                'total_transfers' => count($transactions),
-                'in_transit' => $inTransitCount,
-                'completed' => $completedCount,
-                'total_units_moved' => $totalUnits,
+                'total_transfers' => (int) ($summary->total_transfers ?? 0),
+                'in_transit' => (int) ($summary->in_transit ?? 0),
+                'completed' => (int) ($summary->completed ?? 0),
+                'total_units_moved' => (int) ($summary->total_units_moved ?? 0),
             ],
         ];
     }

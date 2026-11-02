@@ -3,7 +3,6 @@ import { router, usePage } from '@inertiajs/react';
 import { toast } from 'sonner';
 import {
     Building2,
-    ChevronDown,
     PackageCheck,
     Plus,
     Trash2,
@@ -11,7 +10,9 @@ import {
     User,
     Users,
     X,
-} from 'lucide-react';import { useTranslation } from '@/context/language-context';
+} from 'lucide-react';
+import { useTranslation } from '@/context/language-context';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 interface CreateShippingModalProps {
@@ -168,8 +169,8 @@ export const CreateShippingModal: React.FC<CreateShippingModalProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 font-sans animate-in fade-in duration-200">
-            <div className="bg-card text-card-foreground border border-border rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 font-sans animate-in fade-in duration-200">
+            <div className="bg-card text-card-foreground border border-border rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
                 {/* Modal Header */}
                 <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-muted/40">
                     <div className="flex items-center gap-3">
@@ -201,34 +202,30 @@ export const CreateShippingModal: React.FC<CreateShippingModalProps> = ({
                                 <span>{t("Pilih Dokumen SO")}</span>
                                 <span className="text-[10px] bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">{t("Auto-Load")}</span>
                             </label>
-                            <div className="relative">
-                                <select
-                                    value={soReference}
-                                    onChange={(e) => handleSoChange(e.target.value)}
-                                    className="w-full h-9 pl-3 pr-8 bg-muted/50 hover:bg-muted border border-input rounded-lg text-foreground font-mono font-bold outline-none cursor-pointer appearance-none"
-                                >
-                                    <option value="SO-2026-001">{t("SO-2026-001 (Toko Rejeki)")}</option>
-                                    <option value="SO-2026-002">{t("SO-2026-002 (Kedai Cap Enak)")}</option>
-                                    <option value="SO-2026-003">{t("SO-2026-003 (CV Gemilang)")}</option>
-                                </select>
-                                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                            </div>
+                            <Select value={soReference} onValueChange={handleSoChange}>
+                                <SelectTrigger className="h-9 w-full bg-background text-foreground font-mono font-bold">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="SO-2026-001">{t("SO-2026-001 (Toko Rejeki)")}</SelectItem>
+                                    <SelectItem value="SO-2026-002">{t("SO-2026-002 (Kedai Cap Enak)")}</SelectItem>
+                                    <SelectItem value="SO-2026-003">{t("SO-2026-003 (CV Gemilang)")}</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
 
                         <div className="flex flex-col gap-1.5">
                             <label className="font-semibold text-foreground">{t("Pintu Shipping Dock")}</label>
-                            <div className="relative">
-                                <select
-                                    value={dockBay}
-                                    onChange={(e) => setDockBay(e.target.value)}
-                                    className="w-full h-9 pl-3 pr-8 bg-muted/50 hover:bg-muted border border-input rounded-lg text-foreground font-mono font-bold outline-none cursor-pointer appearance-none"
-                                >
-                                    <option value="DOCK-OUT-01">{t("Pintu Depan / DOCK-01 (Default)")}</option>
-                                    <option value="DOCK-OUT-02">{t("DOCK-OUT-02 (Zona Container 20FT)")}</option>
-                                    <option value="DOCK-OUT-03">{t("DOCK-OUT-03 (Zona Truck Wingbox)")}</option>
-                                </select>
-                                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                            </div>
+                            <Select value={dockBay} onValueChange={setDockBay}>
+                                <SelectTrigger className="h-9 w-full bg-background text-foreground font-mono font-bold">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="DOCK-OUT-01">{t("Pintu Depan / DOCK-01 (Default)")}</SelectItem>
+                                    <SelectItem value="DOCK-OUT-02">{t("DOCK-OUT-02 (Zona Container 20FT)")}</SelectItem>
+                                    <SelectItem value="DOCK-OUT-03">{t("DOCK-OUT-03 (Zona Truck Wingbox)")}</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
 
@@ -269,17 +266,21 @@ export const CreateShippingModal: React.FC<CreateShippingModalProps> = ({
                                 <div key={item.id} className="grid grid-cols-12 gap-2 items-center bg-card border border-border p-2 rounded-lg shadow-2xs">
                                     {/* SKU Selector */}
                                     <div className="col-span-4">
-                                        <select
+                                        <Select
                                             value={item.sku}
-                                            onChange={(e) => handleSelectSkuForBonusRow(item.id, e.target.value)}
-                                            className="w-full h-7 px-1.5 bg-background border border-input rounded text-mono font-bold text-[11px] text-foreground cursor-pointer"
+                                            onValueChange={(value) => handleSelectSkuForBonusRow(item.id, value)}
                                         >
-                                            {MASTER_SKUS.map((m) => (
-                                                <option key={m.sku} value={m.sku}>
-                                                    {m.sku}
-                                                </option>
-                                            ))}
-                                        </select>
+                                            <SelectTrigger size="sm" className="h-8 w-full bg-background text-foreground font-mono font-bold text-[11px]">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {MASTER_SKUS.map((m) => (
+                                                    <SelectItem key={m.sku} value={m.sku}>
+                                                        {m.sku}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
                                     </div>
                                     {/* Product Name Display */}
                                     <div className="col-span-5">
@@ -316,7 +317,7 @@ export const CreateShippingModal: React.FC<CreateShippingModalProps> = ({
                     </div>
 
                     {/* Armada Grid */}
-                    <div className="grid grid-cols-2 gap-3">
+                    {/* <div className="grid grid-cols-2 gap-3">
                         <div className="flex flex-col gap-1.5">
                             <label className="font-semibold text-foreground">{t("No. Polisi Armada")}</label>
                             <div className="relative">
@@ -341,10 +342,10 @@ export const CreateShippingModal: React.FC<CreateShippingModalProps> = ({
                                 className="w-full h-9 px-3 bg-muted/50 hover:bg-card focus:bg-card border border-input focus:border-blue-600 rounded-lg text-foreground font-medium outline-none transition-all"
                             />
                         </div>
-                    </div>
+                    </div> */}
 
                     {/* Driver Grid */}
-                    <div className="grid grid-cols-2 gap-3">
+                    {/* <div className="grid grid-cols-2 gap-3">
                         <div className="flex flex-col gap-1.5">
                             <label className="font-semibold text-foreground">{t("Nama Kurir / Driver")}</label>
                             <div className="relative">
@@ -369,7 +370,7 @@ export const CreateShippingModal: React.FC<CreateShippingModalProps> = ({
                                 className="w-full h-9 px-3 bg-muted/50 hover:bg-card focus:bg-card border border-input focus:border-blue-600 rounded-lg text-foreground font-mono outline-none transition-all"
                             />
                         </div>
-                    </div>
+                    </div> */}
 
                     {/* Footer Actions */}
                     <div className="pt-3 border-t border-border flex items-center justify-end gap-2.5">
@@ -392,4 +393,3 @@ export const CreateShippingModal: React.FC<CreateShippingModalProps> = ({
         </div>
     );
 };
-
