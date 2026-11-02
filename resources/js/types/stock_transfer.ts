@@ -8,7 +8,7 @@ export interface StockTransferItem {
     to_warehouse: string;
     to_location: string;
     quantity: number;
-    status: 'COMPLETED' | 'IN_TRANSIT' | 'DRAFT';
+    status: string;
     created_at: string;
     created_by: string;
     notes?: string;

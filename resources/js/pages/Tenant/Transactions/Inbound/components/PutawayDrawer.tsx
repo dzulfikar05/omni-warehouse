@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { AlertCircle, ChevronDown, Save, X } from 'lucide-react';
+import { AlertCircle, Save, X } from 'lucide-react';
 import { useTranslation } from '@/context/language-context';
 import type { InboundItem } from '@/types/inbound';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface PutawayDrawerProps {
     isOpen: boolean;
@@ -42,7 +43,7 @@ export const PutawayDrawer: React.FC<PutawayDrawerProps> = ({
         <>
             {/* Backdrop */}
             <div
-                className="fixed inset-0 z-50 bg-stone-900/40 backdrop-blur-xs transition-opacity duration-200"
+                className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs transition-opacity duration-200"
                 onClick={onClose}
             />
 
@@ -132,20 +133,18 @@ export const PutawayDrawer: React.FC<PutawayDrawerProps> = ({
                     <div className="flex flex-col gap-1.5">
                         <label className="font-semibold text-foreground">
                             {t("Rekomendasi Rak Penyimpanan (Putaway Location)")}</label>
-                        <div className="relative">
-                            <select
-                                value={selectedRack}
-                                onChange={(e) => setSelectedRack(e.target.value)}
-                                className="w-full h-9 pl-3 pr-8 bg-muted/50 hover:bg-muted focus:bg-card border border-input focus:border-blue-600 rounded-lg text-foreground outline-none transition-all cursor-pointer font-mono font-medium appearance-none"
-                            >
-                                <option value="A-02-04">{t("A-02-04 (Zona Fast-Moving • Kapasitas 300 Unit)")}</option>
-                                <option value="A-02-05">{t("A-02-05 (Zona Fast-Moving • Kapasitas 200 Unit)")}</option>
-                                <option value="B-01-01">{t("B-01-01 (Zona Fast-Moving • Kapasitas 150 Unit)")}</option>
-                                <option value="B-04-02">{t("B-04-02 (Zona Dry Storage • Kapasitas 200 Unit)")}</option>
-                                <option value="A-05-02">{t("A-05-02 (Zona Dry Storage • Kapasitas 120 Unit)")}</option>
-                            </select>
-                            <ChevronDown className="w-3.5 h-3.5 text-muted-foreground absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                        </div>
+                        <Select value={selectedRack} onValueChange={setSelectedRack}>
+                            <SelectTrigger className="h-9 w-full bg-background text-foreground font-mono font-medium">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="A-02-04">{t("A-02-04 (Zona Fast-Moving • Kapasitas 300 Unit)")}</SelectItem>
+                                <SelectItem value="A-02-05">{t("A-02-05 (Zona Fast-Moving • Kapasitas 200 Unit)")}</SelectItem>
+                                <SelectItem value="B-01-01">{t("B-01-01 (Zona Fast-Moving • Kapasitas 150 Unit)")}</SelectItem>
+                                <SelectItem value="B-04-02">{t("B-04-02 (Zona Dry Storage • Kapasitas 200 Unit)")}</SelectItem>
+                                <SelectItem value="A-05-02">{t("A-05-02 (Zona Dry Storage • Kapasitas 120 Unit)")}</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
 
                     {/* Quick Action: Buat Berita Acara Kerusakan (BAP) */}

@@ -40,7 +40,7 @@ export const PackingDrawer: React.FC<PackingDrawerProps> = ({
         <>
             {/* Backdrop */}
             <div
-                className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs transition-opacity duration-200"
+                className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs transition-opacity duration-200"
                 onClick={onClose}
             />
 

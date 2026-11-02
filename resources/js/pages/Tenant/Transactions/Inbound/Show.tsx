@@ -265,7 +265,7 @@ export default function Show({
                                     <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
                                     <span>{manifest.supplier_name}</span>
                                 </div>
-                                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-muted/60 border border-border font-medium text-foreground">
+                                {/* <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-muted/60 border border-border font-medium text-foreground">
                                     <Truck className="w-3.5 h-3.5 text-muted-foreground" />
                                     <span>
                                         {t("Armada:")}{' '}
@@ -283,13 +283,13 @@ export default function Show({
                                             {manifest.driver_name !== '-' && manifest.driver_name ? manifest.driver_name : t("Belum Ada")}
                                         </strong>
                                     </span>
-                                </div>
+                                </div> */}
                             </div>
                         </div>
 
                         {/* Topbar Actions */}
                         <div className="flex flex-wrap items-center gap-2.5">
-                            <div className="h-9 px-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center gap-2 text-xs font-semibold">
+                            {/* <div className="h-9 px-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center gap-2 text-xs font-semibold">
                                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                                 <span>{t("Mobile Operator Sync Ready")}</span>
                             </div>
@@ -297,7 +297,7 @@ export default function Show({
                             <div className="h-9 px-3 bg-muted/60 border border-border rounded-xl flex items-center gap-2 text-xs font-semibold text-foreground">
                                 <WarehouseIcon className="w-3.5 h-3.5 text-muted-foreground" />
                                 <span>{activeTenantName}</span>
-                            </div>
+                            </div> */}
 
                             <Button
                                 type="button"
