@@ -65,7 +65,7 @@ class ExportSubscriptionPdfJob implements ShouldQueue
 
             $subscriptions = $query->latest()->get();
 
-            $pdf = Pdf::loadView('exports.subscriptions_pdf', compact('subscriptions'))
+            $pdf = Pdf::loadView('pdf.subscriptions_pdf', compact('subscriptions'))
                 ->setPaper('a4', 'landscape');
 
             $fileName = 'exports/subscriptions/' . $log->filename;
