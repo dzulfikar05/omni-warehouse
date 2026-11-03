@@ -48,4 +48,9 @@ class Tenant extends Model implements HasMedia
     {
         return $this->hasMany(Warehouse::class);
     }
+
+    public function units()
+    {
+        return $this->hasMany(Unit::class);
+    }
 }

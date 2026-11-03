@@ -12,12 +12,19 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class CategoryService implements CategoryContract
 {
-    public function getPaginatedCategories(array $filters, int $perPage = 10): LengthAwarePaginator
-    {
-        $sortBy    = $filters['sort_by'] ?? 'created_at';
-        $sortOrder = strtolower($filters['sort_order'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
+    public function getPaginatedCategories(
+        array $filters,
+        int $perPage = 10
+    ): LengthAwarePaginator {
+        $tenant = app('current_tenant');
+
+        $sortBy = $filters['sort_by'] ?? 'created_at';
+        $sortOrder = strtolower($filters['sort_order'] ?? 'desc') === 'asc'
+            ? 'asc'
+            : 'desc';
 
         return Category::query()
+            ->where('tenant_id', $tenant->id)
             ->withCount('products')
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -28,12 +35,15 @@ class CategoryService implements CategoryContract
             })
             ->when($sortBy, function ($q) use ($sortBy, $sortOrder) {
                 match ($sortBy) {
-                    'id', 'name', 'desc', 'created_at' => $q->orderBy($sortBy, $sortOrder),
-                    'products_count'                   => $q->orderBy('products_count', $sortOrder),
-                    default                            => $q->orderBy('created_at', $sortOrder),
+                    'id', 'name', 'desc', 'created_at'
+                    => $q->orderBy($sortBy, $sortOrder),
+
+                    'products_count'
+                    => $q->orderBy('products_count', $sortOrder),
+
+                    default
+                    => $q->orderBy('created_at', $sortOrder),
                 };
-            }, function ($q) use ($sortOrder) {
-                $q->orderBy('created_at', $sortOrder);
             })
             ->paginate($perPage)
             ->withQueryString();
@@ -41,7 +51,10 @@ class CategoryService implements CategoryContract
 
     public function getCategoryStats(array $filters): array
     {
+        $tenant = app('current_tenant');
+
         $baseQuery = Category::query()
+            ->where('tenant_id', $tenant->id)
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -50,9 +63,17 @@ class CategoryService implements CategoryContract
             });
 
         return [
-            'total_categories'     => (clone $baseQuery)->count(),
-            'total_products_count' => (clone $baseQuery)->withCount('products')->get()->sum('products_count'),
-            'categories_with_desc' => (clone $baseQuery)->whereNotNull('desc')->where('desc', '!=', '')->count(),
+            'total_categories' => (clone $baseQuery)->count(),
+
+            'total_products_count' => (clone $baseQuery)
+                ->withCount('products')
+                ->get()
+                ->sum('products_count'),
+
+            'categories_with_desc' => (clone $baseQuery)
+                ->whereNotNull('desc')
+                ->where('desc', '!=', '')
+                ->count(),
         ];
     }
 
@@ -61,15 +82,17 @@ class CategoryService implements CategoryContract
         $tenant = app('current_tenant');
 
         return Category::create([
-            'tenant_id'  => $tenant?->id,
-            'name'       => $data['name'],
-            'desc'       => $data['desc'] ?? null,
+            'tenant_id' => $tenant->id,
+            'name' => $data['name'],
+            'desc' => $data['desc'] ?? null,
             'created_by' => auth()->id(),
         ]);
     }
 
-    public function updateCategory(Category $category, array $data): Category
-    {
+    public function updateCategory(
+        Category $category,
+        array $data
+    ): Category {
         $category->update([
             'name' => $data['name'],
             'desc' => $data['desc'] ?? null,
@@ -86,14 +109,18 @@ class CategoryService implements CategoryContract
     public function exportPdf(string $tenantSlug): void
     {
         $tenant = Tenant::where('slug', $tenantSlug)->firstOrFail();
-        $categories = Category::withCount('products')->get()->toArray();
+
+        $categories = Category::where('tenant_id', $tenant->id)
+            ->withCount('products')
+            ->get()
+            ->toArray();
 
         $log = ExportLog::create([
             'tenant_id' => $tenant->id,
-            'user_id'   => auth()->id(),
-            'type'      => 'pdf',
-            'filename'  => 'Category_Master_' . date('Ymd_His') . '.pdf',
-            'status'    => 'pending',
+            'user_id' => auth()->id(),
+            'type' => 'pdf',
+            'filename' => 'Category_Master_' . date('Ymd_His') . '.pdf',
+            'status' => 'pending',
         ]);
 
         ExportCategoryPdfJob::dispatch($log->id, $categories);
@@ -102,14 +129,18 @@ class CategoryService implements CategoryContract
     public function exportExcel(string $tenantSlug): void
     {
         $tenant = Tenant::where('slug', $tenantSlug)->firstOrFail();
-        $categories = Category::withCount('products')->get()->toArray();
+
+        $categories = Category::where('tenant_id', $tenant->id)
+            ->withCount('products')
+            ->get()
+            ->toArray();
 
         $log = ExportLog::create([
             'tenant_id' => $tenant->id,
-            'user_id'   => auth()->id(),
-            'type'      => 'excel',
-            'filename'  => 'Category_Master_' . date('Ymd_His') . '.xlsx',
-            'status'    => 'pending',
+            'user_id' => auth()->id(),
+            'type' => 'excel',
+            'filename' => 'Category_Master_' . date('Ymd_His') . '.xlsx',
+            'status' => 'pending',
         ]);
 
         ExportCategoryExcelJob::dispatch($log->id, $categories);
