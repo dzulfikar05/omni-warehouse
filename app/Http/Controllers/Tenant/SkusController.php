@@ -91,7 +91,7 @@ class SkusController extends Controller
             ->withQueryString();
 
         $categories = Category::where('tenant_id', $tenant->id)->select('id', 'name')->get();
-        $units = Unit::select('id', 'name', 'symbol')->get();
+        $units = Unit::where('tenant_id', $tenant->id)->select('id', 'name', 'symbol')->get();
 
         return Inertia::render('Tenant/InventoryManagement/Sku/Index', [
             'tenant_slug' => $tenantSlug,
@@ -114,7 +114,7 @@ class SkusController extends Controller
     {
         $tenant = app('current_tenant');
         $products = Product::where('tenant_id', $tenant->id)->select('id', 'name')->get();
-        $units    = Unit::select('id', 'name', 'symbol')->get();
+        $units    = Unit::where('tenant_id', $tenant->id)->select('id', 'name', 'symbol')->get();
 
         return Inertia::render('Tenant/InventoryManagement/Sku/Create', [
             'tenant_slug' => $request->route('tenant_slug'),
@@ -153,7 +153,7 @@ class SkusController extends Controller
     {
         $tenant = app('current_tenant');
         $products = Product::where('tenant_id', $tenant->id)->select('id', 'name')->get();
-        $units    = Unit::select('id', 'name', 'symbol')->get();
+        $units    = Unit::where('tenant_id', $tenant->id)->select('id', 'name', 'symbol')->get();
 
         return Inertia::render('Tenant/InventoryManagement/Sku/Edit', [
             'tenant_slug' => $tenant_slug,
