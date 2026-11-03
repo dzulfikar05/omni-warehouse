@@ -36,12 +36,12 @@ class ExportSkuPdfJob implements ShouldQueue
 
             $log->update([
                 'status'    => 'completed',
-                'file_path' => $filePath,
+                'file_path' => Storage::url($filePath),
             ]);
         } catch (\Throwable $e) {
             $log->update([
                 'status' => 'failed',
-                'error'  => $e->getMessage(),
+                'errormessage'  => $e->getMessage(),
             ]);
         }
     }

@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Exports;
-
+use Illuminate\Support\Enumerable;
 use App\Models\Location;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -18,15 +18,19 @@ class LocationsExport implements FromCollection, WithHeadings, WithMapping
         $this->filters = $filters;
     }
 
-    public function collection()
+    public function collection(): Enumerable
     {
-        $query = Location::with('warehouse')->where('tenant_id', $this->tenantId);
+        // PERBAIKAN: Cari lokasi berdasarkan tenant_id yang ada di relasi warehouse
+        $query = Location::with('warehouse')->whereHas('warehouse', function ($q) {
+            $q->where('tenant_id', $this->tenantId);
+        });
 
         if (!empty($this->filters['search'])) {
             $search = $this->filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('rack_code', 'like', "%{$search}%")
-                  ->orWhere('zone', 'like', "%{$search}%");
+                  ->orWhere('zone', 'like', "%{$search}%")
+                  ->orWhere('desc', 'like', "%{$search}%");
             });
         }
 
@@ -59,7 +63,7 @@ class LocationsExport implements FromCollection, WithHeadings, WithMapping
             $location->zone ?? '-',
             $location->desc ?? '-',
             $location->is_active ? 'Active' : 'Inactive',
-            $location->created_at->format('Y-m-d H:i:s'),
+            $location->created_at ? $location->created_at->format('Y-m-d H:i:s') : '-',
         ];
     }
 }
