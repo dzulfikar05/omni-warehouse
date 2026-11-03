@@ -55,7 +55,6 @@ class PermissionSeeder extends Seeder
             'central.roles.delete',
             'central.roles.export',
 
-
             // Submenu: Subscriptions Management
             'central.subscriptions.view',
             'central.subscriptions.create_invoice',
@@ -137,7 +136,6 @@ class PermissionSeeder extends Seeder
             'tenant.dashboard.low_stock_table',
             'tenant.dashboard.recent_movements_table',
 
-
             // Menu Group: Transaction
             // Submenu: Inbound Management
             'tenant.inbound.view',
@@ -147,6 +145,7 @@ class PermissionSeeder extends Seeder
             'tenant.inbound.putaway',
             'tenant.inbound.commit',
             'tenant.inbound.hold',
+            'tenant.inbound.resume',
             // Submenu: Outbound Management
             'tenant.outbound.view',
             'tenant.outbound.show',
@@ -154,9 +153,12 @@ class PermissionSeeder extends Seeder
             'tenant.outbound.edit',
             'tenant.outbound.commit',
             'tenant.outbound.hold',
+            'tenant.outbound.resume',
             // Submenu: Stock Transfer
             'tenant.stock_transfer.view',
             'tenant.stock_transfer.create',
+            'tenant.stock_transfer.edit',
+            'tenant.stock_transfer.cancel',
 
             // Menu Group: Contact
             // Submenu: Customer
@@ -193,7 +195,6 @@ class PermissionSeeder extends Seeder
             // Submenu: Inbound & Outbound
             'tenant.inbound_outbound.view',
             'tenant.inbound_outbound.export',
-
 
             // Submenu: User & Roles
             'tenant.users.view',

@@ -1,7 +1,9 @@
 import React from 'react';
-import { FileText, Printer, X } from 'lucide-react';
+import { X, Printer, FileText } from 'lucide-react';
 import { useTranslation } from '@/context/language-context';
-import type { InboundItem, InboundManifest } from '@/types/inbound';
+import { usePage } from '@inertiajs/react';
+import { Button } from '@/components/ui/button';
+import type { InboundManifest, InboundItem } from '@/types/inbound';
 
 interface BapPreviewModalProps {
     isOpen: boolean;
@@ -17,156 +19,226 @@ export const BapPreviewModal: React.FC<BapPreviewModalProps> = ({
     items,
 }) => {
     const { t } = useTranslation();
+    const { current_tenant, general_settings } = usePage().props as any;
+
     if (!isOpen) return null;
 
+    // Filter item yang memiliki anomali/cacat/rusak atau selisih
+    const damagedItems = items.filter(
+        (i) => i.damaged_qty > 0 || i.good_qty < i.po_qty || i.status === 'issue'
+    );
+
+    // MAPPING DATA SESUAI HASIL QUERY DATABASE GENERAL_SETTINGS
+    const companyName = general_settings?.company_name || current_tenant?.name || 'PT Demo Logistik';
+    const docHeaderHtml = general_settings?.doc_header_html || `<h2 style="margin:0; text-align:center;">${companyName}</h2>`;
+    const docFooterHtml = general_settings?.doc_footer_html || '';
+    const paperSize = general_settings?.doc_paper_size || 'A4';
+
+    // Handler Cetak Menggunakan HTML Header & Footer dari Database
+    const handlePrintBAP = () => {
+        const printWindow = window.open('', '_blank', 'width=850,height=900');
+        if (!printWindow) return;
+
+        const damagedTableRows = damagedItems
+            .map(
+                (item, index) => `
+            <tr>
+                <td style="border: 1px solid #9ca3af; padding: 6px; text-align: center;">${index + 1}</td>
+                <td style="border: 1px solid #9ca3af; padding: 6px; font-family: monospace;">${item.sku}</td>
+                <td style="border: 1px solid #9ca3af; padding: 6px;">${item.product_name}</td>
+                <td style="border: 1px solid #9ca3af; padding: 6px; text-align: center; font-family: monospace;">${item.batch_no}</td>
+                <td style="border: 1px solid #9ca3af; padding: 6px; text-align: right; font-family: monospace;">${item.po_qty} ${item.unit}</td>
+                <td style="border: 1px solid #9ca3af; padding: 6px; text-align: right; font-family: monospace;">${item.good_qty} ${item.unit}</td>
+                <td style="border: 1px solid #9ca3af; padding: 6px; text-align: right; font-family: monospace; color: #dc2626; font-weight: bold;">${item.damaged_qty} ${item.unit}</td>
+                <td style="border: 1px solid #9ca3af; padding: 6px;">${item.damage_note || '-'}</td>
+            </tr>
+        `
+            )
+            .join('');
+
+        const htmlContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>BAP - ${manifest.manifest_code}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; font-size: 11px; color: #111827; margin: 0; padding: 15px; }
+                    .header-container { margin-bottom: 15px; border-b: 2px solid #111827; padding-bottom: 10px; }
+                    .title { text-align: center; font-size: 13px; font-weight: bold; text-transform: uppercase; margin: 15px 0 5px 0; text-decoration: underline; }
+                    .meta-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+                    .meta-table td { padding: 4px 0; vertical-align: top; }
+                    .content-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                    .content-table th { border: 1px solid #6b7280; background-color: #f3f4f6; padding: 6px; font-weight: bold; text-align: left; }
+                    .footer-html-container { margin-top: 20px; font-size: 10px; color: #4b5563; }
+                    .ttd-container { width: 100%; margin-top: 35px; border-collapse: collapse; page-break-inside: avoid; }
+                    .ttd-container td { text-align: center; vertical-align: bottom; height: 60px; }
+                    @page { size: ${paperSize} portrait; margin: 12mm; }
+                </style>
+            </head>
+            <body>
+                <!-- KOP SURAT DINAMIS DARI DATABASE (doc_header_html) -->
+                <div class="header-container">
+                    ${docHeaderHtml}
+                </div>
+
+                <div class="title">BERITA ACARA PENERIMAAN & ANOMALI BARANG (BAP)</div>
+                <p style="text-align: center; margin-top: 0; font-family: monospace;">Nomor: BAP/INB/${manifest.manifest_code}</p>
+
+                <!-- META DATA MANIFEST -->
+                <table class="meta-table">
+                    <tr>
+                        <td style="width: 15%;"><strong>Kode Manifest</strong></td>
+                        <td style="width: 35%;">: ${manifest.manifest_code}</td>
+                        <td style="width: 15%;"><strong>Tanggal Diterima</strong></td>
+                        <td style="width: 35%;">: ${new Date().toLocaleDateString('id-ID')}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Nama Supplier</strong></td>
+                        <td>: ${manifest.supplier_name}</td>
+                        <td><strong>Petugas Receiver</strong></td>
+                        <td>: ${manifest.operator_name || 'Operator Inbound'}</td>
+                    </tr>
+                </table>
+
+                <p>Bersama dokumen ini menerangkan hasil verifikasi fisik bongkar muat barang <i>(unloading receiving)</i> sebagai berikut:</p>
+
+                <!-- TABEL ITEM ANOMALI / RINCIAN BAP -->
+                <table class="content-table">
+                    <thead>
+                        <tr>
+                            <th style="text-align: center; width: 25px;">No</th>
+                            <th>SKU</th>
+                            <th>Deskripsi Produk</th>
+                            <th style="text-align: center;">Batch</th>
+                            <th style="text-align: right;">Target PO</th>
+                            <th style="text-align: right;">Baik</th>
+                            <th style="text-align: right;">Rusak</th>
+                            <th>Keterangan Kerusakan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${damagedTableRows.length > 0 ? damagedTableRows : `<tr><td colSpan="8" style="text-align: center; padding: 10px; border: 1px solid #9ca3af;">Tidak ditemukan anomali atau kerusakan barang pada manifest ini.</td></tr>`}
+                    </tbody>
+                </table>
+
+                <!-- FOOTER CATATAN DINAMIS DARI DATABASE (doc_footer_html) -->
+                ${docFooterHtml ? `<div class="footer-html-container">${docFooterHtml}</div>` : ''}
+
+                <!-- TANDA TANGAN LEBAR -->
+                <table class="ttd-container">
+                    <tr>
+                        <td style="width: 33%;">
+                            Petugas Penerima Gudang
+                            <br/><br/><br/><br/>
+                            ( ______________________ )
+                        </td>
+                        <td style="width: 33%;">
+                            Pengemudi / Supir Expedisi
+                            <br/><br/><br/><br/>
+                            ( ______________________ )
+                        </td>
+                        <td style="width: 33%;">
+                            Supervisor Inbound
+                            <br/><br/><br/><br/>
+                            ( ______________________ )
+                        </td>
+                    </tr>
+                </table>
+
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        setTimeout(function() { window.close(); }, 500);
+                    };
+                </script>
+            </body>
+            </html>
+        `;
+
+        printWindow.document.open();
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+    };
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 font-sans">
-            <div className="bg-card text-card-foreground border border-border rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
-                {/* Modal Header */}
-                <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-muted/40">
-                    <div>
-                        <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
-                            <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                            <span>{t("Preview Berita Acara Penerimaan (BAP)")}</span>
-                        </h2>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                            {t("Dokumen resmi serah terima bongkar muatan gudang Cakung")}</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-2xs p-4 font-sans animate-in fade-in duration-150">
+            <div className="bg-card text-card-foreground border border-border rounded-lg w-full max-w-2xl shadow-xl overflow-hidden flex flex-col text-xs">
+                {/* Header Modal */}
+                <div className="p-3.5 border-b border-border flex items-center justify-between bg-muted/30">
+                    <div className="flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-primary" />
+                        <h3 className="text-xs font-bold text-foreground tracking-tight">
+                            {t("Pratinjau Cetak BAP Resmi")}
+                        </h3>
                     </div>
                     <button
+                        type="button"
                         onClick={onClose}
-                        className="w-7 h-7 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors cursor-pointer"
+                        className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
                     >
                         <X className="w-4 h-4" />
                     </button>
                 </div>
 
-                {/* Printable Sheet Simulation */}
-                <div className="p-6 overflow-y-auto max-h-[70vh] flex flex-col gap-4 text-xs font-sans">
-                    {/* Document Header */}
-                    <div className="flex items-start justify-between border-b border-border pb-4">
-                        <div>
-                            <div className="font-bold text-foreground text-base">
-                                {t("OMNIWAREHOUSE SYSTEM")}</div>
-                            <div className="text-muted-foreground text-[11px]">
-                                {t("DC Cakung Utama, Blok B-4, Jakarta Timur")}</div>
-                            <div className="font-mono text-muted-foreground/70 text-[10px] mt-1">
-                                {t("Ref: DOC-BAP-202609-0142")}</div>
-                        </div>
-                        <div className="text-right">
-                            <span className="inline-block px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 rounded font-mono font-bold text-[11px]">
-                                {t("BAP RESMI")}</span>
-                            <div className="text-muted-foreground text-[11px] mt-1 font-mono">
-                                {t("12/09/2026 • 13:30 WIB")}</div>
-                        </div>
-                    </div>
+                {/* Pratinjau Tampilan Kop & Footer Database */}
+                <div className="p-4 overflow-y-auto max-h-[70vh] space-y-3">
+                    <div className="p-4 border border-border rounded-md bg-background space-y-3 shadow-2xs">
+                        {/* Render HTML Kop Surat dari Database */}
+                        <div
+                            className="border-b border-border pb-3 prose dark:prose-invert max-w-none text-xs"
+                            dangerouslySetInnerHTML={{ __html: docHeaderHtml }}
+                        />
 
-                    {/* Meta Table */}
-                    <div className="grid grid-cols-2 gap-4 bg-muted/30 p-3 rounded-lg border border-border text-[11px]">
-                        <div>
-                            <div>
-                                {t("Supplier:")}{' '}
-                                <strong className="text-foreground">
-                                    {manifest.supplier_name}
+                        <div className="text-center py-1">
+                            <h5 className="font-bold text-xs uppercase underline text-foreground">
+                                BERITA ACARA PENERIMAAN & ANOMALI BARANG
+                            </h5>
+                            <p className="font-mono text-[10px] text-muted-foreground">
+                                BAP/INB/{manifest.manifest_code}
+                            </p>
+                        </div>
+
+                        {/* Summary Status Item */}
+                        <div className="p-2.5 bg-muted/40 rounded border border-border flex items-center justify-between text-[11px]">
+                            <span>
+                                Total SKU Anomali/Rusak:{' '}
+                                <strong className="text-amber-600 dark:text-amber-400 font-mono font-bold">
+                                    {damagedItems.length} SKU
                                 </strong>
-                            </div>
-                            <div>
-                                {t("No. PO Terkait:")}{' '}
-                                <strong className="font-mono text-foreground">
-                                    {manifest.manifest_code}
-                                </strong>
-                            </div>
+                            </span>
+                            <span className="text-muted-foreground font-mono">
+                                Ukuran Kertas: <strong>{paperSize}</strong>
+                            </span>
                         </div>
-                        <div>
-                            <div>
-                                {t("Kendaraan:")}{' '}
-                                <strong className="font-mono text-foreground">
-                                    {manifest.vehicle_no} {t("(")}{manifest.vehicle_type}{t(")")}</strong>
-                            </div>
-                            <div>
-                                {t("Sopir / Kurir:")}{' '}
-                                <strong className="text-foreground">
-                                    {manifest.driver_name} {t("(")}{manifest.driver_phone}{t(")")}</strong>
-                            </div>
-                        </div>
-                    </div>
 
-                    {/* Summary Ledger Items */}
-                    <table className="w-full text-left border border-border rounded-lg text-[11px] overflow-hidden">
-                        <thead className="bg-muted/60 text-foreground font-semibold border-b border-border">
-                            <tr>
-                                <th className="p-2">{"Item SKU"}</th>
-                                <th className="p-2 text-right">{"PO"}</th>
-                                <th className="p-2 text-right">{"Fisik Baik"}</th>
-                                <th className="p-2 text-right text-red-600 dark:text-red-400">{"Rusak"}</th>
-                                <th className="p-2">{"Keterangan"}</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border">
-                            {items.map((item) => (
-                                <tr
-                                    key={item.id}
-                                    className={item.status === 'issue' ? 'bg-amber-50/40 dark:bg-amber-950/20' : ''}
-                                >
-                                    <td className="p-2 font-mono font-medium text-foreground">
-                                        {item.sku} {t("(")}{item.product_name}{t(")")}</td>
-                                    <td className="p-2 text-right font-mono text-foreground">{item.po_qty}</td>
-                                    <td className="p-2 text-right font-mono text-emerald-700 dark:text-emerald-400 font-bold">
-                                        {item.good_qty}
-                                    </td>
-                                    <td className="p-2 text-right font-mono text-red-600 dark:text-red-400 font-bold">
-                                        {item.damaged_qty}
-                                    </td>
-                                    <td className="p-2 text-muted-foreground">
-                                        {item.damage_note ||
-                                            (item.status === 'valid'
-                                                ? t('Complete and seals intact')
-                                                : item.status === 'process'
-                                                  ? t('Scanning in progress')
-                                                  : t('Waiting to be scanned'))}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-
-                    {/* Signatures Area */}
-                    <div className="grid grid-cols-2 gap-8 pt-4 mt-2 border-t border-border text-center text-[11px]">
-                        <div>
-                            <div className="text-muted-foreground mb-10">{t("Pihak Pengemudi / Ekspedisi")}</div>
-                            <div className="font-bold text-foreground underline">
-                                {manifest.driver_name}
-                            </div>
-                            <div className="text-muted-foreground/70 text-[10px]">{t("Driver Supplier")}</div>
-                        </div>
-                        <div>
-                            <div className="text-muted-foreground mb-10">{t("Penerima Gudang (Lead Ops)")}</div>
-                            <div className="font-bold text-foreground underline">
-                                {manifest.operator_name}
-                            </div>
-                            <div className="text-muted-foreground/70 text-[10px]">
-                                {t("OmniWarehouse DC Cakung")}</div>
-                        </div>
+                        {/* Render HTML Footer Catatan dari Database */}
+                        {docFooterHtml && (
+                            <div
+                                className="pt-2 border-t border-border text-[10px] text-muted-foreground prose dark:prose-invert max-w-none"
+                                dangerouslySetInnerHTML={{ __html: docFooterHtml }}
+                            />
+                        )}
                     </div>
                 </div>
 
-                {/* Modal Footer Actions */}
-                <div className="px-6 py-3 border-t border-border bg-muted/40 flex items-center justify-between">
-                    <span className="text-[11px] text-muted-foreground font-mono">
-                        {t("Format PDF A4 Siap Cetak")}</span>
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={onClose}
-                            className="h-9 px-3 bg-card hover:bg-muted border border-border rounded-lg text-xs font-semibold text-foreground transition-all cursor-pointer"
-                        >
-                            {t("Tutup")}</button>
-                        <button
-                            onClick={() => window.print()}
-                            className="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
-                        >
-                            <Printer className="w-3.5 h-3.5" />
-                            <span>{t("Cetak Sekarang")}</span>
-                        </button>
-                    </div>
+                {/* Footer Action Modal */}
+                <div className="p-3 border-t border-border bg-muted/30 flex items-center justify-end gap-2">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={onClose}
+                        className="h-8 px-3 text-xs font-medium rounded-md"
+                    >
+                        {t("Tutup")}
+                    </Button>
+                    <Button
+                        type="button"
+                        onClick={handlePrintBAP}
+                        className="h-8 px-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-md gap-1.5"
+                    >
+                        <Printer className="w-3.5 h-3.5" />
+                        <span>{t("Cetak Dokumen BAP")}</span>
+                    </Button>
                 </div>
             </div>
         </div>

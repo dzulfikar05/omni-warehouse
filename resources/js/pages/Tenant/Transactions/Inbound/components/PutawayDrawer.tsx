@@ -1,13 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { AlertCircle, Save, X } from 'lucide-react';
+import { AlertCircle, Save, X, PackageCheck, AlertTriangle } from 'lucide-react';
 import { useTranslation } from '@/context/language-context';
 import type { InboundItem } from '@/types/inbound';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+
+interface LocationOption {
+    id: number;
+    rack_code: string;
+    zone?: string;
+}
 
 interface PutawayDrawerProps {
     isOpen: boolean;
     onClose: () => void;
     item: InboundItem | null;
+    locations?: LocationOption[];
     onSave: (goodQty: number, damagedQty: number, rack: string, note: string) => void;
 }
 
@@ -15,171 +24,234 @@ export const PutawayDrawer: React.FC<PutawayDrawerProps> = ({
     isOpen,
     onClose,
     item,
+    locations = [],
     onSave,
 }) => {
     const { t } = useTranslation();
     const [goodQty, setGoodQty] = useState<number>(0);
     const [damagedQty, setDamagedQty] = useState<number>(0);
-    const [selectedRack, setSelectedRack] = useState<string>('A-02-04');
+    const [selectedRack, setSelectedRack] = useState<string>('');
     const [damageNote, setDamageNote] = useState<string>('');
+    const [validationError, setValidationError] = useState<string | null>(null);
 
     useEffect(() => {
         if (item) {
             setGoodQty(item.good_qty);
             setDamagedQty(item.damaged_qty);
-            setSelectedRack(item.target_rack || 'A-02-04');
+            const defaultRack =
+                item.target_rack && item.target_rack !== 'Belum Dialokasi'
+                    ? item.target_rack
+                    : locations[0]?.rack_code || '';
+            setSelectedRack(defaultRack);
             setDamageNote(item.damage_note || '');
+            setValidationError(null);
         }
-    }, [item]);
+    }, [item, locations]);
 
     if (!isOpen || !item) return null;
 
+    const handleGoodQtyChange = (val: string) => {
+        const parsed = Math.max(0, parseInt(val, 10) || 0);
+        setGoodQty(parsed);
+        setValidationError(null);
+    };
+
+    const handleDamagedQtyChange = (val: string) => {
+        const parsed = Math.max(0, parseInt(val, 10) || 0);
+        setDamagedQty(parsed);
+        setValidationError(null);
+    };
+
     const handleSave = () => {
+        // Validasi Bisnis: Barang rusak wajib memiliki catatan
+        if (damagedQty > 0 && !damageNote.trim()) {
+            setValidationError(t('Catatan kerusakan wajib diisi jika terdapat barang cacat/rusak.'));
+            return;
+        }
+
+        // Validasi Bisnis: Lokasi rak untuk unit baik wajib dipilih
+        if (goodQty > 0 && !selectedRack) {
+            setValidationError(t('Pilih rak penyimpanan untuk barang kondisi baik.'));
+            return;
+        }
+
         onSave(goodQty, damagedQty, selectedRack, damageNote);
-        onClose();
     };
 
     return (
         <>
             {/* Backdrop */}
             <div
-                className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs transition-opacity duration-200"
+                className="fixed inset-0 z-50 bg-black/40 backdrop-blur-2xs transition-opacity duration-150"
                 onClick={onClose}
             />
 
-            {/* Drawer Panel */}
-            <aside className="fixed top-0 right-0 z-50 w-full max-w-md h-full bg-card text-card-foreground border-l border-border shadow-2xl flex flex-col justify-between transform transition-transform duration-300 ease-in-out font-sans">
-                {/* Drawer Header */}
-                <div className="p-5 border-b border-border flex items-center justify-between flex-shrink-0 bg-muted/40">
+            {/* Slide-over Panel */}
+            <aside className="fixed top-0 right-0 z-50 w-full max-w-md h-full bg-card text-card-foreground border-l border-border shadow-xl flex flex-col justify-between font-sans text-xs">
+                {/* Header */}
+                <div className="p-4 border-b border-border flex items-center justify-between bg-muted/30">
                     <div>
-                        <div className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-400"></span>
-                            <h3 className="text-sm font-bold text-foreground tracking-tight">
-                                {t("Inspeksi & Alokasi Rak Putaway")}</h3>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                            {t("Penetapan slot rak fisik & pencatatan anomali barang masuk")}</p>
+                        <h3 className="text-sm font-bold text-foreground tracking-tight">
+                            {t("Inspeksi & Alokasi Putaway")}
+                        </h3>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                            {t("Penetapan slot rak fisik & verifikasi kondisi barang masuk")}
+                        </p>
                     </div>
                     <button
+                        type="button"
                         onClick={onClose}
-                        className="p-1.5 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                        className="p-1.5 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors"
                     >
                         <X className="w-4 h-4" />
                     </button>
                 </div>
 
-                {/* Drawer Content */}
-                <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4 text-xs">
-                    {/* Ringkasan SKU Item */}
-                    <div className="p-3.5 bg-muted/40 border border-border rounded-xl flex flex-col gap-1.5">
+                {/* Body Content */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                    {/* Ringkasan Item SKU */}
+                    <div className="p-3 bg-muted/40 border border-border rounded-lg space-y-2">
                         <div className="flex items-center justify-between">
-                            <span className="font-mono text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 px-1.5 py-0.5 rounded">
+                            <span className="font-mono text-[11px] font-semibold text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded">
                                 {item.sku}
                             </span>
                             <span className="font-mono text-[11px] text-muted-foreground">
-                                {t("Batch:")}{' '}{item.batch_no}
+                                {t("Batch:")} <strong className="text-foreground">{item.batch_no}</strong>
                             </span>
                         </div>
-                        <div className="font-semibold text-foreground text-xs mt-0.5">
+                        <div className="font-semibold text-foreground text-xs">
                             {item.product_name}
                         </div>
-                        <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-border mt-1">
+                        <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-2 border-t border-border">
                             <span>
                                 {t("Target PO:")}{' '}
-                                <strong className="font-mono text-foreground">
+                                <strong className="font-mono text-foreground font-semibold">
                                     {item.po_qty} {item.unit}
                                 </strong>
                             </span>
                             <span>
-                                {t("Exp:")}{' '}
-                                <strong className="font-mono text-foreground">
+                                {t("Exp Date:")}{' '}
+                                <strong className="font-mono text-foreground font-semibold">
                                     {item.exp_date}
                                 </strong>
                             </span>
                         </div>
                     </div>
 
-                    {/* Form Penghitungan Fisik Masuk */}
-                    <div className="p-3.5 border border-border rounded-xl flex flex-col gap-3 bg-muted/20">
-                        <span className="font-semibold text-foreground text-[11px] uppercase tracking-wider">
-                            {t("Hasil Penghitungan Fisik Bongkar")}</span>
+                    {/* Form Kuantitas Fisik */}
+                    <div className="p-3 border border-border rounded-lg space-y-3 bg-card">
+                        <div className="flex items-center justify-between">
+                            <span className="font-semibold text-foreground text-[11px] uppercase tracking-wider">
+                                {t("Hasil Verifikasi Fisik")}
+                            </span>
+                            <span className="text-[10px] font-mono text-muted-foreground">
+                                Total: {goodQty + damagedQty} / {item.po_qty} {item.unit}
+                            </span>
+                        </div>
+
                         <div className="grid grid-cols-2 gap-3">
-                            <div>
-                                <label className="text-[11px] font-medium text-muted-foreground">
-                                    {t("Kondisi Baik (Valid)")}</label>
-                                <input
+                            <div className="space-y-1">
+                                <label className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
+                                    <PackageCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                                    <span>{t("Kondisi Baik")}</span>
+                                </label>
+                                <Input
                                     type="number"
                                     min={0}
                                     value={goodQty}
-                                    onChange={(e) => setGoodQty(Number(e.target.value))}
-                                    className="w-full h-8 px-2 mt-1 bg-muted/50 focus:bg-card border border-input rounded-md font-mono font-bold text-emerald-600 dark:text-emerald-400 outline-none"
+                                    onChange={(e) => handleGoodQtyChange(e.target.value)}
+                                    className="h-8 font-mono font-bold text-emerald-600 dark:text-emerald-400 text-xs rounded-md"
                                 />
                             </div>
-                            <div>
-                                <label className="text-[11px] font-medium text-muted-foreground">
-                                    {t("Cacat / Bocor / Rusak")}</label>
-                                <input
+                            <div className="space-y-1">
+                                <label className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
+                                    <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                                    <span>{t("Cacat / Rusak")}</span>
+                                </label>
+                                <Input
                                     type="number"
                                     min={0}
                                     value={damagedQty}
-                                    onChange={(e) => setDamagedQty(Number(e.target.value))}
-                                    className="w-full h-8 px-2 mt-1 bg-muted/50 focus:bg-card border border-input rounded-md font-mono font-bold text-amber-600 dark:text-amber-400 outline-none"
+                                    onChange={(e) => handleDamagedQtyChange(e.target.value)}
+                                    className="h-8 font-mono font-bold text-amber-600 dark:text-amber-400 text-xs rounded-md"
                                 />
                             </div>
                         </div>
                     </div>
 
-                    {/* Pemilihan Rak Simpan */}
-                    <div className="flex flex-col gap-1.5">
+                    {/* Selection Lokasi Rak Putaway */}
+                    <div className="space-y-1.5">
                         <label className="font-semibold text-foreground">
-                            {t("Rekomendasi Rak Penyimpanan (Putaway Location)")}</label>
+                            {t("Lokasi Rak (Barang Baik)")}
+                        </label>
                         <Select value={selectedRack} onValueChange={setSelectedRack}>
-                            <SelectTrigger className="h-9 w-full bg-background text-foreground font-mono font-medium">
-                                <SelectValue />
+                            <SelectTrigger className="h-8 w-full bg-background font-mono text-xs rounded-md">
+                                <SelectValue placeholder={t("Pilih rak penyimpanan...")} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="A-02-04">{t("A-02-04 (Zona Fast-Moving • Kapasitas 300 Unit)")}</SelectItem>
-                                <SelectItem value="A-02-05">{t("A-02-05 (Zona Fast-Moving • Kapasitas 200 Unit)")}</SelectItem>
-                                <SelectItem value="B-01-01">{t("B-01-01 (Zona Fast-Moving • Kapasitas 150 Unit)")}</SelectItem>
-                                <SelectItem value="B-04-02">{t("B-04-02 (Zona Dry Storage • Kapasitas 200 Unit)")}</SelectItem>
-                                <SelectItem value="A-05-02">{t("A-05-02 (Zona Dry Storage • Kapasitas 120 Unit)")}</SelectItem>
+                                {locations.length > 0 ? (
+                                    locations.map((loc) => (
+                                        <SelectItem key={loc.id} value={loc.rack_code} className="font-mono text-xs">
+                                            {loc.rack_code} {loc.zone ? `(${loc.zone})` : ''}
+                                        </SelectItem>
+                                    ))
+                                ) : (
+                                    <SelectItem value="DEFAULT" disabled className="text-xs">
+                                        {t("Tidak ada rak tersedia")}
+                                    </SelectItem>
+                                )}
                             </SelectContent>
                         </Select>
                     </div>
 
-                    {/* Quick Action: Buat Berita Acara Kerusakan (BAP) */}
-                    <div className="p-3 bg-amber-50/50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 rounded-xl flex flex-col gap-2">
-                        <div className="flex items-center gap-1.5 text-amber-900 dark:text-amber-300 font-semibold text-[11px]">
-                            <AlertCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                            <span>{t("Penanganan Barang Rusak / Selisih")}</span>
+                    {/* Penanganan Barang Rusak & Catatan BAP */}
+                    <div className="p-3 bg-amber-50/40 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-lg space-y-2">
+                        <div className="flex items-center gap-1.5 text-amber-900 dark:text-amber-300 font-semibold">
+                            <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                            <span>{t("Penanganan Anomali & Retur Supplier")}</span>
                         </div>
-                        <p className="text-[11px] text-amber-800 dark:text-amber-300/80 leading-relaxed">
-                            {t("Unit rusak otomatis diarahkan ke")}{' '}
-                            <strong className="font-mono font-bold">{t("QUARANTINE-01")}</strong> {t("dan dimasukkan ke draft lampiran BAP supplier.")}</p>
-                        <input
+                        <p className="text-[11px] text-amber-800 dark:text-amber-300/80 leading-normal">
+                            {t("Unit rusak dialokasikan otomatis ke rak")} <strong className="font-mono font-semibold">QUARANTINE-01</strong>.
+                        </p>
+                        <Input
                             type="text"
                             value={damageNote}
-                            onChange={(e) => setDamageNote(e.target.value)}
-                            placeholder={t("Catatan kerusakan (Cth: Segel dus sobek, kaleng penyok dari supir)...")}
-                            className="w-full h-8 px-2 bg-card border border-amber-200 dark:border-amber-800 rounded-md text-[11px] text-foreground outline-none placeholder-amber-700/50 dark:placeholder-amber-400/50"
+                            onChange={(e) => {
+                                setDamageNote(e.target.value);
+                                setValidationError(null);
+                            }}
+                            placeholder={t("Catatan kerusakan untuk lampiran BAP...")}
+                            className="h-8 bg-background border-amber-200 dark:border-amber-900/60 text-xs rounded-md"
                         />
                     </div>
+
+                    {/* Validation Error Alert */}
+                    {validationError && (
+                        <div className="p-2.5 bg-destructive/10 border border-destructive/20 text-destructive rounded-md text-[11px] font-medium flex items-center gap-1.5">
+                            <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                            <span>{validationError}</span>
+                        </div>
+                    )}
                 </div>
 
-                {/* Drawer Footer */}
-                <div className="p-4 border-t border-border bg-muted/40 flex items-center justify-end gap-2 flex-shrink-0">
-                    <button
+                {/* Footer Actions */}
+                <div className="p-3 border-t border-border bg-muted/30 flex items-center justify-end gap-2">
+                    <Button
+                        type="button"
+                        variant="outline"
                         onClick={onClose}
-                        className="h-9 px-4 bg-card hover:bg-muted border border-border rounded-lg text-xs font-semibold text-foreground transition-all cursor-pointer"
+                        className="h-8 px-3 text-xs font-medium rounded-md"
                     >
-                        {t("Batal")}</button>
-                    <button
+                        {t("Batal")}
+                    </Button>
+                    <Button
+                        type="button"
                         onClick={handleSave}
-                        className="h-9 px-4 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                        className="h-8 px-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-md gap-1.5"
                     >
                         <Save className="w-3.5 h-3.5" />
                         <span>{t("Simpan Alokasi")}</span>
-                    </button>
+                    </Button>
                 </div>
             </aside>
         </>

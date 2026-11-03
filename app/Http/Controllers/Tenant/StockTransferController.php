@@ -13,12 +13,7 @@ use Inertia\Response;
 
 class StockTransferController extends Controller
 {
-    protected StockTransferContract $stockTransferService;
-
-    public function __construct(StockTransferContract $stockTransferService)
-    {
-        $this->stockTransferService = $stockTransferService;
-    }
+    public function __construct(private readonly StockTransferContract $stockTransferService) {}
 
     public function index(Request $request, string $tenant_slug): Response
     {
@@ -27,9 +22,17 @@ class StockTransferController extends Controller
             'search' => ['nullable', 'string', 'max:100'],
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
-            'status' => ['nullable', 'string', 'max:50'],
-            'from_warehouse_id' => ['nullable', 'integer', Rule::exists('warehouses', 'id')->where('tenant_id', $tenant->id)],
-            'to_warehouse_id' => ['nullable', 'integer', Rule::exists('warehouses', 'id')->where('tenant_id', $tenant->id)],
+            'status' => ['nullable', Rule::in(['pending', 'in_transit', 'completed', 'cancelled', 'draft'])],
+            'from_warehouse_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('warehouses', 'id')->where('tenant_id', $tenant->id),
+            ],
+            'to_warehouse_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('warehouses', 'id')->where('tenant_id', $tenant->id),
+            ],
         ]);
         $filters = array_filter($filters, fn ($value) => $value !== null && $value !== '');
         $data = $this->stockTransferService->getTransferLogsList($tenant_slug, $filters);
@@ -42,27 +45,74 @@ class StockTransferController extends Controller
             'skus' => $data['skus'],
             'summary' => $data['summary'],
             'statuses' => $data['statuses'],
-            'filters' => $request->only(['search', 'date_from', 'date_to', 'status', 'from_warehouse_id', 'to_warehouse_id']),
+            'filters' => $request->only([
+                'search',
+                'date_from',
+                'date_to',
+                'status',
+                'from_warehouse_id',
+                'to_warehouse_id',
+            ]),
         ]);
     }
 
-    public function store(string $tenant_slug, Request $request): RedirectResponse
+    public function store(Request $request, string $tenant_slug): RedirectResponse
     {
+        $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
         $validated = $request->validate([
-            'items' => 'required|array|min:1',
-            'items.*.sku_id' => 'required',
-            'items.*.from_location_id' => 'required|different:items.*.to_location_id',
-            'items.*.to_location_id' => 'required',
-            'items.*.quantity' => 'required|integer|min:1',
-            'notes' => 'nullable|string',
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.sku_id' => ['required', 'integer', Rule::exists('skus', 'id')],
+            'items.*.from_location_id' => ['required', 'integer', Rule::exists('locations', 'id')],
+            'items.*.to_location_id' => [
+                'required',
+                'integer',
+                'different:items.*.from_location_id',
+                Rule::exists('locations', 'id'),
+            ],
+            'items.*.quantity' => ['required', 'integer', 'min:1'],
+            'notes' => ['nullable', 'string', 'max:2000'],
         ]);
+        $result = $this->stockTransferService->createStockTransfer(
+            $tenant_slug,
+            $validated,
+            (int) $request->user()->id
+        );
 
-        try {
-            $res = $this->stockTransferService->createStockTransfer($tenant_slug, $validated);
+        return back()->with('success', $result['message']);
+    }
 
-            return redirect()->back()->with('success', __($res['message']));
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', __($e->getMessage()));
-        }
+    public function update(Request $request, string $tenant_slug, string $transfer_code): RedirectResponse
+    {
+        $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
+        $validated = $request->validate([
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.sku_id' => ['required', 'integer', Rule::exists('skus', 'id')],
+            'items.*.from_location_id' => ['required', 'integer', Rule::exists('locations', 'id')],
+            'items.*.to_location_id' => [
+                'required',
+                'integer',
+                'different:items.*.from_location_id',
+                Rule::exists('locations', 'id'),
+            ],
+            'items.*.quantity' => ['required', 'integer', 'min:1'],
+            'items.*.batch_number' => ['nullable', 'string', 'max:100'],
+            'items.*.expiry_date' => ['nullable', 'date'],
+            'notes' => ['nullable', 'string', 'max:2000'],
+        ]);
+        $this->stockTransferService->updateStockTransfer($tenant_slug, $transfer_code, $validated);
+
+        return back()->with('success', __('Draft stock transfer updated successfully.'));
+    }
+
+    public function cancel(Request $request, string $tenant_slug, string $transfer_code): RedirectResponse
+    {
+        Tenant::where('slug', $tenant_slug)->firstOrFail();
+        $this->stockTransferService->cancelStockTransfer(
+            $tenant_slug,
+            $transfer_code,
+            (int) $request->user()->id
+        );
+
+        return back()->with('success', __('Stock transfer cancelled. Completed transfer stock was reversed.'));
     }
 }

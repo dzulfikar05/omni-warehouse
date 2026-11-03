@@ -1468,6 +1468,7 @@
     "status_packing": "Packing",
     "status_dispatched": "Dispatched",
     "status_in_transit": "In transit",
+    "status_cancelled": "Cancelled",
     "stat_total_transactions": "Total transactions",
     "stat_pending_transactions": "In progress",
     "stat_completed_transactions": "Completed",

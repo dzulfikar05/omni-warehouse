@@ -72,6 +72,7 @@ const statusTranslationKeys: Record<string, string> = {
     PACKING: 'status_packing',
     DISPATCHED: 'status_dispatched',
     IN_TRANSIT: 'status_in_transit',
+    CANCELLED: 'status_cancelled',
 };
 
 export function transactionStatusLabel(

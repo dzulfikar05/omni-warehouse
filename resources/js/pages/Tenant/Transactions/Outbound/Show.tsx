@@ -1,421 +1,492 @@
-import React, { useState } from 'react';
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { Head, router, usePage, Link } from '@inertiajs/react';
 import { toast } from 'sonner';
 import {
     AlertTriangle,
     ArrowLeft,
+    Boxes,
+    Building2,
+    Check,
     CheckCircle2,
-    CheckSquare,
-    Clock,
-    Database,
-    FileCheck2,
-    FileText,
-    PackageCheck,
+    CheckCheck,
+    Play,
     PauseCircle,
-    QrCode,
-    RefreshCw,
-    Search,
-    ShieldAlert,
+    ScanBarcode,
     Truck,
-    Users,
+    Pencil,
+    Printer,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { PageHeader } from '@/components/page-header';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useTranslation } from '@/context/language-context';
-import type { OutboundItem, OutboundManifest } from '@/types/outbound';
-import { DispatchCommitModal } from './components/DispatchCommitModal';
-import { HoldShippingModal } from './components/HoldShippingModal';
-import { PackingDrawer } from './components/PackingDrawer';
+import { usePermission } from '@/utils/permission';
+import type { OutboundManifest, OutboundItem } from '@/types/outbound';
+
+import { CommitModal } from './components/CommitModal';
+import { HoldSessionModal } from './components/HoldSessionModal';
+import { PickingModal } from './components/PickingModal';
 import { SuratJalanPreviewModal } from './components/SuratJalanPreviewModal';
+
+interface LocationOption {
+    id: number;
+    rack_code: string;
+    zone?: string;
+}
 
 interface OutboundShowProps {
     manifest: OutboundManifest;
     items: OutboundItem[];
+    locations?: LocationOption[];
 }
 
-export default function Show({ manifest: initialManifest, items: initialItems }: OutboundShowProps) {
-    const { t } = useTranslation();
-    const { current_tenant, auth } = usePage().props as any;
-    const [manifest, setManifest] = useState<OutboundManifest>(initialManifest);
-    const [items, setItems] = useState<OutboundItem[]>(initialItems || []);
-    const [barcodeInput, setBarcodeInput] = useState<string>('');
-    const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'picking' | 'packed' | 'issue'>('all');
+type FilterTabOption = 'all' | 'valid' | 'process' | 'issue';
+type OutboundItemWithGoodQty = OutboundItem & { good_qty?: number | string | null };
+type OutboundItemWithDamage = OutboundItem & { damaged_qty?: number | string | null };
+type OutboundItemWithNotes = OutboundItem & {
+    damage_note?: string | null;
+    issue_note?: string | null;
+};
 
-    // Modals & Drawer state
-    const [selectedItemForDrawer, setSelectedItemForDrawer] = useState<OutboundItem | null>(null);
+const getDamagedQty = (item: OutboundItem) => Number((item as OutboundItemWithDamage).damaged_qty) || 0;
+
+// Menyelaraskan status beku dan selesai untuk mengaktifkan Surat Jalan & Lock Input Barcode
+const FROZEN_STATUS_LIST: OutboundManifest['status'][] = ['HOLD', 'COMMITTED', 'DISPATCHED', 'CLOSED'];
+const COMPLETED_STATUS_LIST: OutboundManifest['status'][] = ['COMMITTED', 'DISPATCHED', 'CLOSED'];
+
+export default function Show({
+    manifest: initialManifest,
+    items: initialItems = [],
+    locations = [],
+}: OutboundShowProps) {
+    const { t } = useTranslation();
+    const { current_tenant, auth, flash } = usePage().props as any;
+    const { can } = usePermission();
+
+    const [manifest, setManifest] = useState<OutboundManifest>(initialManifest);
+    const [items, setItems] = useState<OutboundItem[]>(initialItems);
+    const [filterTab, setFilterTab] = useState<FilterTabOption>('all');
+    const [barcodeInput, setBarcodeInput] = useState<string>('');
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+    const [selectedDrawerItem, setSelectedDrawerItem] = useState<OutboundItem | null>(null);
     const [isCommitModalOpen, setIsCommitModalOpen] = useState<boolean>(false);
     const [isHoldModalOpen, setIsHoldModalOpen] = useState<boolean>(false);
     const [isSuratJalanOpen, setIsSuratJalanOpen] = useState<boolean>(false);
 
-    const currentPathSlug = window.location.pathname.split('/')[1];
+    const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
+    const basePath = `/${tenantSlug}/transactions/outbound`;
 
-    // Filter Items
-    const filteredItems = items.filter((item) => {
-        if (filterStatus === 'all') return true;
-        return item.status === filterStatus;
-    });
+    useEffect(() => {
+        setManifest(initialManifest);
+        setItems(initialItems || []);
+    }, [initialManifest, initialItems]);
 
-    // Handle Barcode Scan Submit
-    const handleScanSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!barcodeInput.trim()) return;
+    useEffect(() => {
+        if (flash?.success) toast.success(flash.success);
+        if (flash?.error) toast.error(flash.error);
+        if (flash?.warning) toast.warning(flash.warning);
+    }, [flash]);
 
-        const foundIndex = items.findIndex(
-            (i) => i.barcode === barcodeInput.trim() || i.sku === barcodeInput.trim(),
-        );
+    const currentStatus = manifest.status;
+    const isSessionFrozen = useMemo(
+        () => FROZEN_STATUS_LIST.includes(currentStatus),
+        [currentStatus]
+    );
+    const isCompleted = useMemo(
+        () => COMPLETED_STATUS_LIST.includes(currentStatus),
+        [currentStatus]
+    );
+    const isHold = currentStatus === 'HOLD';
 
-        if (foundIndex !== -1) {
-            const itemToUpdate = items[foundIndex];
-            const updatedItems = [...items];
-            const newPacked = itemToUpdate.packed_qty + 1;
-            const isFullPacked = newPacked >= itemToUpdate.so_qty;
+    const { totalLineSku, totalGoodUnits, totalDamagedUnits, totalTargetUnits, progressPct } = useMemo(() => {
+        const lineSku = items.length;
+        const good = items.reduce((acc, curr) => acc + (Number((curr as OutboundItemWithGoodQty).good_qty) || 0), 0);
+        const damaged = items.reduce((acc, curr) => acc + getDamagedQty(curr), 0);
+        const target = items.reduce((acc, curr) => acc + (Number(curr.so_qty) || 0), 0);
+        const progress = target > 0 ? (((good + damaged) / target) * 100).toFixed(1) : '0';
 
-            updatedItems[foundIndex] = {
-                ...itemToUpdate,
-                picked_qty: Math.max(itemToUpdate.picked_qty, newPacked),
-                packed_qty: newPacked,
-                status: isFullPacked ? 'packed' : 'picking',
-                status_label: isFullPacked ? 'Terverifikasi Packed' : `Picking (${newPacked}/${itemToUpdate.so_qty})`,
-            };
+        return {
+            totalLineSku: lineSku,
+            totalGoodUnits: good,
+            totalDamagedUnits: damaged,
+            totalTargetUnits: target,
+            progressPct: progress,
+        };
+    }, [items]);
 
-            setItems(updatedItems);
-            toast.success(`1 Unit ${itemToUpdate.sku} tervalidasi di meja packing!`);
-        } else {
-            toast.error(`Barcode / SKU ${barcodeInput} tidak ditemukan di manifest pengiriman ini!`);
-        }
+    const { filteredItems, validCount, processCount, issueCount } = useMemo(() => {
+        const valid = items.filter((i) => i.status === 'packed').length;
+        const process = items.filter((i) => i.status === 'pending' || i.status === 'picking').length;
+        const issue = items.filter((i) => i.status === 'issue' || getDamagedQty(i) > 0).length;
 
-        setBarcodeInput('');
-    };
-
-    // Save from Packing Drawer
-    const handleSaveDrawer = (pickedQty: number, packedQty: number, note: string) => {
-        if (!selectedItemForDrawer) return;
-
-        const updatedItems = items.map((i) => {
-            if (i.id === selectedItemForDrawer.id) {
-                const isFullPacked = packedQty >= i.so_qty;
-                const hasIssue = note.trim().length > 0;
-
-                return {
-                    ...i,
-                    picked_qty: pickedQty,
-                    packed_qty: packedQty,
-                    issue_note: note,
-                    status: hasIssue
-                        ? ('issue' as const)
-                        : isFullPacked
-                          ? ('packed' as const)
-                          : packedQty > 0
-                            ? ('picking' as const)
-                            : ('pending' as const),
-                    status_label: hasIssue
-                        ? 'Ada Catatan Rak'
-                        : isFullPacked
-                          ? 'Terverifikasi Packed'
-                          : packedQty > 0
-                            ? `Picking (${packedQty}/${i.so_qty})`
-                            : 'Menunggu Picking',
-                };
-            }
-            return i;
+        const filtered = items.filter((item) => {
+            if (filterTab === 'valid') return item.status === 'packed';
+            if (filterTab === 'process') return item.status === 'pending' || item.status === 'picking';
+            if (filterTab === 'issue') return item.status === 'issue' || getDamagedQty(item) > 0;
+            return true;
         });
 
-        setItems(updatedItems);
-        toast.success(`Alokasi & packing item ${selectedItemForDrawer.sku} berhasil diperbarui!`);
-    };
+        return { filteredItems: filtered, validCount: valid, processCount: process, issueCount: issue };
+    }, [items, filterTab]);
 
-    // Commit Dispatch
-    const handleConfirmCommit = () => {
-        setManifest((prev) => ({
-            ...prev,
-            status: 'DISPATCHED',
-            progress_percentage: 100,
-        }));
+    const handleScanSubmit = useCallback(
+        (e: React.FormEvent) => {
+            e.preventDefault();
+            const code = barcodeInput.trim();
+            if (!code || isSubmitting) return;
+
+            if (isSessionFrozen) {
+                toast.warning(t('Sesi picking sedang dibekukan atau telah selesai.'));
+                return;
+            }
+
+            setIsSubmitting(true);
+            router.post(
+                `${basePath}/verify-barcode`,
+                { manifest_code: manifest.manifest_code, barcode: code },
+                {
+                    preserveScroll: true,
+                    onSuccess: () => setBarcodeInput(''),
+                    onFinish: () => setIsSubmitting(false),
+                },
+            );
+        },
+        [barcodeInput, isSubmitting, isSessionFrozen, basePath, manifest.manifest_code, t],
+    );
+
+    const handlePickingSave = useCallback(
+        (goodQty: number, damagedQty: number, rackId: number | null, note: string) => {
+            if (!selectedDrawerItem) return;
+
+            router.post(
+                `${basePath}/update-picking`,
+                {
+                    item_id: selectedDrawerItem.id,
+                    good_qty: goodQty,
+                    damaged_qty: damagedQty,
+                    source_rack_id: rackId,
+                    damage_note: note,
+                },
+                {
+                    preserveScroll: true,
+                    onSuccess: () => setSelectedDrawerItem(null),
+                },
+            );
+        },
+        [selectedDrawerItem, basePath],
+    );
+
+    const handleCommit = useCallback(() => {
         setIsCommitModalOpen(false);
-        toast.success(`Outbound Pengiriman ${manifest.manifest_code} berhasil disubmit & Surat Jalan diterbitkan!`);
-    };
+        router.post(
+            `${basePath}/commit`,
+            { manifest_code: manifest.manifest_code },
+            { preserveScroll: true },
+        );
+    }, [basePath, manifest.manifest_code]);
 
-    // Hold Session
-    const handleConfirmHold = (reason: string) => {
-        setManifest((prev) => ({
-            ...prev,
-            status: 'HOLD',
-        }));
-        toast.warning(`Sesi pengiriman di-hold dengan alasan: ${reason}`);
-    };
+    const handleHoldSession = useCallback(
+        (reason: string) => {
+            setIsHoldModalOpen(false);
+            router.post(
+                `${basePath}/hold`,
+                { manifest_code: manifest.manifest_code, reason },
+                { preserveScroll: true },
+            );
+        },
+        [basePath, manifest.manifest_code],
+    );
+
+    const handleResumeSession = useCallback(() => {
+        router.post(
+            `${basePath}/resume`,
+            { manifest_code: manifest.manifest_code },
+            { preserveScroll: true },
+        );
+    }, [basePath, manifest.manifest_code]);
 
     return (
         <>
-            <Head title={`Workspace Outbound - ${manifest.manifest_code}`} />
+            <Head title={`Outbound ${manifest.manifest_code}`} />
 
-            <div className="space-y-6 p-4 sm:p-6 font-sans">
-                {/* Header Section */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card border border-border rounded-2xl p-5 shadow-xs text-card-foreground">
-                    <div className="flex items-start gap-4">
-                        <Link
-                            href={`/${tenantSlug}/transactions/outbound`}
-                            className="p-2 rounded-xl bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground border border-border transition-colors mt-0.5 cursor-pointer"
+            <div className="space-y-6 p-4 font-sans text-xs">
+                <div className="rounded-lg bg-card text-card-foreground p-6 shadow-md border border-border">
+                    <div className="flex flex-col justify-between gap-3 border-b border-border pb-4 md:flex-row md:items-center">
+                        <div className="flex items-center gap-3">
+                            <Link
+                                href={basePath}
+                                className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                            >
+                                <ArrowLeft className="h-4 w-4" />
+                            </Link>
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <h1 className="text-xl font-bold tracking-tight text-foreground">
+                                        {manifest.manifest_code}
+                                    </h1>
+                                    <span
+                                        className={`inline-flex items-center gap-1.5 rounded border px-2 py-0.5 font-mono text-[11px] font-medium ${
+                                            isHold
+                                                ? 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-400'
+                                                : isCompleted
+                                                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400'
+                                                  : 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-400'
+                                        }`}
+                                    >
+                                        <span
+                                            className={`h-1.5 w-1.5 rounded-full ${
+                                                isHold ? 'bg-amber-500' : isCompleted ? 'bg-emerald-500' : 'bg-blue-500'
+                                            }`}
+                                        />
+                                        {manifest.status}
+                                    </span>
+                                </div>
+                                <div className="mt-1 flex items-center gap-2 text-muted-foreground">
+                                    <Building2 className="h-3.5 w-3.5" />
+                                    <span>Customer: {manifest.customer_name}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            {isCompleted && (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => setIsSuratJalanOpen(true)}
+                                    className="h-8 gap-1.5 rounded-md border-border px-3 text-xs font-medium"
+                                >
+                                    <Printer className="h-3.5 w-3.5 text-blue-600" />
+                                    <span>{t('Cetak Surat Jalan')}</span>
+                                </Button>
+                            )}
+
+                            {isHold ? (
+                                <Button
+                                    type="button"
+                                    onClick={handleResumeSession}
+                                    className="h-8 gap-1.5 rounded-md bg-emerald-600 px-3 text-xs font-medium text-white hover:bg-emerald-700"
+                                >
+                                    <Play className="h-3.5 w-3.5 fill-current" />
+                                    <span>{t('Resume Sesi')}</span>
+                                </Button>
+                            ) : (
+                                can('tenant.outbound.hold') &&
+                                !isCompleted && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => setIsHoldModalOpen(true)}
+                                        className="h-8 gap-1.5 rounded-md border-border px-3 text-xs font-medium"
+                                    >
+                                        <PauseCircle className="h-3.5 w-3.5 text-amber-600" />
+                                        <span>{t('Hold Sesi')}</span>
+                                    </Button>
+                                )
+                            )}
+
+                            {can('tenant.outbound.commit') && !isCompleted && (
+                                <Button
+                                    type="button"
+                                    disabled={isHold}
+                                    onClick={() => setIsCommitModalOpen(true)}
+                                    className="h-8 gap-1.5 rounded-md bg-blue-600 px-3 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                                >
+                                    <CheckCheck className="h-3.5 w-3.5" />
+                                    <span>{t('Potong Stok & Commit')}</span>
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+
+                    <form onSubmit={handleScanSubmit} className="flex items-center gap-2 pt-4">
+                        <div className="relative flex-1">
+                            <ScanBarcode className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                type="text"
+                                disabled={isSessionFrozen}
+                                value={barcodeInput}
+                                onChange={(e) => setBarcodeInput(e.target.value)}
+                                placeholder={
+                                    isSessionFrozen
+                                        ? t('Sesi picking dibekukan / selesai...')
+                                        : t('Scan Barcode SKU untuk picking...')
+                                }
+                                className="h-9 rounded-md border-border bg-background pr-12 pl-9 font-mono text-xs"
+                            />
+                            <kbd className="absolute top-1/2 right-2.5 -translate-y-1/2 rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+                                Enter
+                            </kbd>
+                        </div>
+                        <Button
+                            type="submit"
+                            disabled={isSessionFrozen || isSubmitting}
+                            className="h-9 gap-1.5 rounded-md px-4 text-xs font-medium text-primary-foreground bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
                         >
-                            <ArrowLeft className="w-5 h-5" />
-                        </Link>
+                            <Check className="h-3.5 w-3.5" />
+                            <span>{isSubmitting ? t('Verifikasi...') : t('Verifikasi')}</span>
+                        </Button>
+                    </form>
+                </div>
 
+                <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                    <div className="flex items-center justify-between rounded-lg border border-border bg-card p-4 shadow-md">
                         <div>
-                            <div className="flex items-center gap-2.5 flex-wrap">
-                                <h1 className="text-xl font-bold font-mono text-foreground tracking-tight">
-                                    {manifest.manifest_code}
-                                </h1>
-                                <span
-                                    className={`px-2.5 py-0.5 rounded-lg text-xs font-bold font-mono border ${
-                                        manifest.status === 'PACKING'
-                                            ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800'
-                                            : manifest.status === 'DISPATCHED'
-                                              ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
-                                              : 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800'
+                            <span className="font-medium text-muted-foreground">{t('Total SKU Demand')}</span>
+                            <div className="mt-1 text-xl font-bold text-foreground">
+                                {totalLineSku} <span className="text-xs font-normal text-muted-foreground">({totalTargetUnits} Unit)</span>
+                            </div>
+                        </div>
+                        <Boxes className="h-5 w-5 text-muted-foreground/70" />
+                    </div>
+
+                    <div className="flex items-center justify-between rounded-lg border border-border bg-card p-4 shadow-md">
+                        <div>
+                            <span className="font-medium text-muted-foreground">{t('Picked (Baik)')}</span>
+                            <div className="mt-1 text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                                {totalGoodUnits} Unit
+                            </div>
+                        </div>
+                        <CheckCircle2 className="h-5 w-5 text-emerald-500/70" />
+                    </div>
+
+                    <div className="flex items-center justify-between rounded-lg border border-border bg-card p-4 shadow-md">
+                        <div>
+                            <span className="font-medium text-muted-foreground">{t('Batal / Rusak')}</span>
+                            <div className="mt-1 text-xl font-bold text-amber-600 dark:text-amber-400">
+                                {totalDamagedUnits} Unit
+                            </div>
+                        </div>
+                        <AlertTriangle className="h-5 w-5 text-amber-500/70" />
+                    </div>
+
+                    <div className="flex items-center justify-between rounded-lg border border-border bg-card p-4 shadow-md">
+                        <div>
+                            <span className="font-medium text-muted-foreground">{t('Progress Picking')}</span>
+                            <div className="mt-1 text-xl font-bold text-foreground">{progressPct}%</div>
+                        </div>
+                        <Truck className="h-5 w-5 text-indigo-500/70" />
+                    </div>
+                </div>
+
+                <div className="rounded-lg bg-card text-card-foreground shadow-md border border-border overflow-hidden">
+                    <div className="p-4 border-b border-border flex flex-col md:flex-row items-center justify-between gap-4 bg-muted/20">
+                        <span className="font-bold text-sm text-foreground">
+                            {t('Detail Item Picking & Rak Asal')}
+                        </span>
+                        <div className="flex items-center space-x-2">
+                            {(['all', 'valid', 'process', 'issue'] as const).map((tab) => (
+                                <button
+                                    key={tab}
+                                    type="button"
+                                    onClick={() => setFilterTab(tab)}
+                                    className={`rounded-md px-3 py-1 text-xs font-medium transition-colors cursor-pointer ${
+                                        filterTab === tab
+                                            ? 'border border-border bg-background text-foreground shadow-2xs'
+                                            : 'text-muted-foreground hover:text-foreground'
                                     }`}
                                 >
-                                    {manifest.status}
-                                </span>
-                            </div>
-
-                            <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1.5 flex-wrap">
-                                <span className="flex items-center gap-1.5 font-semibold text-foreground">
-                                    <Users className="w-3.5 h-3.5 text-muted-foreground" />
-                                    {manifest.customer_name || t("Customer General")}
-                                </span>
-                                <span>{t("•")}</span>
-                                <span className="font-mono">
-                                    {t("SO:")}{' '}<strong>{manifest.so_number || manifest.manifest_code}</strong>
-                                </span>
-                                <span>{t("•")}</span>
-                                <span className="flex items-center gap-1 font-mono">
-                                    <Truck className="w-3.5 h-3.5 text-muted-foreground" />
-                                    {manifest.vehicle_no || '-'} {t("(")}{manifest.vehicle_type || '-'}{t(")")}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Quick Control Actions */}
-                    <div className="flex items-center gap-2 flex-wrap">
-                        {/* <div className="h-9 px-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center gap-2 text-xs font-semibold">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <span>{t("Mobile Operator Sync Ready")}</span>
-                        </div> */}
-
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => setIsSuratJalanOpen(true)}
-                            className="bg-card hover:bg-muted border-border text-foreground font-semibold text-xs h-9 px-3.5 rounded-xl gap-1.5 cursor-pointer"
-                        >
-                            <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                            <span>{t("Surat Jalan")}</span>
-                        </Button>
-
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => setIsHoldModalOpen(true)}
-                            className="bg-card hover:bg-muted border-border text-foreground font-semibold text-xs h-9 px-3.5 rounded-xl gap-1.5 cursor-pointer"
-                        >
-                            <PauseCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                            <span>{t("Hold Sesi")}</span>
-                        </Button>
-
-                        <Button
-                            type="button"
-                            onClick={() => setIsCommitModalOpen(true)}
-                            disabled={manifest.status === 'DISPATCHED'}
-                            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs h-9 px-4 rounded-xl shadow-md gap-1.5 cursor-pointer"
-                        >
-                            <CheckSquare className="w-4 h-4" />
-                            <span>{t("Submit Pengiriman")}</span>
-                        </Button>
-                    </div>
-                </div>
-
-                {/* Scanner & Progress Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-                    {/* Barcode Scanner Input Card */}
-                    <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-5 shadow-xs text-card-foreground flex flex-col justify-between gap-4">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                                    <QrCode className="w-4 h-4" />
-                                </div>
-                                <div>
-                                    <h3 className="text-sm font-bold text-foreground">
-                                        {t("Scan Barcode / SKU Item Outbound")}</h3>
-                                    <p className="text-xs text-muted-foreground">
-                                        {t("Arahkan barcode scanner ke kemasan kardus/SKU saat verifikasi packing")}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <form onSubmit={handleScanSubmit} className="flex gap-2">
-                            <div className="relative flex-1">
-                                <Input
-                                    type="text"
-                                    placeholder={t("Scan EAN-13 / SKU Barcode item di meja packing...")}
-                                    value={barcodeInput}
-                                    onChange={(e) => setBarcodeInput(e.target.value)}
-                                    className="pl-9 bg-muted/50 border-input text-xs font-mono h-10 rounded-xl focus:bg-card"
-                                    autoFocus
-                                />
-                                <QrCode className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
-                            </div>
-                            <Button
-                                type="submit"
-                                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-10 px-5 rounded-xl cursor-pointer"
-                            >
-                                {t("Validate Scan")}</Button>
-                        </form>
-                    </div>
-
-                    {/* Progress Card */}
-                    <div className="bg-card border border-border rounded-2xl p-5 shadow-xs text-card-foreground flex flex-col justify-between">
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-muted-foreground">
-                                {t("Progress Verifikasi Packing")}</span>
-                            <span className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400">
-                                {manifest.progress_percentage}{t("%")}</span>
-                        </div>
-
-                        <div className="w-full bg-muted/60 h-2.5 rounded-full overflow-hidden my-2">
-                            <div
-                                className="bg-blue-600 h-full rounded-full transition-all duration-300"
-                                style={{ width: `${manifest.progress_percentage}%` }}
-                            />
-                        </div>
-
-                        <div className="flex items-center justify-between text-xs pt-1">
-                            <span className="text-muted-foreground">
-                                {t("Target Total:")}{' '}<strong className="text-foreground">{manifest.total_so_units} {t("Unit")}</strong>
-                            </span>
-                            <span className="text-emerald-600 dark:text-emerald-400 font-bold">
-                                {manifest.packed_units} {t("Packed")}</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Table View of Items */}
-                <div className="bg-card border border-border rounded-2xl shadow-xs overflow-hidden text-card-foreground">
-                    <div className="p-4 border-b border-border flex items-center justify-between gap-4 flex-wrap">
-                        <div className="flex items-center gap-2">
-                            <h3 className="text-sm font-bold text-foreground">
-                                {t("Daftar SKU & Zone Picking Rak")}</h3>
-                            <span className="px-2 py-0.5 bg-muted/60 text-muted-foreground text-xs font-mono font-bold rounded-md">
-                                {items.length} {t("SKU")}</span>
-                        </div>
-
-                        <div className="flex items-center gap-1 bg-muted/40 p-1 rounded-xl border border-border">
-                            <button
-                                onClick={() => setFilterStatus('all')}
-                                className={`px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer ${
-                                    filterStatus === 'all'
-                                        ? 'bg-card text-foreground shadow-xs'
-                                        : 'text-muted-foreground hover:text-foreground'
-                                }`}
-                            >
-                                {t("Semua")}</button>
-                            <button
-                                onClick={() => setFilterStatus('picking')}
-                                className={`px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer ${
-                                    filterStatus === 'picking'
-                                        ? 'bg-card text-foreground shadow-xs'
-                                        : 'text-muted-foreground hover:text-foreground'
-                                }`}
-                            >
-                                {t("Picking")}</button>
-                            <button
-                                onClick={() => setFilterStatus('packed')}
-                                className={`px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer ${
-                                    filterStatus === 'packed'
-                                        ? 'bg-card text-foreground shadow-xs'
-                                        : 'text-muted-foreground hover:text-foreground'
-                                }`}
-                            >
-                                {t("Packed")}</button>
+                                    {tab === 'all' && `Semua (${items.length})`}
+                                    {tab === 'valid' && `Valid (${validCount})`}
+                                    {tab === 'process' && `Proses (${processCount})`}
+                                    {tab === 'issue' && `Ada Selisih (${issueCount})`}
+                                </button>
+                            ))}
                         </div>
                     </div>
 
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs">
-                            <thead className="bg-muted/40 text-muted-foreground font-semibold border-b border-border">
-                                <tr>
-                                    <th className="py-3 px-5 whitespace-nowrap">{"SKU & Barcode"}</th>
-                                    <th className="py-3 px-5 whitespace-nowrap">{"Nama Produk"}</th>
-                                    <th className="py-3 px-5 whitespace-nowrap">{"Lokasi Rak Asal"}</th>
-                                    <th className="py-3 px-5 text-right whitespace-nowrap">{"Target SO"}</th>
-                                    <th className="py-3 px-5 text-right whitespace-nowrap">{"Diambil (Picked)"}</th>
-                                    <th className="py-3 px-5 text-right whitespace-nowrap">{"Packed"}</th>
-                                    <th className="py-3 px-5 text-center whitespace-nowrap">{"Status"}</th>
-                                    <th className="py-3 px-5 text-center whitespace-nowrap">{"Aksi"}</th>
+                        <table className="w-full border-collapse text-left text-sm">
+                            <thead>
+                                <tr className="border-b border-border bg-muted/50 text-muted-foreground">
+                                    <th className="p-4 font-semibold">SKU / Barcode</th>
+                                    <th className="p-4 font-semibold">Nama Produk</th>
+                                    <th className="p-4 font-semibold text-right">Target Demand SO</th>
+                                    <th className="p-4 font-semibold text-right">Fisik Dipick</th>
+                                    <th className="p-4 font-semibold">Rak Asal (Source Rack)</th>
+                                    <th className="p-4 font-semibold text-center">Status</th>
+                                    <th className="p-4 font-semibold text-right">{t('Actions')}</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-border text-foreground">
+                            <tbody className="divide-y divide-border">
                                 {filteredItems.length > 0 ? (
-                                    filteredItems.map((item) => (
-                                        <tr key={item.id} className="hover:bg-muted/30 transition-colors">
-                                            <td className="py-3.5 px-5">
-                                                <div className="font-mono font-bold text-blue-600 dark:text-blue-400">
+                                    filteredItems.map((item) => {
+                                        const targetQty = Number(item.so_qty) || 0;
+                                        const damagedQty = getDamagedQty(item);
+                                        const goodQty = Number((item as OutboundItemWithGoodQty).good_qty) || 0;
+                                        const noteItem = item as OutboundItemWithNotes;
+                                        const noteText = noteItem.damage_note ?? noteItem.issue_note ?? null;
+
+                                        return (
+                                            <tr key={item.id} className="hover:bg-muted/50 transition-colors">
+                                                <td className="p-4 font-mono font-semibold text-primary">
                                                     {item.sku}
-                                                </div>
-                                                <div className="font-mono text-[11px] text-muted-foreground">
-                                                    {item.barcode}
-                                                </div>
-                                            </td>
-                                            <td className="py-3.5 px-5">
-                                                <div className="font-semibold text-foreground">{item.product_name}</div>
-                                                <div className="text-[11px] text-muted-foreground">
-                                                    {item.category} {t("• Batch:")}{' '}{item.batch_no}
-                                                </div>
-                                            </td>
-                                            <td className="py-3.5 px-5">
-                                                <span className="px-2 py-1 bg-muted/60 border border-border rounded-lg font-mono font-bold text-foreground">
-                                                    {item.source_rack}
-                                                </span>
-                                            </td>
-                                            <td className="py-3.5 px-5 text-right font-mono font-semibold">
-                                                {item.so_qty} {item.unit}
-                                            </td>
-                                            <td className="py-3.5 px-5 text-right font-mono font-semibold text-blue-600 dark:text-blue-400">
-                                                {item.picked_qty} {item.unit}
-                                            </td>
-                                            <td className="py-3.5 px-5 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                                                {item.packed_qty} {item.unit}
-                                            </td>
-                                            <td className="py-3.5 px-5 text-center">
-                                                <span
-                                                    className={`px-2 py-0.5 rounded-md text-[11px] font-bold font-mono border ${
-                                                        item.status === 'packed'
-                                                            ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
-                                                            : item.status === 'picking'
-                                                              ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800'
-                                                              : item.status === 'issue'
-                                                                ? 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800'
-                                                                : 'bg-muted/60 text-muted-foreground border-border'
-                                                    }`}
-                                                >
-                                                    {item.status_label}
-                                                </span>
-                                            </td>
-                                            <td className="py-3.5 px-5 text-center">
-                                                <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    onClick={() => setSelectedItemForDrawer(item)}
-                                                    className="h-8 px-3 text-xs font-semibold bg-card hover:bg-muted border-border cursor-pointer"
-                                                >
-                                                    {t("Detail Packing")}</Button>
-                                            </td>
-                                        </tr>
-                                    ))
+                                                    <div className="text-[10px] font-normal text-muted-foreground">
+                                                        {item.barcode}
+                                                    </div>
+                                                </td>
+                                                <td className="p-4 font-medium text-foreground">
+                                                    {item.product_name}
+                                                    {noteText && (
+                                                        <div className="text-[10px] text-amber-600 dark:text-amber-400 mt-0.5 italic">
+                                                            Catatan: {noteText}
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                <td className="p-4 text-right font-mono text-xs">
+                                                    {targetQty} {item.unit}
+                                                </td>
+                                                <td className="p-4 text-right font-mono text-xs font-medium">
+                                                    {goodQty} Baik{' '}
+                                                    {damagedQty > 0 && (
+                                                        <span className="font-bold text-amber-600">
+                                                            ({damagedQty} Batal/Rusak)
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td className="p-4">
+                                                    <span className="rounded border border-border bg-muted px-2 py-0.5 font-mono text-xs font-medium">
+                                                        {item.source_rack || 'Belum Dialokasi'}
+                                                    </span>
+                                                </td>
+                                                <td className="p-4 text-center">
+                                                    <span className="rounded border border-border bg-muted/50 px-2 py-0.5 text-[10px] font-medium">
+                                                        {item.status_label || item.status}
+                                                    </span>
+                                                </td>
+                                                <td className="p-4 text-right">
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="outline" size="sm" disabled={isSessionFrozen}>
+                                                                {t('Actions')}
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end" className="w-44">
+                                                            <DropdownMenuItem
+                                                                onClick={() => setSelectedDrawerItem(item)}
+                                                                className="cursor-pointer"
+                                                            >
+                                                                <Pencil className="mr-2 h-4 w-4 text-muted-foreground" />
+                                                                <span>{t('Edit Picking / Rak')}</span>
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
                                 ) : (
                                     <tr>
-                                        <td colSpan={8} className="py-10 text-center text-muted-foreground">
-                                            {t("Belum ada item terdaftar pada workspace outbound ini.")}</td>
+                                        <td colSpan={7} className="p-6 text-center text-muted-foreground">
+                                            {t('Tidak ada item picking aktif.')}
+                                        </td>
                                     </tr>
                                 )}
                             </tbody>
@@ -424,25 +495,25 @@ export default function Show({ manifest: initialManifest, items: initialItems }:
                 </div>
             </div>
 
-            {/* Modals & Slide-over Drawer */}
-            <PackingDrawer
-                isOpen={!!selectedItemForDrawer}
-                onClose={() => setSelectedItemForDrawer(null)}
-                item={selectedItemForDrawer}
-                onSave={handleSaveDrawer}
+            <PickingModal
+                isOpen={Boolean(selectedDrawerItem)}
+                onClose={() => setSelectedDrawerItem(null)}
+                item={selectedDrawerItem}
+                locations={locations}
+                onSave={handlePickingSave}
             />
 
-            <DispatchCommitModal
+            <CommitModal
                 isOpen={isCommitModalOpen}
                 onClose={() => setIsCommitModalOpen(false)}
-                onConfirm={handleConfirmCommit}
+                onConfirm={handleCommit}
                 manifest={manifest}
             />
 
-            <HoldShippingModal
+            <HoldSessionModal
                 isOpen={isHoldModalOpen}
                 onClose={() => setIsHoldModalOpen(false)}
-                onConfirm={handleConfirmHold}
+                onConfirm={handleHoldSession}
             />
 
             <SuratJalanPreviewModal
@@ -457,8 +528,8 @@ export default function Show({ manifest: initialManifest, items: initialItems }:
 
 Show.layout = {
     breadcrumbs: [
-        { title: "Transaction", href: '#' },
-        { title: "Outbound Management", href: '#' },
-        { title: "Workspace Pengiriman", href: '#' },
+        { title: 'Transaction', href: '#' },
+        { title: 'Outbound Management', href: '/transactions/outbound' },
+        { title: 'Workspace Picking', href: '#' },
     ],
 };

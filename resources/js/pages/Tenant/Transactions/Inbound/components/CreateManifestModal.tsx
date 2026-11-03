@@ -1,171 +1,125 @@
-import React, { useState } from 'react';
-import { router, usePage } from '@inertiajs/react';
+import React from 'react';
+import { useForm, usePage } from '@inertiajs/react';
 import { toast } from 'sonner';
-import {
-    Building2,
-    FileCheck2,
-    Plus,
-    Trash2,
-    Truck,
-    User,
-    X,
-} from 'lucide-react';
+import { FileCheck2, Plus, Trash2, X } from 'lucide-react';
 import { useTranslation } from '@/context/language-context';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+interface MasterSku {
+    id: number;
+    sku: string;
+    product_name: string;
+}
+
+interface SupplierOption {
+    id: number;
+    name: string;
+}
 
 interface CreateManifestModalProps {
     isOpen: boolean;
     onClose: () => void;
+    suppliers: SupplierOption[];
+    masterSkus: MasterSku[];
 }
 
-interface SkuItemRow {
+export interface SkuRowFormItem {
     id: string;
-    sku: string;
-    product_name: string;
+    sku_id: number;
     po_qty: number;
+}
+
+interface InboundManifestForm {
+    supplier_id: string;
+    items: SkuRowFormItem[];
 }
 
 export const CreateManifestModal: React.FC<CreateManifestModalProps> = ({
     isOpen,
     onClose,
+    suppliers = [],
+    masterSkus = [],
 }) => {
     const { t } = useTranslation();
     const { current_tenant, auth } = usePage().props as any;
 
-    const currentPathSlug = window.location.pathname.split('/')[1];
+    const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
     const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
 
-    // Mock Purchase Order DB Data for Auto-Load Demonstration
-    const AVAILABLE_POS: Record<string, { supplier: string; items: SkuItemRow[] }> = {
-        'PO-2026-001': {
-            supplier: 'PT Indofood Sukses Makmur Tbk',
-            items: [
-                { id: '101', sku: 'SKU-8849', product_name: 'Indomie Goreng Spesial 85g', po_qty: 120 },
-                { id: '102', sku: 'SKU-8850', product_name: 'Indomie Kuah Ayam Bawang 75g', po_qty: 80 },
-            ],
-        },
-        'PO-2026-002': {
-            supplier: 'PT Mayora Indah Tbk',
-            items: [
-                { id: '201', sku: 'SKU-7721', product_name: 'Kopiko 78c Coffee Drink 240ml', po_qty: 200 },
-                { id: '202', sku: 'SKU-7722', product_name: 'Torabika Cappuccino 25g (Pack 10)', po_qty: 150 },
-            ],
-        },
-        'PO-2026-003': {
-            supplier: 'PT Unilever Indonesia Tbk',
-            items: [
-                { id: '301', sku: 'SKU-3310', product_name: 'Sabun Lifebuoy Total 10 110g', po_qty: 300 },
-                { id: '302', sku: 'SKU-3311', product_name: 'Pepsodent Herbal 190g', po_qty: 180 },
-            ],
-        },
-    };
-
-    // Master SKU database list for selection
-    const MASTER_SKUS = [
-        { sku: 'SKU-8849', product_name: 'Indomie Goreng Spesial 85g' },
-        { sku: 'SKU-8850', product_name: 'Indomie Kuah Ayam Bawang 75g' },
-        { sku: 'SKU-7721', product_name: 'Kopiko 78c Coffee Drink 240ml' },
-        { sku: 'SKU-7722', product_name: 'Torabika Cappuccino 25g (Pack 10)' },
-        { sku: 'SKU-3310', product_name: 'Sabun Lifebuoy Total 10 110g' },
-        { sku: 'SKU-3311', product_name: 'Pepsodent Herbal 190g' },
-        { sku: 'SKU-9901', product_name: 'Bonus Sample Supplier (Unplanned)' },
-    ];
-
-    // Form States
-    const [poReference, setPoReference] = useState<string>('PO-2026-001');
-    const [supplierName, setSupplierName] = useState<string>(AVAILABLE_POS['PO-2026-001'].supplier);
-    const [dockBay, setDockBay] = useState<string>('BAY-01');
-    const [vehicleNo, setVehicleNo] = useState<string>('B 9382 UXZ');
-    const [vehicleType, setVehicleType] = useState<string>('Wingbox 20T');
-    const [notes, setNotes] = useState<string>('');
-
-    // Pre-defined Expected SKU items for Mobile Operator Scan (Auto-loaded from PO-2026-001 by default)
-    const [skuItems, setSkuItems] = useState<SkuItemRow[]>(AVAILABLE_POS['PO-2026-001'].items);
+    const { data, setData, post, processing, reset, errors } = useForm<InboundManifestForm>({
+        supplier_id: '',
+        items: [],
+    });
 
     if (!isOpen) return null;
 
-    // Handle PO selection & Auto-load items
-    const handlePoChange = (selectedPo: string) => {
-        setPoReference(selectedPo);
-        if (selectedPo && AVAILABLE_POS[selectedPo]) {
-            setSupplierName(AVAILABLE_POS[selectedPo].supplier);
-            setSkuItems(AVAILABLE_POS[selectedPo].items);
-            toast.success(`Data PO ${selectedPo} & ${AVAILABLE_POS[selectedPo].items.length} item otomatis dimuat!`);
-        } else {
-            setSupplierName('');
-            setSkuItems([]);
-        }
-    };
-
-    const handleAddSkuRow = () => {
-        const newId = String(Date.now());
-        const defaultMaster = MASTER_SKUS[6]; // Bonus item
-        setSkuItems([
-            ...skuItems,
-            { id: newId, sku: defaultMaster.sku, product_name: defaultMaster.product_name, po_qty: 10 },
-        ]);
-        toast.info('Baris barang ekstra / bonus ditambahkan.');
-    };
-
-    const handleRemoveSkuRow = (id: string) => {
-        if (skuItems.length === 1) {
-            toast.error('Manifest harus memiliki minimal 1 item barang!');
+    const handleAddRow = () => {
+        if (!masterSkus.length) {
+            toast.error(t('Tidak ada Master SKU tersedia di database!'));
             return;
         }
-        setSkuItems(skuItems.filter((it) => it.id !== id));
+        const newRow: SkuRowFormItem = {
+            id: String(Date.now()),
+            sku_id: masterSkus[0].id,
+            po_qty: 10,
+        };
+        setData('items', [...data.items, newRow]);
     };
 
-    const handleSelectSkuForBonusRow = (id: string, selectedSkuCode: string) => {
-        const matched = MASTER_SKUS.find((m) => m.sku === selectedSkuCode);
-        setSkuItems(
-            skuItems.map((it) =>
-                it.id === id
-                    ? {
-                          ...it,
-                          sku: selectedSkuCode,
-                          product_name: matched ? matched.product_name : it.product_name,
-                      }
-                    : it,
-            ),
+    const handleRemoveRow = (rowId: string) => {
+        setData('items', data.items.filter((r) => r.id !== rowId));
+    };
+
+    const handleSkuChange = (rowId: string, skuIdStr: string) => {
+        const selectedId = Number(skuIdStr);
+        setData(
+            'items',
+            data.items.map((r) => (r.id === rowId ? { ...r, sku_id: selectedId } : r))
         );
     };
 
-    const handleQtyChange = (id: string, qty: number) => {
-        setSkuItems(
-            skuItems.map((it) => (it.id === id ? { ...it, po_qty: qty } : it)),
+    const handleQtyChange = (rowId: string, qty: number) => {
+        setData(
+            'items',
+            data.items.map((r) => (r.id === rowId ? { ...r, po_qty: qty } : r))
         );
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        if (!data.supplier_id) {
+            toast.error(t('Pilih supplier terlebih dahulu!'));
+            return;
+        }
+        if (!data.items.length) {
+            toast.error(t('Manifest harus memiliki minimal 1 item barang!'));
+            return;
+        }
 
-        const targetManifestCode = poReference
-            ? `TX-INB-${poReference}`
-            : `TX-INB-${Math.floor(100000 + Math.random() * 900000)}`;
-
-        toast.success(`Manifest Inbound ${targetManifestCode} berhasil diinisiasi (${skuItems.length} SKU Registered)!`);
-
-        onClose();
-
-        // Navigate to the receiving workspace
-        router.visit(`/${tenantSlug}/transactions/inbound/${targetManifestCode}`);
+        post(`/${tenantSlug}/transactions/inbound`, {
+            onSuccess: () => {
+                toast.success(t('Manifest Inbound berhasil diinisiasi!'));
+                reset();
+                onClose();
+            },
+        });
     };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 font-sans animate-in fade-in duration-200">
             <div className="bg-card text-card-foreground border border-border rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-                {/* Modal Header */}
                 <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-muted/40">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/80 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-2xs">
+                        <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/80 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                             <FileCheck2 className="w-5 h-5" />
                         </div>
                         <div>
                             <h3 className="text-sm font-bold text-foreground tracking-tight">
-                                {t("Inisiasi Manifest Inbound PO Baru")}</h3>
+                                {t("Inisiasi Manifest Inbound PO Baru")}
+                            </h3>
                             <p className="text-xs text-muted-foreground mt-0.5">
-                                {t("Tarik data PO resmi & registrasi kedatangan armada supplier")}</p>
+                                {t("Tarik data PO resmi & registrasi kedatangan barang supplier")}
+                            </p>
                         </div>
                     </div>
                     <button
@@ -177,147 +131,77 @@ export const CreateManifestModal: React.FC<CreateManifestModalProps> = ({
                     </button>
                 </div>
 
-                {/* Form Content */}
                 <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4 text-xs overflow-y-auto">
-                    {/* Referensi PO & Dock Bay */}
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="flex flex-col gap-1.5">
-                            <label className="font-semibold text-foreground flex items-center gap-1.5">
-                                <span>{t("Pilih Dokumen PO")}</span>
-                                <span className="text-[10px] bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">{t("Auto-Load")}</span>
-                            </label>
-                            <Select value={poReference} onValueChange={handlePoChange}>
-                                <SelectTrigger className="h-9 w-full bg-background text-foreground font-mono font-bold">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="PO-2026-001">{t("PO-2026-001 (PT Indofood)")}</SelectItem>
-                                    <SelectItem value="PO-2026-002">{t("PO-2026-002 (PT Mayora)")}</SelectItem>
-                                    <SelectItem value="PO-2026-003">{t("PO-2026-003 (PT Unilever)")}</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div className="flex flex-col gap-1.5">
-                            <label className="font-semibold text-foreground">{t("Pintu Dock Unloading")}</label>
-                            <Select value={dockBay} onValueChange={setDockBay}>
-                                <SelectTrigger className="h-9 w-full bg-background text-foreground font-mono font-bold">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="BAY-01">{t("Pintu Depan / BAY-01 (Default)")}</SelectItem>
-                                    <SelectItem value="BAY-02">{t("BAY-02 (Zona Fast-Moving)")}</SelectItem>
-                                    <SelectItem value="BAY-03">{t("BAY-03 (Zona High Density)")}</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-
-                    {/* Supplier Name */}
                     <div className="flex flex-col gap-1.5">
-                        <label className="font-semibold text-foreground">{t("Pemasok / Supplier (Otomatis Terisi)")}</label>
-                        <div className="relative">
-                            <input
-                                type="text"
-                                readOnly
-                                value={supplierName}
-                                className="w-full h-9 pl-9 pr-3 bg-muted/60 text-muted-foreground border border-input rounded-lg font-medium outline-none cursor-not-allowed"
-                            />
-                            <Building2 className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
-                        </div>
+                        <label className="font-semibold text-foreground">{t("Pilih Supplier / Pemasok")}</label>
+                        <Select
+                            value={data.supplier_id}
+                            onValueChange={(val) => setData('supplier_id', val)}
+                        >
+                            <SelectTrigger className="h-9 w-full bg-background text-foreground font-medium">
+                                <SelectValue placeholder={t("Pilih Supplier...")} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {suppliers.map((sup) => (
+                                    <SelectItem key={sup.id} value={String(sup.id)}>
+                                        {sup.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        {errors.supplier_id && <span className="text-red-500 text-[10px]">{errors.supplier_id}</span>}
                     </div>
 
-                    {/* Armada Grid */}
-                    {/* <div className="grid grid-cols-2 gap-3">
-                        <div className="flex flex-col gap-1.5">
-                            <label className="font-semibold text-foreground">{t("No. Polisi Armada")}</label>
-                            <div className="relative">
-                                <input
-                                    type="text"
-                                    value={vehicleNo}
-                                    onChange={(e) => setVehicleNo(e.target.value)}
-                                    placeholder={t("Cth: B 9382 UXZ")}
-                                    className="w-full h-9 pl-9 pr-3 bg-muted/50 hover:bg-card focus:bg-card border border-input focus:border-blue-600 rounded-lg text-foreground font-mono font-bold uppercase outline-none transition-all"
-                                />
-                                <Truck className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col gap-1.5">
-                            <label className="font-semibold text-foreground">{t("Jenis Kendaraan")}</label>
-                            <input
-                                type="text"
-                                value={vehicleType}
-                                onChange={(e) => setVehicleType(e.target.value)}
-                                placeholder={t("Cth: Wingbox 20T, Box Container")}
-                                className="w-full h-9 px-3 bg-muted/50 hover:bg-card focus:bg-card border border-input focus:border-blue-600 rounded-lg text-foreground font-medium outline-none transition-all"
-                            />
-                        </div>
-                    </div> */}
-
-                    {/* Expected Item SKUs for Mobile Operator Reference */}
                     <div className="border border-border rounded-xl p-3 bg-muted/30 flex flex-col gap-2.5">
                         <div className="flex items-center justify-between">
                             <div>
-                                <span className="font-bold text-foreground block">{t("Daftar Barang Acuan PO (Auto-Loaded)")}</span>
-                                <span className="text-[11px] text-muted-foreground">{t("Admin tidak perlu ngetik manual, cukup verifikasi kuantitas")}</span>
+                                <span className="font-bold text-foreground block">{t("Daftar Barang Acuan PO")}</span>
+                                <span className="text-[11px] text-muted-foreground">{t("Pilih item barang dan jumlah unit target PO")}</span>
                             </div>
                             <button
                                 type="button"
-                                onClick={handleAddSkuRow}
+                                onClick={handleAddRow}
                                 className="h-7 px-2.5 bg-muted hover:bg-muted/80 text-foreground border border-input rounded-lg text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-colors"
-                                title={t("Tambah barang sampel/bonus dari supplier")}
                             >
                                 <Plus className="w-3.5 h-3.5 text-blue-600" />
-                                <span>{t("+ Barang Ekstra (Opsional)")}</span>
+                                <span>{t("+ Tambah Barang")}</span>
                             </button>
                         </div>
 
-                        <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
-                            {skuItems.map((item) => (
-                                <div key={item.id} className="grid grid-cols-12 gap-2 items-center bg-card border border-border p-2 rounded-lg shadow-2xs">
-                                    {/* SKU Selector / Display */}
-                                    <div className="col-span-4">
+                        <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                            {data.items.map((row) => (
+                                <div key={row.id} className="grid grid-cols-12 gap-2 items-center bg-card border border-border p-2 rounded-lg shadow-2xs">
+                                    <div className="col-span-8">
                                         <Select
-                                            value={item.sku}
-                                            onValueChange={(value) => handleSelectSkuForBonusRow(item.id, value)}
+                                            value={String(row.sku_id)}
+                                            onValueChange={(val) => handleSkuChange(row.id, val)}
                                         >
-                                            <SelectTrigger size="sm" className="h-8 w-full bg-background text-foreground font-mono font-bold text-[11px]">
+                                            <SelectTrigger className="h-8 w-full bg-background text-foreground font-medium text-[11px]">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {MASTER_SKUS.map((m) => (
-                                                    <SelectItem key={m.sku} value={m.sku}>
-                                                        {m.sku}
+                                                {masterSkus.map((m) => (
+                                                    <SelectItem key={m.id} value={String(m.id)}>
+                                                        {m.sku} - {m.product_name}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
                                     </div>
-                                    {/* Product Name Display */}
-                                    <div className="col-span-5">
-                                        <input
-                                            type="text"
-                                            readOnly
-                                            value={item.product_name}
-                                            className="w-full h-7 px-2 bg-muted/50 border border-input rounded text-[11px] text-muted-foreground truncate"
-                                        />
-                                    </div>
-                                    {/* Qty Input */}
-                                    <div className="col-span-2">
+                                    <div className="col-span-3">
                                         <input
                                             type="number"
                                             min={1}
-                                            value={item.po_qty}
-                                            onChange={(e) => handleQtyChange(item.id, parseInt(e.target.value) || 1)}
+                                            value={row.po_qty}
+                                            onChange={(e) => handleQtyChange(row.id, parseInt(e.target.value) || 1)}
                                             placeholder={t("Qty")}
-                                            className="w-full h-7 px-1.5 bg-background border border-input rounded text-center font-bold text-[11px] text-foreground"
+                                            className="w-full h-8 px-1.5 bg-background border border-input rounded text-center font-bold text-[11px] text-foreground"
                                         />
                                     </div>
                                     <div className="col-span-1 flex justify-center">
                                         <button
                                             type="button"
-                                            onClick={() => handleRemoveSkuRow(item.id)}
+                                            onClick={() => handleRemoveRow(row.id)}
                                             className="text-muted-foreground hover:text-red-500 cursor-pointer p-1 transition-colors"
                                         >
                                             <Trash2 className="w-3.5 h-3.5" />
@@ -328,19 +212,21 @@ export const CreateManifestModal: React.FC<CreateManifestModalProps> = ({
                         </div>
                     </div>
 
-                    {/* Modal Footer Actions */}
                     <div className="pt-3 border-t border-border flex items-center justify-end gap-2.5">
                         <button
                             type="button"
                             onClick={onClose}
                             className="h-9 px-4 rounded-xl border border-border bg-card hover:bg-muted text-foreground font-semibold cursor-pointer transition-colors"
                         >
-                            {t("Batal")}</button>
+                            {t("Batal")}
+                        </button>
                         <button
                             type="submit"
-                            className="h-9 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-md cursor-pointer transition-all"
+                            disabled={processing}
+                            className="h-9 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold shadow-md cursor-pointer transition-all"
                         >
-                            {t("Inisiasi Manifest PO")}</button>
+                            {processing ? t("Menyimpan...") : t("Inisiasi Manifest PO")}
+                        </button>
                     </div>
                 </form>
             </div>

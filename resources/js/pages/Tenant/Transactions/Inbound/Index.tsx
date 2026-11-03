@@ -1,8 +1,14 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { CheckCircle2, Clock, Package, Plus, Warehouse } from 'lucide-react';
+import { CheckCircle2, Clock, Package, Plus, Warehouse, Eye } from 'lucide-react';
 import { useState } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useTranslation } from '@/context/language-context';
 import { usePermission } from '@/utils/permission';
 import {
@@ -35,6 +41,12 @@ interface SupplierOption {
     name: string;
 }
 
+interface MasterSkuOption {
+    id: number;
+    sku: string;
+    product_name: string;
+}
+
 interface InboundIndexProps {
     manifests: TransactionPage<ManifestItem>;
     summary: {
@@ -45,6 +57,7 @@ interface InboundIndexProps {
     };
     statuses: string[];
     suppliers: SupplierOption[];
+    masterSkus: MasterSkuOption[];
     filters: Partial<TransactionFilters>;
 }
 
@@ -53,12 +66,14 @@ export default function Index({
     summary,
     statuses,
     suppliers,
+    masterSkus,
     filters,
 }: InboundIndexProps) {
     const { t, locale } = useTranslation();
     const { current_tenant, auth } = usePage().props as any;
     const { can } = usePermission();
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
     const currentPathSlug =
         typeof window !== 'undefined'
             ? window.location.pathname.split('/')[1]
@@ -112,6 +127,7 @@ export default function Index({
                     }
                 />
 
+                {/* Stat Cards */}
                 <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     {stats.map(({ label, value, icon: Icon }) => (
                         <article
@@ -133,6 +149,7 @@ export default function Index({
                     ))}
                 </section>
 
+                {/* Filter Bar */}
                 <TransactionFilterBar
                     route={route}
                     kind="inbound"
@@ -141,29 +158,32 @@ export default function Index({
                     suppliers={suppliers}
                 />
 
-                <section className="overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-sm">
+                {/* Standardized Table Section */}
+                <section className="rounded-lg bg-card text-card-foreground shadow-md border border-border overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full border-collapse text-left text-sm">
-                            <thead className="border-b border-border bg-muted/40 text-xs font-semibold text-muted-foreground">
-                                <tr>
-                                    <th className="px-5 py-3.5 whitespace-nowrap">
+                            <thead>
+                                <tr className="border-b border-border bg-muted/50 text-muted-foreground">
+                                    <th className="p-4 font-semibold whitespace-nowrap">
                                         {t('table_reference')}
                                     </th>
-                                    <th className="px-5 py-3.5 whitespace-nowrap">
+                                    <th className="p-4 font-semibold whitespace-nowrap">
                                         {t('table_supplier')}
                                     </th>
-                                    <th className="px-5 py-3.5 whitespace-nowrap">
+                                    <th className="p-4 font-semibold whitespace-nowrap">
                                         {t('table_item_summary')}
                                     </th>
-                                    <th className="px-5 py-3.5 whitespace-nowrap">
+                                    <th className="p-4 font-semibold whitespace-nowrap">
                                         {t('table_status')}
                                     </th>
-                                    <th className="px-5 py-3.5 whitespace-nowrap">
+                                    <th className="p-4 font-semibold whitespace-nowrap">
                                         {t('table_created_at')}
                                     </th>
-                                    <th className="px-5 py-3.5 text-right whitespace-nowrap">
-                                        {t('table_action')}
-                                    </th>
+                                    {can('tenant.inbound.show') && (
+                                        <th className="p-4 font-semibold text-right whitespace-nowrap">
+                                            {t('Actions')}
+                                        </th>
+                                    )}
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border">
@@ -171,21 +191,21 @@ export default function Index({
                                     manifests.data.map((manifest) => (
                                         <tr
                                             key={manifest.manifest_code}
-                                            className="transition-colors hover:bg-muted/30"
+                                            className="hover:bg-muted/50 transition-colors"
                                         >
-                                            <td className="px-5 py-4 font-mono text-xs font-semibold text-primary">
+                                            <td className="p-4 font-mono font-semibold text-primary">
                                                 {manifest.manifest_code}
                                             </td>
-                                            <td className="px-5 py-4 text-sm font-medium text-foreground">
+                                            <td className="p-4 font-medium text-foreground">
                                                 {manifest.supplier_name}
                                             </td>
-                                            <td className="px-5 py-4 text-sm text-muted-foreground">
+                                            <td className="p-4 text-muted-foreground">
                                                 {manifest.total_skus}{' '}
                                                 {t('table_skus')} ·{' '}
                                                 {manifest.total_units}{' '}
                                                 {t('table_units')}
                                             </td>
-                                            <td className="px-5 py-4">
+                                            <td className="p-4">
                                                 <span className="inline-flex rounded-lg border border-border bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
                                                     {transactionStatusLabel(
                                                         manifest.status,
@@ -193,7 +213,7 @@ export default function Index({
                                                     )}
                                                 </span>
                                             </td>
-                                            <td className="px-5 py-4 text-xs whitespace-nowrap text-muted-foreground">
+                                            <td className="p-4 text-xs whitespace-nowrap text-muted-foreground">
                                                 {new Date(
                                                     manifest.created_at,
                                                 ).toLocaleString(
@@ -202,29 +222,35 @@ export default function Index({
                                                         : 'en-US',
                                                 )}
                                             </td>
-                                            <td className="px-5 py-4 text-right">
-                                                <Button
-                                                    asChild
-                                                    size="sm"
-                                                    variant="outline"
-                                                    className="border-border"
-                                                >
-                                                    <Link
-                                                        href={`${route}/${manifest.manifest_code}`}
-                                                    >
-                                                        {t(
-                                                            'btn_view_transaction',
-                                                        )}
-                                                    </Link>
-                                                </Button>
-                                            </td>
+                                            {can('tenant.inbound.show') && (
+                                                <td className="p-4 text-right">
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="outline" size="sm">
+                                                                {t('Actions')}
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end" className="w-40">
+                                                            <DropdownMenuItem asChild>
+                                                                <Link
+                                                                    href={`${route}/${manifest.manifest_code}`}
+                                                                    className="flex items-center cursor-pointer"
+                                                                >
+                                                                    <Eye className="mr-2 h-4 w-4 text-muted-foreground" />
+                                                                    <span>{t('View Details')}</span>
+                                                                </Link>
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </td>
+                                            )}
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
                                         <td
-                                            colSpan={6}
-                                            className="px-5 py-14 text-center text-sm text-muted-foreground"
+                                            colSpan={can('tenant.inbound.show') ? 6 : 5}
+                                            className="p-6 text-center text-muted-foreground"
                                         >
                                             {t('empty_inbound_transactions')}
                                         </td>
@@ -233,6 +259,7 @@ export default function Index({
                             </tbody>
                         </table>
                     </div>
+
                     <TransactionPagination
                         route={route}
                         filters={filters}
@@ -242,10 +269,15 @@ export default function Index({
                     />
                 </section>
             </main>
-            <CreateManifestModal
-                isOpen={isCreateModalOpen}
-                onClose={() => setIsCreateModalOpen(false)}
-            />
+
+            {can('tenant.inbound.create') && (
+                <CreateManifestModal
+                    isOpen={isCreateModalOpen}
+                    onClose={() => setIsCreateModalOpen(false)}
+                    suppliers={suppliers}
+                    masterSkus={masterSkus}
+                />
+            )}
         </>
     );
 }

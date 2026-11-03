@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, CheckCheck, Database, PackageCheck, ShieldAlert, X } from 'lucide-react';
+import { CheckCheck, Database, PackageCheck, ShieldAlert, X } from 'lucide-react';
 import { useTranslation } from '@/context/language-context';
 import type { InboundManifest } from '@/types/inbound';
 
@@ -22,7 +22,6 @@ export const CommitModal: React.FC<CommitModalProps> = ({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 font-sans animate-in fade-in duration-200">
             <div className="bg-card text-card-foreground border border-border rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-150">
-                {/* Modal Header */}
                 <div className="p-5 border-b border-border flex items-center justify-between bg-muted/40">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/80 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-2xs">
@@ -30,9 +29,11 @@ export const CommitModal: React.FC<CommitModalProps> = ({
                         </div>
                         <div>
                             <h3 className="text-sm font-bold text-foreground tracking-tight">
-                                {t("Simpan ke Rak & Post Stok Database")}</h3>
+                                {t("Simpan ke Rak & Post Stok Database")}
+                            </h3>
                             <p className="text-xs text-muted-foreground mt-0.5">
-                                {t("Konfirmasi mutasi fisik inbound ke penyimpanan gudang")}</p>
+                                {t("Konfirmasi mutasi fisik inbound ke penyimpanan gudang")}
+                            </p>
                         </div>
                     </div>
                     <button
@@ -44,7 +45,6 @@ export const CommitModal: React.FC<CommitModalProps> = ({
                     </button>
                 </div>
 
-                {/* Modal Body */}
                 <div className="p-6 flex flex-col gap-4 text-xs">
                     <div className="bg-muted/50 border border-border rounded-xl p-3.5 flex items-center justify-between">
                         <div>
@@ -56,11 +56,11 @@ export const CommitModal: React.FC<CommitModalProps> = ({
                         <div className="text-right">
                             <span className="text-[11px] text-muted-foreground font-mono">{t("Lokasi Unloading")}</span>
                             <div className="font-mono font-semibold text-blue-600 dark:text-blue-400">
-                                {manifest.warehouse_name} {t("(")}{manifest.dock_bay || t("DOCK-01")}{t(")")}</div>
+                                {manifest.warehouse_name} {t("(")}{manifest.dock_bay || t("BAY-01")}{t(")")}
+                            </div>
                         </div>
                     </div>
 
-                    {/* Breakdown Stats */}
                     <div className="grid grid-cols-2 gap-3">
                         <div className="p-3.5 bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/60 rounded-xl flex flex-col justify-between">
                             <div className="flex items-center justify-between text-emerald-800 dark:text-emerald-300 font-semibold text-[11px]">
@@ -72,7 +72,8 @@ export const CommitModal: React.FC<CommitModalProps> = ({
                                 <span className="text-xs font-normal text-emerald-600 dark:text-emerald-400">{t("Unit")}</span>
                             </div>
                             <span className="text-[10px] text-emerald-700 dark:text-emerald-400/80 mt-1">
-                                {t("Siap di-post ke stok live rak gudang")}</span>
+                                {t("Siap di-post ke stok live rak gudang")}
+                            </span>
                         </div>
 
                         <div className="p-3.5 bg-amber-50/50 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60 rounded-xl flex flex-col justify-between">
@@ -85,22 +86,24 @@ export const CommitModal: React.FC<CommitModalProps> = ({
                                 <span className="text-xs font-normal text-amber-600 dark:text-amber-400">{t("Unit")}</span>
                             </div>
                             <span className="text-[10px] text-amber-700 dark:text-amber-400/80 mt-1">
-                                {t("Alokasi ke Rak QUARANTINE")}</span>
+                                {t("Alokasi ke Rak QUARANTINE")}
+                            </span>
                         </div>
                     </div>
 
                     <div className="p-3 bg-blue-50/40 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-800/50 rounded-xl text-foreground text-[11px] leading-relaxed">
-                        {t("⚠️ Tindakan ini akan mengunci sesi inbound, menerbitkan berita acara serah terima, dan memperbarui saldo stok di sistem secara permanen.")}</div>
+                        {t("⚠️ Tindakan ini akan mengunci sesi inbound, menerbitkan berita acara serah terima, dan memperbarui saldo stok di sistem secara permanen.")}
+                    </div>
                 </div>
 
-                {/* Modal Footer Actions */}
                 <div className="p-4 bg-muted/40 border-t border-border flex items-center justify-end gap-2.5">
                     <button
                         type="button"
                         onClick={onClose}
                         className="h-9 px-4 bg-card hover:bg-muted border border-border rounded-lg text-xs font-semibold text-foreground transition-all cursor-pointer"
                     >
-                        {t("Periksa Kembali")}</button>
+                        {t("Periksa Kembali")}
+                    </button>
                     <button
                         type="button"
                         onClick={onConfirm}
