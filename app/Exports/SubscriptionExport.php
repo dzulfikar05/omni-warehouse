@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use App\Models\Subscription;
 use Maatwebsite\Excel\Concerns\FromQuery;
+use Illuminate\Database\Eloquent\Builder;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -17,7 +18,7 @@ class SubscriptionExport implements FromQuery, WithHeadings, WithMapping, Should
         $this->filters = $filters;
     }
 
-    public function query()
+    public function query(): builder
     {
         $query = Subscription::with(['tenant', 'plan']);
 

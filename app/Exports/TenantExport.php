@@ -5,8 +5,10 @@ namespace App\Exports;
 use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Concerns\FromQuery;
+use Illuminate\Database\Eloquent\Builder;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 
 class TenantsExport implements FromQuery, WithHeadings, WithMapping
 {
