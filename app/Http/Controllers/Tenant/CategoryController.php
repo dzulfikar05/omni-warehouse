@@ -19,26 +19,35 @@ class CategoryController extends Controller
 
     public function index(Request $request): Response
     {
+        $tenant = app('current_tenant');
         $tenantSlug = $request->route('tenant_slug');
+
         $filters = [
-            'search'     => $request->input('search'),
-            'sort_by'    => $request->input('sort_by', 'created_at'),
+            'search' => $request->input('search'),
+            'sort_by' => $request->input('sort_by', 'created_at'),
             'sort_order' => $request->input('sort_order', 'desc'),
         ];
 
         $perPage = (int) $request->input('per_page', 10);
+
         if (! in_array($perPage, [10, 25, 50])) {
             $perPage = 10;
         }
 
-        $categories = $this->categoryService->getPaginatedCategories($filters, $perPage);
-        $stats      = $this->categoryService->getCategoryStats($filters);
+        $categories = $this->categoryService->getPaginatedCategories(
+            $filters,
+            $perPage
+        );
+
+        $stats = $this->categoryService->getCategoryStats($filters);
 
         return Inertia::render('Tenant/InventoryManagement/Categories/Index', [
             'tenant_slug' => $tenantSlug,
-            'categories'  => $categories,
-            'stats'       => $stats,
-            'filters'     => array_merge($filters, ['per_page' => (string) $perPage]),
+            'categories' => $categories,
+            'stats' => $stats,
+            'filters' => array_merge($filters, [
+                'per_page' => (string) $perPage,
+            ]),
         ]);
     }
 
@@ -49,62 +58,115 @@ class CategoryController extends Controller
         ]);
     }
 
-    public function store(CategoryRequest $request, string $tenant_slug): RedirectResponse
-    {
+    public function store(
+        CategoryRequest $request,
+        string $tenant_slug
+    ): RedirectResponse {
         $this->categoryService->createCategory($request->validated());
 
-        return to_route('tenant.inventory.categories.index', ['tenant_slug' => $tenant_slug])
-            ->with('success', __('Category created successfully.'));
+        return to_route('tenant.inventory.categories.index', [
+            'tenant_slug' => $tenant_slug,
+        ])->with('success', __('Category created successfully.'));
     }
 
-    public function show(Request $request, string $tenant_slug, Category $category): Response
-    {
+    public function show(
+        Request $request,
+        string $tenant_slug,
+        Category $category
+    ): Response {
+        $tenant = app('current_tenant');
+
+        $category = Category::where('tenant_id', $tenant->id)
+            ->findOrFail($category->id);
+
         $category->loadCount('products');
-        $category->load(['products' => function ($query) {
-            $query->latest()->take(5);
-        }]);
+
+        $category->load([
+            'products' => function ($query) use ($tenant) {
+                $query->where('tenant_id', $tenant->id)
+                    ->latest()
+                    ->take(5);
+            },
+        ]);
 
         return Inertia::render('Tenant/InventoryManagement/Categories/Show', [
             'tenant_slug' => $tenant_slug,
-            'category'    => $category,
+            'category' => $category,
         ]);
     }
 
-    public function edit(Request $request, string $tenant_slug, Category $category): Response
-    {
+    public function edit(
+        Request $request,
+        string $tenant_slug,
+        Category $category
+    ): Response {
+        $tenant = app('current_tenant');
+
+        $category = Category::where('tenant_id', $tenant->id)
+            ->findOrFail($category->id);
+
         return Inertia::render('Tenant/InventoryManagement/Categories/Edit', [
             'tenant_slug' => $tenant_slug,
-            'category'    => $category,
+            'category' => $category,
         ]);
     }
 
-    public function update(CategoryRequest $request, string $tenant_slug, Category $category): RedirectResponse
-    {
-        $this->categoryService->updateCategory($category, $request->validated());
+    public function update(
+        CategoryRequest $request,
+        string $tenant_slug,
+        Category $category
+    ): RedirectResponse {
+        $tenant = app('current_tenant');
 
-        return to_route('tenant.inventory.categories.index', ['tenant_slug' => $tenant_slug])
-            ->with('success', __('Category updated successfully.'));
+        $category = Category::where('tenant_id', $tenant->id)
+            ->findOrFail($category->id);
+
+        $this->categoryService->updateCategory(
+            $category,
+            $request->validated()
+        );
+
+        return to_route('tenant.inventory.categories.index', [
+            'tenant_slug' => $tenant_slug,
+        ])->with('success', __('Category updated successfully.'));
     }
 
-    public function destroy(Request $request, string $tenant_slug, Category $category): RedirectResponse
-    {
+    public function destroy(
+        Request $request,
+        string $tenant_slug,
+        Category $category
+    ): RedirectResponse {
+        $tenant = app('current_tenant');
+
+        $category = Category::where('tenant_id', $tenant->id)
+            ->findOrFail($category->id);
+
         $this->categoryService->deleteCategory($category);
 
-        return to_route('tenant.inventory.categories.index', ['tenant_slug' => $tenant_slug])
-            ->with('success', __('Category deleted successfully.'));
+        return to_route('tenant.inventory.categories.index', [
+            'tenant_slug' => $tenant_slug,
+        ])->with('success', __('Category deleted successfully.'));
     }
 
-    public function exportPdf(Request $request, string $tenant_slug): RedirectResponse
-    {
+    public function exportPdf(
+        Request $request,
+        string $tenant_slug
+    ): RedirectResponse {
         $this->categoryService->exportPdf($tenant_slug);
 
-        return back()->with('success', __('Export added to the queue. Check the notification or download icon in the navigation bar.'));
+        return back()->with('success', __(
+            'Export added to the queue. Check the notification or download icon in the navigation bar.'
+        ));
     }
 
-    public function exportExcel(Request $request, string $tenant_slug): RedirectResponse
-    {
+    public function exportExcel(
+        Request $request,
+        string $tenant_slug
+    ): RedirectResponse {
         $this->categoryService->exportExcel($tenant_slug);
 
-        return back()->with('success', __('Export added to the queue. Check the notification or download icon in the navigation bar.'));
+        return back()->with('success', __(
+            'Export added to the queue. Check the notification or download icon in the navigation bar.'
+        ));
     }
 }
