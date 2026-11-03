@@ -10,6 +10,8 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Storage;
+
 
 class ExportUnitExcelJob implements ShouldQueue
 {
@@ -31,7 +33,7 @@ class ExportUnitExcelJob implements ShouldQueue
 
             $log->update([
                 'status'    => 'completed',
-                'file_path' => $filePath,
+                'file_path' => Storage::url($filePath),
             ]);
         } catch (\Throwable $e) {
             $log->update([

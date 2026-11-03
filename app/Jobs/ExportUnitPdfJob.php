@@ -26,7 +26,7 @@ class ExportUnitPdfJob implements ShouldQueue
         if (! $log) return;
 
         try {
-            $pdf = Pdf::loadView('exports.pdf.units', [
+            $pdf = Pdf::loadView('pdf.units', [
                 'units' => $this->units,
                 'generatedAt' => now()->format('d M Y H:i'),
             ])->setPaper('a4', 'portrait');
@@ -36,12 +36,12 @@ class ExportUnitPdfJob implements ShouldQueue
 
             $log->update([
                 'status'    => 'completed',
-                'file_path' => $filePath,
+                'file_path' => Storage::url($filePath),
             ]);
         } catch (\Throwable $e) {
             $log->update([
                 'status' => 'failed',
-                'error'  => $e->getMessage(),
+                'error_message'  => $e->getMessage(),
             ]);
         }
     }
