@@ -1468,6 +1468,7 @@
     "status_packing": "Sedang dikemas",
     "status_dispatched": "Dikirim",
     "status_in_transit": "Dalam perjalanan",
+    "status_cancelled": "Dibatalkan",
     "stat_total_transactions": "Total transaksi",
     "stat_pending_transactions": "Sedang diproses",
     "stat_completed_transactions": "Selesai",
