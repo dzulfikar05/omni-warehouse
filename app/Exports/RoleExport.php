@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\FromQuery;
+use Illuminate\Database\Eloquent\Builder;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -17,7 +18,7 @@ class RoleExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSize
         $this->filters = $filters;
     }
 
-    public function query()
+    public function query(): Builder
     {
         $query = Role::query()->whereNull('tenant_id')->with('permissions');
 

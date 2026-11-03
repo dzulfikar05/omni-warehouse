@@ -155,12 +155,12 @@ export default function TenantIndex({ tenants, stats, plans, filters }: PageProp
 
     const handleExportPdf = () => {
         // PERBAIKAN: Menyesuaikan URL export PDF sesuai route /tenants/tenants/export/pdf
-        router.get('/tenants/tenants/export/pdf');
+        router.get('/tenants/export/pdf');
     };
 
     const handleExportExcel = () => {
         // PERBAIKAN: Menyesuaikan URL export Excel sesuai route /tenants/tenants/export/excel
-        router.get('/tenants/tenants/export/excel');
+        router.get('/tenants/export/excel');
     };
 
     const handleApplyDropdownFilter = () => {

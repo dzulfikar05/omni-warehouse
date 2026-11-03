@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Exports\TenantExport;
 use App\Models\ExportLog;
 use App\Models\Tenant;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -26,19 +27,19 @@ class ExportTenantPdfJob implements ShouldQueue
         try {
             $tenants = Tenant::with('subscription.plan')->get();
 
-            $pdf = Pdf::loadView('pdf.tenants_report', ['tenants' => $tenants]);
+            $pdf = Pdf::loadView('pdf.tenants_pdf', ['tenants' => $tenants]);
 
-            $filePath = 'exports/' . $log->filename;
+            $filePath = 'exports/tenants/' . $log->filename;
             Storage::disk('public')->put($filePath, $pdf->output());
 
             $log->update([
                 'status'    => 'completed',
-                'file_path' => $filePath,
+                'file_path' => Storage::url($filePath),
             ]);
         } catch (\Throwable $e) {
             $log->update([
-                'status' => 'failed',
-                'error'  => $e->getMessage(),
+                'status'        => 'failed',
+                'error_message' => $e->getMessage(),
             ]);
         }
     }
