@@ -147,6 +147,7 @@ class PermissionSeeder extends Seeder
             'tenant.inbound.putaway',
             'tenant.inbound.commit',
             'tenant.inbound.hold',
+            'tenant.inbound.resume',
             // Submenu: Outbound Management
             'tenant.outbound.view',
             'tenant.outbound.show',
