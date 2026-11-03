@@ -1,8 +1,14 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { CheckCircle2, Clock, Package, Plus, Warehouse } from 'lucide-react';
+import { CheckCircle2, Clock, Package, Plus, Warehouse, Eye } from 'lucide-react';
 import { useState } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useTranslation } from '@/context/language-context';
 import { usePermission } from '@/utils/permission';
 import {
@@ -11,7 +17,7 @@ import {
 } from '../components/TransactionFilterBar';
 import type { TransactionFilters } from '../components/TransactionFilterBar';
 import { TransactionPagination } from '../components/TransactionPagination';
-import { CreateShippingModal } from './components/CreateShippingModal';
+import { CreateManifestModal } from './components/CreateManifestModal';
 
 interface ManifestItem {
     manifest_code: string;
@@ -35,6 +41,12 @@ interface CustomerOption {
     name: string;
 }
 
+interface MasterSkuOption {
+    id: number;
+    sku: string;
+    product_name: string;
+}
+
 interface OutboundIndexProps {
     manifests: TransactionPage<ManifestItem>;
     summary: {
@@ -45,6 +57,7 @@ interface OutboundIndexProps {
     };
     statuses: string[];
     customers: CustomerOption[];
+    masterSkus: MasterSkuOption[];
     filters: Partial<TransactionFilters>;
 }
 
@@ -53,12 +66,14 @@ export default function Index({
     summary,
     statuses,
     customers,
+    masterSkus,
     filters,
 }: OutboundIndexProps) {
     const { t, locale } = useTranslation();
     const { current_tenant, auth } = usePage().props as any;
     const { can } = usePermission();
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
     const currentPathSlug =
         typeof window !== 'undefined'
             ? window.location.pathname.split('/')[1]
@@ -70,34 +85,34 @@ export default function Index({
     const stats = [
         {
             label: 'stat_total_transactions',
-            value: summary.total,
+            value: summary?.total ?? 0,
             icon: Package,
         },
         {
             label: 'stat_pending_transactions',
-            value: summary.pending,
+            value: summary?.pending ?? 0,
             icon: Clock,
         },
         {
             label: 'stat_completed_transactions',
-            value: summary.completed,
+            value: summary?.completed ?? 0,
             icon: CheckCircle2,
         },
         {
             label: 'stat_total_units',
-            value: summary.total_units,
+            value: summary?.total_units ?? 0,
             icon: Warehouse,
         },
     ];
 
     return (
         <>
-            <Head title={t('page_outbound_transactions')} />
+            <Head title={t('Outbound Management')} />
             <main className="space-y-6 p-4 font-sans sm:p-6">
                 <PageHeader
-                    title={t('page_outbound_transactions')}
+                    title={t('Outbound Management')}
                     description={t(
-                        'Kelola transaksi pengiriman barang (SO/Surat Jalan), zone picking rak, verifikasi packing, dan penyerahan armada.',
+                        'Kelola transaksi pengeluaran barang, picking gudang, dan pemotongan stok ke pelanggan.',
                     )}
                     renderAction={
                         can('tenant.outbound.create') ? (
@@ -138,54 +153,56 @@ export default function Index({
                     kind="outbound"
                     filters={filters}
                     statuses={statuses}
-                    customers={customers}
+                    suppliers={customers}
                 />
 
-                <section className="overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-sm">
+                <section className="rounded-lg bg-card text-card-foreground shadow-md border border-border overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full border-collapse text-left text-sm">
-                            <thead className="border-b border-border bg-muted/40 text-xs font-semibold text-muted-foreground">
-                                <tr>
-                                    <th className="px-5 py-3.5 whitespace-nowrap">
-                                        {t('table_reference')}
+                            <thead>
+                                <tr className="border-b border-border bg-muted/50 text-muted-foreground">
+                                    <th className="p-4 font-semibold whitespace-nowrap">
+                                        {t('Kode Manifest')}
                                     </th>
-                                    <th className="px-5 py-3.5 whitespace-nowrap">
-                                        {t('table_customer')}
+                                    <th className="p-4 font-semibold whitespace-nowrap">
+                                        {t('Customer / Pelanggan')}
                                     </th>
-                                    <th className="px-5 py-3.5 whitespace-nowrap">
-                                        {t('table_item_summary')}
+                                    <th className="p-4 font-semibold whitespace-nowrap">
+                                        {t('Summary SKU & Unit')}
                                     </th>
-                                    <th className="px-5 py-3.5 whitespace-nowrap">
-                                        {t('table_status')}
+                                    <th className="p-4 font-semibold whitespace-nowrap">
+                                        {t('Status')}
                                     </th>
-                                    <th className="px-5 py-3.5 whitespace-nowrap">
-                                        {t('table_created_at')}
+                                    <th className="p-4 font-semibold whitespace-nowrap">
+                                        {t('Tanggal Dibuat')}
                                     </th>
-                                    <th className="px-5 py-3.5 text-right whitespace-nowrap">
-                                        {t('table_action')}
-                                    </th>
+                                    {can('tenant.outbound.show') && (
+                                        <th className="p-4 font-semibold text-right whitespace-nowrap">
+                                            {t('Actions')}
+                                        </th>
+                                    )}
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border">
-                                {manifests.data.length ? (
+                                {manifests?.data?.length ? (
                                     manifests.data.map((manifest) => (
                                         <tr
                                             key={manifest.manifest_code}
-                                            className="transition-colors hover:bg-muted/30"
+                                            className="hover:bg-muted/50 transition-colors"
                                         >
-                                            <td className="px-5 py-4 font-mono text-xs font-semibold text-primary">
+                                            <td className="p-4 font-mono font-semibold text-primary">
                                                 {manifest.manifest_code}
                                             </td>
-                                            <td className="px-5 py-4 text-sm font-medium text-foreground">
+                                            <td className="p-4 font-medium text-foreground">
                                                 {manifest.customer_name}
                                             </td>
-                                            <td className="px-5 py-4 text-sm text-muted-foreground">
+                                            <td className="p-4 text-muted-foreground">
                                                 {manifest.total_skus}{' '}
-                                                {t('table_skus')} ·{' '}
+                                                {t('SKU')} ·{' '}
                                                 {manifest.total_units}{' '}
-                                                {t('table_units')}
+                                                {t('Unit')}
                                             </td>
-                                            <td className="px-5 py-4">
+                                            <td className="p-4">
                                                 <span className="inline-flex rounded-lg border border-border bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
                                                     {transactionStatusLabel(
                                                         manifest.status,
@@ -193,7 +210,7 @@ export default function Index({
                                                     )}
                                                 </span>
                                             </td>
-                                            <td className="px-5 py-4 text-xs whitespace-nowrap text-muted-foreground">
+                                            <td className="p-4 text-xs whitespace-nowrap text-muted-foreground">
                                                 {new Date(
                                                     manifest.created_at,
                                                 ).toLocaleString(
@@ -202,50 +219,62 @@ export default function Index({
                                                         : 'en-US',
                                                 )}
                                             </td>
-                                            <td className="px-5 py-4 text-right">
-                                                <Button
-                                                    asChild
-                                                    size="sm"
-                                                    variant="outline"
-                                                    className="border-border"
-                                                >
-                                                    <Link
-                                                        href={`${route}/${manifest.manifest_code}`}
-                                                    >
-                                                        {t(
-                                                            'btn_view_transaction',
-                                                        )}
-                                                    </Link>
-                                                </Button>
-                                            </td>
+                                            {can('tenant.outbound.show') && (
+                                                <td className="p-4 text-right">
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="outline" size="sm">
+                                                                {t('Actions')}
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end" className="w-40">
+                                                            <DropdownMenuItem asChild>
+                                                                <Link
+                                                                    href={`${route}/${manifest.manifest_code}`}
+                                                                    className="flex items-center cursor-pointer"
+                                                                >
+                                                                    <Eye className="mr-2 h-4 w-4 text-muted-foreground" />
+                                                                    <span>{t('View Details')}</span>
+                                                                </Link>
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </td>
+                                            )}
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
                                         <td
-                                            colSpan={6}
-                                            className="px-5 py-14 text-center text-sm text-muted-foreground"
+                                            colSpan={can('tenant.outbound.show') ? 6 : 5}
+                                            className="p-6 text-center text-muted-foreground"
                                         >
-                                            {t('empty_outbound_transactions')}
+                                            {t('Tidak ada transaksi outbound ditemukan.')}
                                         </td>
                                     </tr>
                                 )}
                             </tbody>
                         </table>
                     </div>
+
                     <TransactionPagination
                         route={route}
                         filters={filters}
-                        currentPage={manifests.current_page}
-                        lastPage={manifests.last_page}
-                        total={manifests.total}
+                        currentPage={manifests?.current_page ?? 1}
+                        lastPage={manifests?.last_page ?? 1}
+                        total={manifests?.total ?? 0}
                     />
                 </section>
             </main>
-            <CreateShippingModal
-                isOpen={isCreateModalOpen}
-                onClose={() => setIsCreateModalOpen(false)}
-            />
+
+            {can('tenant.outbound.create') && (
+                <CreateManifestModal
+                    isOpen={isCreateModalOpen}
+                    onClose={() => setIsCreateModalOpen(false)}
+                    customers={customers}
+                    masterSkus={masterSkus}
+                />
+            )}
         </>
     );
 }

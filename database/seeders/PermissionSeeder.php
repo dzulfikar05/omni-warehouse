@@ -155,6 +155,7 @@ class PermissionSeeder extends Seeder
             'tenant.outbound.edit',
             'tenant.outbound.commit',
             'tenant.outbound.hold',
+            'tenant.outbound.resume',
             // Submenu: Stock Transfer
             'tenant.stock_transfer.view',
             'tenant.stock_transfer.create',

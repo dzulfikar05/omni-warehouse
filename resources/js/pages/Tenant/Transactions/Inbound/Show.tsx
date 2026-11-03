@@ -356,7 +356,7 @@ export default function Show({
                             <Button
                                 type="submit"
                                 disabled={isSessionFrozen}
-                                className="h-9 gap-1.5 rounded-md bg-primary px-4 text-xs font-medium text-primary-foreground"
+                                className="h-9 gap-1.5 rounded-md px-4 text-xs font-medium text-primary-foreground bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
                             >
                                 <Check className="h-3.5 w-3.5" />
                                 <span>{t('Verifikasi')}</span>
