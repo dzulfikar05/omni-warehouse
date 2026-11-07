@@ -26,7 +26,7 @@ class ExportSkuPdfJob implements ShouldQueue
         if (! $log) return;
 
         try {
-            $pdf = Pdf::loadView('exports.pdf.skus', [
+            $pdf = Pdf::loadView('pdf.skus', [
                 'skus' => $this->skus,
                 'generatedAt' => now()->format('d M Y H:i'),
             ])->setPaper('a4', 'landscape');
@@ -41,7 +41,7 @@ class ExportSkuPdfJob implements ShouldQueue
         } catch (\Throwable $e) {
             $log->update([
                 'status' => 'failed',
-                'errormessage'  => $e->getMessage(),
+                'error_message'  => $e->getMessage(),
             ]);
         }
     }
