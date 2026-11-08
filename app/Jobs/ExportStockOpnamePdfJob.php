@@ -33,7 +33,7 @@ class ExportStockOpnamePdfJob implements ShouldQueue
         $log->update(['status' => 'processing']);
 
         try {
-            $pdf = Pdf::loadView('exports.pdf.stock_opname', [
+            $pdf = Pdf::loadView('pdf.stock_opname', [
                 'session' => $this->dataPayload['session'] ?? [],
                 'items'   => $this->dataPayload['items'] ?? [],
                 'tenant'  => $log->tenant,
@@ -44,12 +44,12 @@ class ExportStockOpnamePdfJob implements ShouldQueue
 
             $log->update([
                 'status'    => 'completed',
-                'file_path' => $filePath,
+                'file_path' => Storage::url($filePath),
             ]);
         } catch (\Exception $e) {
             $log->update([
                 'status' => 'failed',
-                'error'  => $e->getMessage(),
+                'error_message'  => $e->getMessage(),
             ]);
         }
     }

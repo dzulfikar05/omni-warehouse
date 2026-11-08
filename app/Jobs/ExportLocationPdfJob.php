@@ -33,7 +33,7 @@ class ExportLocationPdfJob implements ShouldQueue
         $log->update(['status' => 'processing']);
 
         try {
-            $query = Location::with('warehouse')->where('tenant_id', $log->tenant_id);
+            $query = Location::with('warehouse');
 
             if (!empty($this->filters['search'])) {
                 $search = $this->filters['search'];
@@ -50,7 +50,7 @@ class ExportLocationPdfJob implements ShouldQueue
 
             $locations = $query->latest()->get();
 
-            $pdf = Pdf::loadView('exports.pdf.locations', [
+            $pdf = Pdf::loadView('pdf/locations', [
                 'locations' => $locations,
                 'tenant'    => $log->tenant,
             ]);
@@ -60,12 +60,12 @@ class ExportLocationPdfJob implements ShouldQueue
 
             $log->update([
                 'status'    => 'completed',
-                'file_path' => $filePath,
+                'file_path' => Storage::url($filePath)
             ]);
         } catch (\Exception $e) {
             $log->update([
                 'status' => 'failed',
-                'error'  => $e->getMessage(),
+                'error_message'  => $e->getMessage(),
             ]);
         }
     }
