@@ -4,9 +4,7 @@ namespace App\Services;
 
 use App\Contracts\InboundContract;
 use App\Models\InventoryStock;
-use App\Models\Location;
 use App\Models\Sku;
-use App\Models\Supplier;
 use App\Models\Tenant;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -90,6 +88,7 @@ class InboundService implements InboundContract
                     });
             });
         }
+
         if (!empty($filters['date_from'])) {
             $query->whereDate('transactions.created_at', '>=', $filters['date_from']);
         }
@@ -110,6 +109,7 @@ class InboundService implements InboundContract
                 ->withQueryString()
                 ->through(fn($manifest) => [
                     'manifest_code' => $manifest->manifest_code,
+                    'po_number' => $manifest->manifest_code,
                     'status' => strtoupper($manifest->status),
                     'supplier_name' => $manifest->supplier_name ?? '-',
                     'created_by' => $manifest->created_by ?? '-',
@@ -132,7 +132,7 @@ class InboundService implements InboundContract
         $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
 
         return DB::transaction(function () use ($tenant, $data, $userId) {
-            $manifestCode = 'TX-INB-' . strtoupper(Str::random(8));
+            $manifestCode = 'TX-PO-' . strtoupper(Str::random(8));
 
             $transactionId = DB::table('transactions')->insertGetId([
                 'tenant_id' => $tenant->id,
@@ -149,10 +149,17 @@ class InboundService implements InboundContract
 
             if (!empty($data['items']) && is_array($data['items'])) {
                 foreach ($data['items'] as $item) {
+                    $skuId = $item['sku_id'] ?? $item['product_id'] ?? null;
+                    $quantity = $item['po_qty'] ?? $item['expected_qty'] ?? 1;
+
+                    if (!$skuId) continue;
+
                     DB::table('transaction_items')->insert([
                         'transaction_id' => $transactionId,
-                        'sku_id' => $item['sku_id'],
-                        'quantity' => $item['po_qty'],
+                        'sku_id' => $skuId,
+                        'quantity' => $quantity,
+                        'good_qty' => 0,
+                        'damaged_qty' => 0,
                         'created_by' => $userId,
                         'created_at' => now(),
                         'updated_at' => now(),
@@ -162,6 +169,11 @@ class InboundService implements InboundContract
 
             return ['manifest_code' => $manifestCode];
         });
+    }
+
+    public function createManifestFromPo(string $tenant_slug, array $data, int $userId): array
+    {
+        return $this->createManifest($tenant_slug, $data, $userId);
     }
 
     public function getManifestDetail(string $tenant_slug, string $manifest_code): array
@@ -203,7 +215,7 @@ class InboundService implements InboundContract
             ->get();
 
         $items = $rawItems->map(function ($item) {
-            $poQty = (int)$item->quantity;
+            $poQty = (int) $item->quantity;
             $goodQty = (int) ($item->good_qty ?? 0);
             $damagedQty = (int) ($item->damaged_qty ?? 0);
             $scanned = $goodQty + $damagedQty;
@@ -219,7 +231,7 @@ class InboundService implements InboundContract
                 $statusLabel = 'Sesuai / Valid';
             } else if ($scanned > 0) {
                 $status = 'process';
-                $statusLabel = 'Proses Scan (' . round(($goodQty / $poQty) * 100) . '%)';
+                $statusLabel = 'Proses Scan';
             }
 
             return [
@@ -229,9 +241,8 @@ class InboundService implements InboundContract
                 'barcode' => $item->barcode ?? $item->sku,
                 'product_name' => $item->product_name,
                 'category' => $item->category ?? 'General',
-                'batch_no' => $item->batch_number ?? '-',
-                'exp_date' => $item->expiry_date ?? '-',
                 'po_qty' => $poQty,
+                'expected_qty' => $poQty,
                 'good_qty' => $goodQty,
                 'damaged_qty' => $damagedQty,
                 'unit' => $item->unit ?? 'Pcs',
@@ -249,14 +260,11 @@ class InboundService implements InboundContract
         return [
             'manifest' => [
                 'manifest_code' => $transaction->local_uuid,
+                'po_number' => $transaction->local_uuid,
                 'status' => strtoupper($transaction->status),
                 'supplier_name' => $transaction->supplier_name ?? '-',
-                'vehicle_no' => $transaction->vehicle_no ?? '-',
-                'driver_name' => $transaction->driver_name ?? '-',
                 'warehouse_name' => $tenant->name,
-                'dock_bay' => '-',
                 'operator_name' => $transaction->operator_name ?? 'Operator',
-                'operator_initials' => strtoupper(substr($transaction->operator_name ?? 'OP', 0, 2)),
                 'total_skus' => count($items),
                 'total_po_units' => $totalPo,
                 'good_units' => $totalGood,
@@ -280,12 +288,12 @@ class InboundService implements InboundContract
                 ->first();
 
             if (!$transaction) {
-                return ['success' => false, 'message' => __('Manifest tidak ditemukan.')];
+                return ['success' => false, 'message' => 'Manifest tidak ditemukan.'];
             }
 
             $currentStatus = strtoupper($transaction->status);
             if (in_array($currentStatus, ['COMMITTED', 'CLOSED', 'CANCELLED'])) {
-                return ['success' => false, 'message' => __("Inbound dikunci dengan status ':status'.", ['status' => $currentStatus])];
+                return ['success' => false, 'message' => "Inbound dikunci dengan status '{$currentStatus}'."];
             }
 
             $sku = DB::table('skus')
@@ -299,7 +307,7 @@ class InboundService implements InboundContract
                 ->first();
 
             if (!$sku) {
-                return ['success' => false, 'message' => __("Barcode / SKU ':barcode' tidak terdaftar!", ['barcode' => $cleanBarcode])];
+                return ['success' => false, 'message' => "Barcode/SKU '{$cleanBarcode}' tidak terdaftar!"];
             }
 
             $item = DB::table('transaction_items')
@@ -309,20 +317,16 @@ class InboundService implements InboundContract
                 ->first();
 
             if (!$item) {
-                return ['success' => false, 'message' => __("SKU ':sku' tidak terdaftar dalam PO Manifest ini!", ['sku' => $sku->sku_code])];
+                return ['success' => false, 'message' => "SKU '{$sku->sku_code}' tidak terdaftar dalam manifest ini!"];
             }
 
             $goodQtyCurrent = (int) ($item->good_qty ?? 0);
-            $poQuantity = (int)$item->quantity;
+            $poQuantity = (int) $item->quantity;
 
             if ($goodQtyCurrent >= $poQuantity) {
                 return [
                     'success' => false,
-                    'message' => __("Item ':sku' sudah tervalidasi lengkap (:current/:max unit).", [
-                        'sku' => $sku->sku_code,
-                        'current' => $goodQtyCurrent,
-                        'max' => $poQuantity,
-                    ]),
+                    'message' => "Item '{$sku->sku_code}' sudah tervalidasi lengkap ({$goodQtyCurrent}/{$poQuantity} unit).",
                 ];
             }
 
@@ -341,11 +345,7 @@ class InboundService implements InboundContract
 
             return [
                 'success' => true,
-                'message' => __("Berhasil scan SKU ':sku' (+1 Unit). Total: :new/:max", [
-                    'sku' => $sku->sku_code,
-                    'new' => $goodQtyCurrent + 1,
-                    'max' => $poQuantity,
-                ]),
+                'message' => "Berhasil scan SKU '{$sku->sku_code}' (+1 Unit).",
             ];
         });
     }
@@ -369,7 +369,7 @@ class InboundService implements InboundContract
                 'updated_at' => now(),
             ]);
 
-        return ['success' => true, 'message' => __('Alokasi rak dan fisik berhasil diperbarui.')];
+        return ['success' => true, 'message' => 'Alokasi rak dan fisik berhasil diperbarui.'];
     }
 
     public function commitInbound(string $tenant_slug, string $manifest_code): bool
@@ -380,6 +380,7 @@ class InboundService implements InboundContract
             $transaction = DB::table('transactions')
                 ->where('tenant_id', $tenant->id)
                 ->where('local_uuid', $manifest_code)
+                ->lockForUpdate()
                 ->firstOrFail();
 
             $items = DB::table('transaction_items')
@@ -387,7 +388,7 @@ class InboundService implements InboundContract
                 ->get();
 
             foreach ($items as $item) {
-                $goodQty = (int) ($item->good_qty ?? $item->quantity);
+                $goodQty = (int) ($item->good_qty ?? 0);
                 if ($goodQty > 0 && $item->to_location_id) {
                     $stock = InventoryStock::firstOrNew([
                         'sku_id' => $item->sku_id,
@@ -411,7 +412,7 @@ class InboundService implements InboundContract
         });
     }
 
-    public function holdInboundSession(string $tenant_slug, string $manifest_code, string $reason): bool
+    public function holdInbound(string $tenant_slug, string $manifest_code, ?string $reason = 'Hold by Operator'): bool
     {
         $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
 
@@ -424,7 +425,7 @@ class InboundService implements InboundContract
             ]) > 0;
     }
 
-    public function resumeInboundSession(string $tenant_slug, string $manifest_code): bool
+    public function resumeInbound(string $tenant_slug, string $manifest_code): bool
     {
         $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
 
@@ -435,5 +436,17 @@ class InboundService implements InboundContract
                 'status' => 'RECEIVING',
                 'updated_at' => now(),
             ]) > 0;
+    }
+
+
+
+    public function holdInboundSession(string $tenant_slug, string $manifest_code, ?string $reason = 'Penundaan Operator'): bool
+    {
+        return $this->holdInbound($tenant_slug, $manifest_code, $reason);
+    }
+
+    public function resumeInboundSession(string $tenant_slug, string $manifest_code): bool
+    {
+        return $this->resumeInbound($tenant_slug, $manifest_code);
     }
 }
