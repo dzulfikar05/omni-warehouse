@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\InboundController;
-
+use App\Http\Controllers\Api\OutboundController;
 /*
 |--------------------------------------------------------------------------
 | Public Auth Routes (Global Gateway)
@@ -54,5 +54,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/commit', [InboundController::class, 'commit']);
         Route::post('/hold', [InboundController::class, 'hold']);
         Route::post('/resume', [InboundController::class, 'resume']);
+    });
+
+    Route::prefix('{tenant_slug}/outbound')->group(function () {
+        Route::get('/options', [OutboundController::class, 'options']);
+
+        Route::get('/', [OutboundController::class, 'index']);
+        Route::get('/manifests/{manifest_code}', [OutboundController::class, 'show']);
+        Route::post('/store', [OutboundController::class, 'store']);
+        Route::post('/verify-barcode', [OutboundController::class, 'verifyBarcode']);
+        Route::post('/picking', [OutboundController::class, 'updatePicking']);
+        Route::post('/commit', [OutboundController::class, 'commit']);
+        Route::post('/hold', [OutboundController::class, 'hold']);
+        Route::post('/resume', [OutboundController::class, 'resume']);
     });
 });
