@@ -270,7 +270,7 @@ class OutboundService implements OutboundContract
         });
     }
 
-    public function holdOutboundSession(string $tenantSlug, string $manifestCode, string $reason): array
+    public function holdOutboundSession(string $tenantSlug, string $manifestCode, string $reason = 'Hold by Operator'): array
     {
         $tenant = Tenant::where('slug', $tenantSlug)->firstOrFail();
         $tx = Transaction::where('tenant_id', $tenant->id)
