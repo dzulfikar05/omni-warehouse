@@ -32,6 +32,7 @@ Route::get('/health-check', function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [AuthController::class, 'profile']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);
+   
 
     Route::get('/dashboard/summary', [DashboardController::class, 'summary']);
     /*
