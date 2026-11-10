@@ -5,6 +5,8 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\InboundController;
 use App\Http\Controllers\Api\OutboundController;
+use App\Http\Controllers\Api\StockTransferController;
+
 /*
 |--------------------------------------------------------------------------
 | Public Auth Routes (Global Gateway)
@@ -32,7 +34,7 @@ Route::get('/health-check', function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [AuthController::class, 'profile']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);
-   
+
 
     Route::get('/dashboard/summary', [DashboardController::class, 'summary']);
     /*
@@ -67,5 +69,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/commit', [OutboundController::class, 'commit']);
         Route::post('/hold', [OutboundController::class, 'hold']);
         Route::post('/resume', [OutboundController::class, 'resume']);
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Stock Transfer Operations (Multi-tenant Scoped Mobile API)
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('{tenant_slug}/stock-transfer')->group(function () {
+        Route::get('/options', [StockTransferController::class, 'options']);
+        Route::get('/', [StockTransferController::class, 'index']);
+        Route::post('/store', [StockTransferController::class, 'store']);
+        Route::put('/{transfer_code}', [StockTransferController::class, 'update']);
+        Route::post('/{transfer_code}/cancel', [StockTransferController::class, 'cancel']);
     });
 });
