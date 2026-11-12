@@ -20,15 +20,70 @@ class StockTransferController extends Controller
      */
     public function options(string $tenant_slug): JsonResponse
     {
-        $data = $this->stockTransferService->getTransferLogsList($tenant_slug, []);
+        $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
+
+        $warehouses = \App\Models\Warehouse::where('tenant_id', $tenant->id)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'code']);
+
+        $locations = \App\Models\Location::whereHas('warehouse', fn($q) => $q->where('tenant_id', $tenant->id)->where('is_active', true))
+            ->with('warehouse:id,name')
+            ->where('is_active', true)
+            ->orderBy('zone')
+            ->orderBy('rack_code')
+            ->get()
+            ->map(fn($loc) => [
+                'id'             => $loc->id,
+                'warehouse_id'   => $loc->warehouse_id,
+                'warehouse_name' => $loc->warehouse->name ?? '-',
+                'rack_code'      => $loc->rack_code,
+                'zone'           => $loc->zone,
+                'label'          => $loc->zone ? "{$loc->zone} - {$loc->rack_code}" : $loc->rack_code,
+            ]);
+
+        // Query SKU aktif yang memiliki stok fisik di gudang
+        $skuItems = \App\Models\Sku::whereHas('product', fn($q) => $q->where('tenant_id', $tenant->id))
+            ->whereHas('inventoryStocks', fn($q) => $q->where('quantity', '>', 0))
+            ->with([
+                'product:id,name',
+                'inventoryStocks' => fn($q) => $q->where('quantity', '>', 0)->select('id', 'sku_id', 'location_id', 'quantity', 'batch_number', 'expiry_date'),
+            ])
+            ->where('is_active', true)
+            ->get()
+            ->map(function ($sku) {
+                $stockByLocation = $sku->inventoryStocks
+                    ->groupBy('location_id')
+                    ->map(fn($stocks, $locationId) => [
+                        'location_id' => (int) $locationId,
+                        'quantity'    => (int) $stocks->sum('quantity'),
+                    ])
+                    ->values();
+
+                return [
+                    'id'            => $sku->id,
+                    'code'          => $sku->sku_code,
+                    'sku'           => $sku->sku_code,
+                    'barcode'       => $sku->barcode ?? $sku->sku_code,
+                    'name'          => $sku->product->name ?? '-',
+                    'current_stock' => (int) $sku->inventoryStocks->sum('quantity'),
+                    'locations'     => $stockByLocation,
+                ];
+            });
+
+        $rackCodes = $locations->pluck('rack_code');
 
         return response()->json([
             'success' => true,
             'message' => 'Opsi master stock transfer berhasil dimuat.',
             'data'    => [
-                'warehouses' => $data['warehouses'],
-                'locations'  => $data['locations'],
-                'skus'       => $data['skus'],
+                'warehouses'      => $warehouses,
+                'locations'       => $locations,
+                'skus'            => $skuItems,
+                'products'        => $skuItems,
+                'available_racks' => $rackCodes->isEmpty()
+                    ? ['RACK-A1-01', 'RACK-A1-02', 'RACK-B1-01']
+                    : $rackCodes,
             ],
         ]);
     }

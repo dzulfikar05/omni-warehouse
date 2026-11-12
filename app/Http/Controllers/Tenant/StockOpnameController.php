@@ -36,7 +36,7 @@ class StockOpnameController extends Controller
 
     public function storeSession(StockOpnameRequest $request, string $tenant_slug): RedirectResponse
     {
-        $this->service->createSession($tenant_slug, $request->validated());
+        $this->service->createSession($tenant_slug, $request->validated(), (int) auth()->id());
 
         return to_route('tenant.stock-opname.index', ['tenant_slug' => $tenant_slug])
             ->with('success', __('Stocktake session created successfully.'));
@@ -44,7 +44,7 @@ class StockOpnameController extends Controller
 
     public function verifyCount(StockOpnameRequest $request, string $tenant_slug): RedirectResponse
     {
-        $this->service->updateItemPhysicalQty($tenant_slug, $request->validated());
+        $this->service->updateItemPhysicalQty($tenant_slug, $request->validated(), (int) auth()->id());
 
         return to_route('tenant.stock-opname.index', ['tenant_slug' => $tenant_slug])
             ->with('success', __('Physical count results saved successfully.'));
@@ -53,7 +53,7 @@ class StockOpnameController extends Controller
     public function executeAdjustment(StockOpnameRequest $request, string $tenant_slug): RedirectResponse
     {
         $validated = $request->validated();
-        $this->service->executeAdjustment($tenant_slug, (int) $validated['session_id']);
+        $this->service->executeAdjustment($tenant_slug, (int) $validated['session_id'], (int) auth()->id());
 
         return to_route('tenant.stock-opname.index', ['tenant_slug' => $tenant_slug])
             ->with('success', __('Stock adjustment executed successfully.'));

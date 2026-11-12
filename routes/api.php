@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\InboundController;
 use App\Http\Controllers\Api\OutboundController;
+use App\Http\Controllers\Api\StockOpnameController;
 use App\Http\Controllers\Api\StockTransferController;
 
 /*
@@ -82,5 +83,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/store', [StockTransferController::class, 'store']);
         Route::put('/{transfer_code}', [StockTransferController::class, 'update']);
         Route::post('/{transfer_code}/cancel', [StockTransferController::class, 'cancel']);
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Stock Opname Operations (Multi-tenant Scoped Mobile API)
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('{tenant_slug}/stock-opname')->group(function () {
+        Route::get('/active', [StockOpnameController::class, 'activeSession']);
+        Route::post('/record-count', [StockOpnameController::class, 'recordCount']);
+        Route::post('/submit-review', [StockOpnameController::class, 'submitReview']);
     });
 });
