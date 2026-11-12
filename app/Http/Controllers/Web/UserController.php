@@ -8,6 +8,7 @@ use App\Http\Requests\Web\UserRequest;
 use App\Jobs\ExportUserExcelJob;
 use App\Jobs\ExportUserPdfJob;
 use App\Models\ExportLog;
+use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -95,8 +96,9 @@ class UserController extends Controller
 
     public function exportPdf(Request $request): RedirectResponse
     {
+        $defaultTenantId = Tenant::value('id') ?? 1;
         $log = ExportLog::create([
-            'tenant_id' => null,
+            'tenant_id' => $defaultTenantId,
             'user_id'   => auth()->id(),
             'type'      => 'pdf',
             'filename'  => 'Central_Users_Report_' . date('Ymd_His') . '.pdf',
@@ -110,8 +112,9 @@ class UserController extends Controller
 
     public function exportExcel(Request $request): RedirectResponse
     {
+        $defaultTenantId = Tenant::value('id') ?? 1;
         $log = ExportLog::create([
-            'tenant_id' => null,
+            'tenant_id' => $defaultTenantId,
             'user_id'   => auth()->id(),
             'type'      => 'excel',
             'filename'  => 'Central_Users_Report_' . date('Ymd_His') . '.xlsx',

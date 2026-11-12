@@ -8,11 +8,13 @@ use App\Http\Requests\Web\RoleRequest;
 use App\Jobs\ExportRoleExcelJob;
 use App\Jobs\ExportRolePdfJob;
 use App\Models\ExportLog;
+use App\Models\Tenant;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Permission;
+
 
 class RoleController extends Controller
 {
@@ -90,8 +92,9 @@ class RoleController extends Controller
 
     public function exportPdf(Request $request): RedirectResponse
     {
+        $defaultTenantId = Tenant::value('id') ?? 1;
         $log = ExportLog::create([
-            'tenant_id' => null,
+            'tenant_id' => $defaultTenantId,
             'user_id'   => auth()->id(),
             'type'      => 'pdf',
             'filename'  => 'Central_Roles_Report_' . date('Ymd_His') . '.pdf',
@@ -105,8 +108,9 @@ class RoleController extends Controller
 
     public function exportExcel(Request $request): RedirectResponse
     {
+        $defaultTenantId = Tenant::value('id') ?? 1;
         $log = ExportLog::create([
-            'tenant_id' => null,
+            'tenant_id' => $defaultTenantId,
             'user_id'   => auth()->id(),
             'type'      => 'excel',
             'filename'  => 'Central_Roles_Report_' . date('Ymd_His') . '.xlsx',

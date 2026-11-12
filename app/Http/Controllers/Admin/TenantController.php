@@ -90,9 +90,10 @@ class TenantController extends Controller
 
     public function exportExcel(): RedirectResponse
     {
+        $defaultTenantId = Tenant::value('id') ?? 1;
 
         $log = ExportLog::create([
-            'tenant_id' => null,
+            'tenant_id' => $defaultTenantId,
             'user_id'   => auth()->id(),
             'type'      => 'excel',
             'filename'  => 'Tenants_Report_' . date('Ymd_His') . '.xlsx',
@@ -106,9 +107,10 @@ class TenantController extends Controller
 
     public function exportPdf(): RedirectResponse
     {
+        $defaultTenantId = Tenant::value('id') ?? 1;
 
         $log = ExportLog::create([
-            'tenant_id' => null,
+            'tenant_id' => $defaultTenantId,
             'user_id'   => auth()->id(),
             'type'      => 'pdf',
             'filename'  => 'Tenants_Report_' . date('Ymd_His') . '.pdf',

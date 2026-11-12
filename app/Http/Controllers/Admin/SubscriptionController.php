@@ -112,10 +112,11 @@ class SubscriptionController extends Controller
 
     public function exportPdf(Request $request): RedirectResponse
     {
+        $defaultTenantId = Tenant::value('id') ?? 1;
         $filters = $request->only(['search', 'status', 'plan_id', 'date_from', 'date_to']);
 
         $log = ExportLog::create([
-            'tenant_id' => null,
+            'tenant_id' => $defaultTenantId,
             'user_id'   => auth()->id(),
             'type'      => 'pdf',
             'filename'  => 'Subscription_Report_' . date('Ymd_His') . '.pdf',
@@ -129,10 +130,12 @@ class SubscriptionController extends Controller
 
     public function exportExcel(Request $request): RedirectResponse
     {
+        $defaultTenantId = Tenant::value('id') ?? 1;
+
         $filters = $request->only(['search', 'status', 'plan_id', 'date_from', 'date_to']);
 
         $log = ExportLog::create([
-            'tenant_id' => null,
+            'tenant_id' => $defaultTenantId,
             'user_id'   => auth()->id(),
             'type'      => 'excel',
             'filename'  => 'Subscription_Report_' . date('Ymd_His') . '.xlsx',
