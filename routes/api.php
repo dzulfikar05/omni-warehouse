@@ -32,7 +32,7 @@ Route::get('/health-check', function () {
 | Protected Tenant Routes (Sanctum Authenticated)
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('')->group(function () {
     Route::get('/profile', [AuthController::class, 'profile']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);
 

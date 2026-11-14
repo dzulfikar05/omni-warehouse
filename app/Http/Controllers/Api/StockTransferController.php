@@ -113,12 +113,29 @@ class StockTransferController extends Controller
         ]);
 
         $filters = array_filter($filters, fn ($value) => $value !== null && $value !== '');
-        $data = $this->stockTransferService->getTransferLogsList($tenant_slug, $filters);
+        $rawData = $this->stockTransferService->getTransferLogsList($tenant_slug, $filters);
+
+        $transfersPaginator = $rawData['transfers'] ?? null;
+        $isPaginator = $transfersPaginator instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator;
+
+        $responseData = [
+            'transfers' => $isPaginator ? $transfersPaginator->items() : ($transfersPaginator ?? []),
+            'stats'     => $rawData['stats'] ?? null,
+        ];
+
+        if ($isPaginator) {
+            $responseData['pagination'] = [
+                'current_page' => $transfersPaginator->currentPage(),
+                'last_page'    => $transfersPaginator->lastPage(),
+                'per_page'     => $transfersPaginator->perPage(),
+                'total'        => $transfersPaginator->total(),
+            ];
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'Daftar riwayat transfer stok berhasil dimuat.',
-            'data'    => $data,
+            'data'    => $responseData,
         ]);
     }
 
