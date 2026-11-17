@@ -50,6 +50,7 @@ Route::middleware('')->group(function () {
 
         Route::post('/store', [InboundController::class, 'store']);
         Route::post('/adhoc', [InboundController::class, 'storeAdhoc']);
+        Route::post('/sync-offline', [InboundController::class, 'syncOffline']);
 
         Route::post('/scan-item', [InboundController::class, 'scanItem']);
         Route::post('/putaway', [InboundController::class, 'updatePutaway']);
