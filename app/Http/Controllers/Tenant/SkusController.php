@@ -34,8 +34,14 @@ class SkusController extends Controller
             $perPage = 10;
         }
 
+        // Subquery untuk menghitung total stok aktual secara dinamis dari tabel inventory_stocks
+        $stockSubquery = DB::table('inventory_stocks')
+            ->selectRaw('COALESCE(SUM(quantity), 0)')
+            ->whereColumn('sku_id', 'skus.id');
+
         $query = Sku::query()
             ->with(['product.category', 'unit'])
+            ->addSelect(['current_stock' => $stockSubquery]) // Menyisipkan kalkulasi stok aktual
             ->when($search, function ($q, $search) {
                 $q->where(function ($sub) use ($search) {
                     $sub->where('sku_code', 'like', "%{$search}%")
@@ -57,15 +63,14 @@ class SkusController extends Controller
         // Hitung Ringkasan Statistik untuk seluruh data terfilter
         $stats = [
             'total_skus'      => (clone $query)->count(),
-            'total_stock'     => (int) (clone $query)->sum('current_stock'),
-            'low_stock_count' => (clone $query)->whereRaw('current_stock <= COALESCE(min_stock, 5)')->count(),
-            'total_valuation' => (float) ((clone $query)->select(DB::raw('SUM(base_cost * current_stock) as total'))->value('total') ?? 0),
+            'total_stock'     => (int) (clone $query)->get()->sum('current_stock'),
+            'low_stock_count' => (clone $query)->get()->filter(fn($sku) => $sku->current_stock <= ($sku->min_stock ?? 5))->count(),
+            'total_valuation' => (float) (clone $query)->get()->sum(fn($sku) => $sku->base_cost * $sku->current_stock),
         ];
 
         // Apply Sorting Dinamis & Pagination
         $skus = (clone $query)
             ->when($sortBy, function ($q) use ($sortBy, $sortDir) {
-                // Pemetaan nilai sort_by legacy/dropdown atau klik header DataTable
                 match ($sortBy) {
                     'oldest'     => $q->oldest(),
                     'latest'     => $q->latest(),
@@ -74,8 +79,8 @@ class SkusController extends Controller
                     'stock_low'  => $q->orderBy('current_stock', 'asc'),
                     'stock_high' => $q->orderBy('current_stock', 'desc'),
                     'product_id' => $q->join('products', 'skus.product_id', '=', 'products.id')
-                                      ->orderBy('products.name', $sortDir)
-                                      ->select('skus.*'),
+                                        ->orderBy('products.name', $sortDir)
+                                        ->select('skus.*'),
                     'sku_code', 'base_cost', 'current_stock', 'created_at', 'id' => $q->orderBy($sortBy, $sortDir),
                     default      => $q->orderBy('created_at', $sortDir),
                 };
@@ -132,6 +137,11 @@ class SkusController extends Controller
 
     public function show(Request $request, string $tenant_slug, Sku $sku): Response
     {
+        // Subquery untuk menghitung total stok aktual dari inventory_stocks
+        $sku->current_stock = DB::table('inventory_stocks')
+            ->where('sku_id', $sku->id)
+            ->sum('quantity');
+
         $sku->load(['product.category', 'unit']);
 
         return Inertia::render('Tenant/InventoryManagement/Sku/Show', [
@@ -142,6 +152,11 @@ class SkusController extends Controller
 
     public function edit(Request $request, string $tenant_slug, Sku $sku): Response
     {
+        // Subquery untuk menghitung total stok aktual dari inventory_stocks
+        $sku->current_stock = DB::table('inventory_stocks')
+            ->where('sku_id', $sku->id)
+            ->sum('quantity');
+
         $products = Product::select('id', 'name')->get();
         $units    = Unit::select('id', 'name', 'symbol')->get();
 
@@ -172,7 +187,16 @@ class SkusController extends Controller
     public function exportPdf(Request $request, string $tenant_slug): RedirectResponse
     {
         $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
-        $skus = Sku::with(['product.category', 'unit'])->get()->toArray();
+        
+        // Subquery stok aktual
+        $stockSubquery = DB::table('inventory_stocks')
+            ->selectRaw('COALESCE(SUM(quantity), 0)')
+            ->whereColumn('sku_id', 'skus.id');
+
+        $skus = Sku::with(['product.category', 'unit'])
+            ->addSelect(['current_stock' => $stockSubquery])
+            ->get()
+            ->toArray();
 
         $log = ExportLog::create([
             'tenant_id' => $tenant->id,
@@ -190,7 +214,16 @@ class SkusController extends Controller
     public function exportExcel(Request $request, string $tenant_slug): RedirectResponse
     {
         $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
-        $skus = Sku::with(['product.category', 'unit'])->get()->toArray();
+        
+        // Subquery stok aktual
+        $stockSubquery = DB::table('inventory_stocks')
+            ->selectRaw('COALESCE(SUM(quantity), 0)')
+            ->whereColumn('sku_id', 'skus.id');
+
+        $skus = Sku::with(['product.category', 'unit'])
+            ->addSelect(['current_stock' => $stockSubquery])
+            ->get()
+            ->toArray();
 
         $log = ExportLog::create([
             'tenant_id' => $tenant->id,
