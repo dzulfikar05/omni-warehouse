@@ -12,4 +12,5 @@ interface OutboundContract
     public function commitOutbound(string $tenantSlug, string $manifestCode): array;
     public function holdOutboundSession(string $tenantSlug, string $manifestCode, string $reason): array;
     public function resumeOutboundSession(string $tenantSlug, string $manifestCode): array;
+    public function syncOfflineManifest(string $tenantSlug, array $payload, int $userId): array;
 }

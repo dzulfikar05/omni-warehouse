@@ -35,8 +35,6 @@ class OutboundController extends Controller
             ->where('is_active', true)
             ->get()
             ->map(function ($sku) use ($tenant) {
-                // Filter via sku.product.tenant_id — konsisten dengan StockSummaryReportController
-                // location.tenant_id tidak reliable (nullable, bisa null untuk lokasi lama)
                 $totalStock = (int) InventoryStock::where('sku_id', $sku->id)
                     ->whereHas('sku.product', fn($q) => $q->where('tenant_id', $tenant->id))
                     ->sum('quantity');
@@ -57,13 +55,13 @@ class OutboundController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Opsi master outbound berhasil dimuat.',
-            'data' => [
-                'customers' => $customers,
-                'products' => $products,
+            'data'    => [
+                'customers'       => $customers,
+                'products'        => $products,
                 'available_racks' => $locations->isEmpty()
                     ? ['RACK-A1-01', 'RACK-A1-02', 'RACK-B1-01']
                     : $locations,
-            ]
+            ],
         ]);
     }
 
@@ -84,6 +82,7 @@ class OutboundController extends Controller
         $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
 
         $validated = $request->validate([
+            'local_uuid'     => ['nullable', 'string', 'max:100'],
             'customer_id'    => ['required', 'integer', Rule::exists('customers', 'id')->where('tenant_id', $tenant->id)],
             'vehicle_no'     => ['nullable', 'string'],
             'driver_name'    => ['nullable', 'string'],
@@ -102,21 +101,63 @@ class OutboundController extends Controller
         ], 201);
     }
 
+    public function syncOffline(Request $request, string $tenant_slug): JsonResponse
+    {
+        $validated = $request->validate([
+            'manifest_code'          => ['nullable', 'string', 'max:100'],
+            'local_uuid'             => ['nullable', 'string', 'max:100'],
+            'transaction_uuid'       => ['nullable', 'string', 'max:100'],
+            'customer_id'            => ['nullable', 'integer'],
+            'vehicle_no'             => ['nullable', 'string'],
+            'driver_name'            => ['nullable', 'string'],
+            'notes'                  => ['nullable', 'string'],
+            'should_commit'          => ['nullable', 'boolean'],
+            'items'                  => ['required', 'array', 'min:1'],
+            'items.*.sku_id'         => ['required', 'integer'],
+            'items.*.so_qty'         => ['nullable', 'integer', 'min:1'],
+            'items.*.good_qty'       => ['required', 'integer', 'min:0'],
+            'items.*.damaged_qty'    => ['nullable', 'integer', 'min:0'],
+            'items.*.source_rack_id' => ['nullable', 'integer'],
+            'items.*.source_rack'    => ['nullable', 'string'],
+            'items.*.damage_note'    => ['nullable', 'string'],
+        ]);
+
+        $res = $this->service->syncOfflineManifest($tenant_slug, $validated, auth()->id());
+
+        return response()->json([
+            'success' => true,
+            'message' => $res['message'] ?? 'Sinkronisasi transaksi outbound offline berhasil.',
+            'data'    => $res,
+        ]);
+    }
+
     public function show(string $tenant_slug, string $manifest_code): JsonResponse
     {
         $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
         $data = $this->service->getManifestDetail($tenant_slug, $manifest_code);
+
         $locations = Location::whereHas('warehouse', fn($q) => $q->where('tenant_id', $tenant->id))
             ->where('is_active', true)
-            ->get(['id', 'rack_code', 'zone']);
+            ->get(['id', 'rack_code', 'zone'])
+            ->map(function ($loc) {
+                $stockQty = (int) InventoryStock::where('location_id', $loc->id)->sum('quantity');
+
+                return [
+                    'id'             => $loc->id,
+                    'rack_code'      => $loc->rack_code,
+                    'zone'           => $loc->zone,
+                    'stock_quantity' => $stockQty,
+                ];
+            });
 
         return response()->json([
             'success' => true,
             'message' => 'Detail manifes outbound berhasil dimuat.',
             'data'    => [
-                'manifest'  => $data['manifest'],
-                'items'     => $data['items'],
-                'locations' => $locations,
+                'manifest'            => $data['manifest'],
+                'items'               => $data['items'],
+                'locations'           => $locations,
+                'available_locations' => $locations,
             ],
         ]);
     }
@@ -128,7 +169,11 @@ class OutboundController extends Controller
             'barcode'       => 'required|string',
         ]);
 
-        $res = $this->service->verifyBarcode($tenant_slug, $request->input('manifest_code'), $request->input('barcode'));
+        $res = $this->service->verifyBarcode(
+            $tenant_slug,
+            $request->input('manifest_code'),
+            $request->input('barcode')
+        );
 
         return response()->json([
             'success' => $res['success'],
@@ -143,6 +188,7 @@ class OutboundController extends Controller
             'good_qty'       => 'required|numeric|min:0',
             'damaged_qty'    => 'required|numeric|min:0',
             'source_rack_id' => 'nullable',
+            'source_rack'    => 'nullable|string',
             'damage_note'    => 'nullable|string',
         ]);
 

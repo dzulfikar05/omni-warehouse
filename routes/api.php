@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\StockTransferController;
 | Public Auth Routes (Global Gateway)
 |--------------------------------------------------------------------------
 */
+
 Route::post('/verify-tenant', [AuthController::class, 'verifyTenant'])
     ->middleware('throttle:10,1');
 
@@ -32,7 +33,7 @@ Route::get('/health-check', function () {
 | Protected Tenant Routes (Sanctum Authenticated)
 |--------------------------------------------------------------------------
 */
-Route::middleware('')->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [AuthController::class, 'profile']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);
 
@@ -66,6 +67,7 @@ Route::middleware('')->group(function () {
         Route::get('/', [OutboundController::class, 'index']);
         Route::get('/manifests/{manifest_code}', [OutboundController::class, 'show']);
         Route::post('/store', [OutboundController::class, 'store']);
+        Route::post('/sync-offline', [OutboundController::class, 'syncOffline']);
         Route::post('/verify-barcode', [OutboundController::class, 'verifyBarcode']);
         Route::post('/picking', [OutboundController::class, 'updatePicking']);
         Route::post('/commit', [OutboundController::class, 'commit']);
@@ -82,6 +84,7 @@ Route::middleware('')->group(function () {
         Route::get('/options', [StockTransferController::class, 'options']);
         Route::get('/', [StockTransferController::class, 'index']);
         Route::post('/store', [StockTransferController::class, 'store']);
+        Route::post('/sync-offline', [StockTransferController::class, 'syncOffline']);
         Route::put('/{transfer_code}', [StockTransferController::class, 'update']);
         Route::post('/{transfer_code}/cancel', [StockTransferController::class, 'cancel']);
     });
@@ -93,6 +96,7 @@ Route::middleware('')->group(function () {
     */
     Route::prefix('{tenant_slug}/stock-opname')->group(function () {
         Route::get('/active', [StockOpnameController::class, 'activeSession']);
+        Route::post('/sync-offline', [StockOpnameController::class, 'syncOffline']);
         Route::post('/record-count', [StockOpnameController::class, 'recordCount']);
         Route::post('/submit-review', [StockOpnameController::class, 'submitReview']);
     });

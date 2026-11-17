@@ -30,15 +30,50 @@ class StockOpnameController extends Controller
     }
 
     /**
-     * Record physical count via manual input (item_id) or barcode scan (session_id + barcode).
+     * Synchronize offline-counted stock opname items from mobile SQLite (Idempotent & FIFO).
+     */
+    public function syncOffline(Request $request, string $tenant_slug): JsonResponse
+    {
+        $validated = $request->validate([
+            'session_id'             => ['nullable', 'integer'],
+            'session_code'           => ['nullable', 'string', 'max:100'],
+            'local_uuid'             => ['nullable', 'string', 'max:100'],
+            'transaction_uuid'       => ['nullable', 'string', 'max:100'],
+            'should_submit_review'   => ['nullable', 'boolean'],
+            'items'                  => ['required', 'array', 'min:1'],
+            'items.*.item_id'        => ['nullable', 'integer'],
+            'items.*.sku_id'         => ['nullable', 'integer'],
+            'items.*.barcode'        => ['nullable', 'string', 'max:100'],
+            'items.*.location_id'    => ['nullable', 'integer'],
+            'items.*.target_rack'    => ['nullable', 'string', 'max:100'],
+            'items.*.physical_qty'   => ['required', 'integer', 'min:0'],
+        ]);
+
+        $res = $this->service->syncOfflineOpname(
+            $tenant_slug,
+            $validated,
+            (int) $request->user()->id
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => $res['message'],
+            'data'    => $res,
+        ]);
+    }
+
+    /**
+     * Record physical count via manual input (item_id) or barcode scan (session_id/session_code + barcode).
      */
     public function recordCount(Request $request, string $tenant_slug): JsonResponse
     {
         $validated = $request->validate([
             'item_id'      => ['nullable', 'integer'],
             'session_id'   => ['nullable', 'integer'],
+            'session_code' => ['nullable', 'string', 'max:100'],
             'barcode'      => ['nullable', 'string', 'max:100'],
             'location_id'  => ['nullable', 'integer'],
+            'target_rack'  => ['nullable', 'string', 'max:100'],
             'physical_qty' => ['nullable', 'integer', 'min:0'],
             'is_increment' => ['nullable', 'boolean'],
         ]);
@@ -60,10 +95,20 @@ class StockOpnameController extends Controller
     public function submitReview(Request $request, string $tenant_slug): JsonResponse
     {
         $validated = $request->validate([
-            'session_id' => ['required', 'integer'],
+            'session_id'   => ['nullable', 'integer'],
+            'session_code' => ['nullable', 'string', 'max:100'],
         ]);
 
-        $submitted = $this->service->submitSessionForReview($tenant_slug, (int) $validated['session_id']);
+        $identifier = $validated['session_id'] ?? $validated['session_code'] ?? null;
+
+        if (!$identifier) {
+            return response()->json([
+                'success' => false,
+                'message' => 'session_id atau session_code wajib diisi.',
+            ], 422);
+        }
+
+        $submitted = $this->service->submitSessionForReview($tenant_slug, $identifier);
 
         return response()->json([
             'success' => $submitted,

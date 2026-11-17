@@ -10,7 +10,9 @@ interface StockOpnameContract
 
     public function updateItemPhysicalQty(string $tenantSlug, array $data, ?int $userId = null): array;
 
-    public function submitSessionForReview(string $tenantSlug, int $sessionId): bool;
+    public function syncOfflineOpname(string $tenantSlug, array $payload, int $userId): array;
+
+    public function submitSessionForReview(string $tenantSlug, int|string $sessionIdentifier): bool;
 
     public function executeAdjustment(string $tenantSlug, int $sessionId, ?int $userId = null): bool;
 }
