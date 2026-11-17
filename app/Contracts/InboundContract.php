@@ -25,4 +25,6 @@ interface InboundContract
     public function holdInbound(string $tenant_slug, string $manifest_code, ?string $reason = null): bool;
 
     public function resumeInbound(string $tenant_slug, string $manifest_code): bool;
+
+    public function syncOfflineManifest(string $tenant_slug, array $payload, int $userId): array;
 }

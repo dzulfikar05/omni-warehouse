@@ -2,429 +2,689 @@
 
 namespace App\Services;
 
-use App\Contracts\StockOpnameContract;
+use App\Contracts\StockTransferContract;
 use App\Models\Tenant;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
 
-class StockOpnameService implements StockOpnameContract
+class StockTransferService implements StockTransferContract
 {
-    private const TRANSACTION_TYPE = 'STOCK_OPNAME';
+    private const TRANSACTION_TYPE = 'STOCK_TRANSFER';
 
-    public function getActiveSessionData(string $tenantSlug, bool $isForMobile = false): array
+    /**
+     * Helper terpusat untuk mencari dokumen Stock Transfer secara konsisten
+     * (mendukung prefix TX-TRF-, TRF-YYYYMMDD-, maupun UUID lokal).
+     */
+    private function findTransferTransaction(int $tenantId, string $transferCode, bool $lock = false)
     {
-        $tenant = Tenant::where('slug', $tenantSlug)->firstOrFail();
+        $cleanCode = trim($transferCode);
 
-        $session = DB::table('transactions')
+        $query = DB::table('transactions')
+            ->where('tenant_id', $tenantId)
+            ->where('transaction_type', self::TRANSACTION_TYPE)
+            ->where(function ($q) use ($cleanCode) {
+                $q->where('local_uuid', $cleanCode);
+
+                if (Schema::hasColumn('transactions', 'transaction_code')) {
+                    $q->orWhere('transaction_code', $cleanCode);
+                }
+                if (Schema::hasColumn('transactions', 'code')) {
+                    $q->orWhere('code', $cleanCode);
+                }
+            });
+
+        if ($lock) {
+            $query->lockForUpdate();
+        }
+
+        return $query->first();
+    }
+
+    public function getTransferLogsList(string $tenant_slug, array $filters = []): array
+    {
+        $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
+
+        $baseQuery = DB::table('transactions')
             ->leftJoin('users', 'transactions.created_by', '=', 'users.id')
             ->where('transactions.tenant_id', $tenant->id)
-            ->where('transactions.transaction_type', self::TRANSACTION_TYPE)
-            ->whereIn('transactions.status', ['DRAFT', 'COUNTING', 'REVIEW'])
+            ->where('transactions.transaction_type', self::TRANSACTION_TYPE);
+
+        if (!empty($filters['search'])) {
+            $search = '%' . trim($filters['search']) . '%';
+            $baseQuery->where(function ($q) use ($search) {
+                $q->where('transactions.local_uuid', 'ilike', $search)
+                    ->orWhere('transactions.notes', 'ilike', $search)
+                    ->orWhereExists(function ($sub) use ($search) {
+                        $sub->select(DB::raw(1))
+                            ->from('transaction_items')
+                            ->join('skus', 'transaction_items.sku_id', '=', 'skus.id')
+                            ->join('products', 'skus.product_id', '=', 'products.id')
+                            ->whereColumn('transaction_items.transaction_id', 'transactions.id')
+                            ->where(function ($sq) use ($search) {
+                                $sq->where('skus.sku_code', 'ilike', $search)
+                                    ->orWhere('products.name', 'ilike', $search);
+                            });
+                    });
+            });
+        }
+
+        if (!empty($filters['status'])) {
+            $baseQuery->whereRaw('UPPER(transactions.status) = ?', [strtoupper($filters['status'])]);
+        }
+
+        if (!empty($filters['date_from'])) {
+            $baseQuery->whereDate('transactions.created_at', '>=', $filters['date_from']);
+        }
+
+        if (!empty($filters['date_to'])) {
+            $baseQuery->whereDate('transactions.created_at', '<=', $filters['date_to']);
+        }
+
+        if (!empty($filters['from_warehouse_id'])) {
+            $fromWhId = (int) $filters['from_warehouse_id'];
+            $baseQuery->whereExists(function ($sub) use ($fromWhId) {
+                $sub->select(DB::raw(1))
+                    ->from('transaction_items')
+                    ->join('locations', 'transaction_items.from_location_id', '=', 'locations.id')
+                    ->whereColumn('transaction_items.transaction_id', 'transactions.id')
+                    ->where('locations.warehouse_id', $fromWhId);
+            });
+        }
+
+        if (!empty($filters['to_warehouse_id'])) {
+            $toWhId = (int) $filters['to_warehouse_id'];
+            $baseQuery->whereExists(function ($sub) use ($toWhId) {
+                $sub->select(DB::raw(1))
+                    ->from('transaction_items')
+                    ->join('locations', 'transaction_items.to_location_id', '=', 'locations.id')
+                    ->whereColumn('transaction_items.transaction_id', 'transactions.id')
+                    ->where('locations.warehouse_id', $toWhId);
+            });
+        }
+
+        $paginator = (clone $baseQuery)
             ->select(
                 'transactions.id',
-                'transactions.local_uuid as session_code',
+                'transactions.local_uuid as transfer_code',
                 'transactions.status',
-                'transactions.dock_bay as zone',
                 'transactions.notes',
-                'users.name as auditor_name',
-                'transactions.created_at as cut_off_date'
+                'transactions.created_at',
+                'transactions.updated_at',
+                'users.name as created_by_name'
             )
-            ->latest('transactions.created_at')
-            ->first();
+            ->orderByDesc('transactions.created_at')
+            ->paginate(15);
 
-        if (! $session) {
+        $transactionIds = collect($paginator->items())->pluck('id')->all();
+
+        $itemsByTx = empty($transactionIds)
+            ? collect()
+            : DB::table('transaction_items')
+                ->join('skus', 'transaction_items.sku_id', '=', 'skus.id')
+                ->join('products', 'skus.product_id', '=', 'products.id')
+                ->leftJoin('locations as from_loc', 'transaction_items.from_location_id', '=', 'from_loc.id')
+                ->leftJoin('warehouses as from_wh', 'from_loc.warehouse_id', '=', 'from_wh.id')
+                ->leftJoin('locations as to_loc', 'transaction_items.to_location_id', '=', 'to_loc.id')
+                ->leftJoin('warehouses as to_wh', 'to_loc.warehouse_id', '=', 'to_wh.id')
+                ->whereIn('transaction_items.transaction_id', $transactionIds)
+                ->select(
+                    'transaction_items.id',
+                    'transaction_items.transaction_id',
+                    'transaction_items.sku_id',
+                    'skus.sku_code',
+                    'products.name as product_name',
+                    'transaction_items.from_location_id',
+                    'from_loc.rack_code as from_rack_code',
+                    'from_loc.zone as from_zone',
+                    'from_wh.id as from_warehouse_id',
+                    'from_wh.name as from_warehouse_name',
+                    'transaction_items.to_location_id',
+                    'to_loc.rack_code as to_rack_code',
+                    'to_loc.zone as to_zone',
+                    'to_wh.id as to_warehouse_id',
+                    'to_wh.name as to_warehouse_name',
+                    'transaction_items.quantity',
+                    'transaction_items.batch_number',
+                    'transaction_items.expiry_date'
+                )
+                ->get()
+                ->groupBy('transaction_id');
+
+        $paginator->getCollection()->transform(function ($tx) use ($itemsByTx) {
+            $txItems = ($itemsByTx->get($tx->id) ?? collect())->map(fn($item) => [
+                'id'                  => (int) $item->id,
+                'sku_id'              => (int) $item->sku_id,
+                'sku_code'            => $item->sku_code,
+                'product_name'        => $item->product_name,
+                'from_location_id'    => (int) $item->from_location_id,
+                'from_rack'           => $item->from_rack_code ?? '-',
+                'from_warehouse_name' => $item->from_warehouse_name ?? '-',
+                'to_location_id'      => (int) $item->to_location_id,
+                'to_rack'             => $item->to_rack_code ?? '-',
+                'to_warehouse_name'   => $item->to_warehouse_name ?? '-',
+                'quantity'            => (int) $item->quantity,
+                'batch_number'        => $item->batch_number,
+                'expiry_date'         => $item->expiry_date,
+            ])->values()->all();
+
+            $firstItem = $txItems[0] ?? null;
+
             return [
-                'session' => null,
-                'items'   => [],
+                'id'                  => (int) $tx->id,
+                'transfer_code'       => $tx->transfer_code,
+                'status'              => strtoupper($tx->status),
+                'notes'               => $tx->notes,
+                'created_by_name'     => $tx->created_by_name ?? '-',
+                'created_at'          => $tx->created_at,
+                'total_items'         => count($txItems),
+                'total_quantity'      => array_sum(array_column($txItems, 'quantity')),
+                'from_warehouse_name' => $firstItem['from_warehouse_name'] ?? '-',
+                'to_warehouse_name'   => $firstItem['to_warehouse_name'] ?? '-',
+                'from_rack'           => $firstItem['from_rack'] ?? '-',
+                'to_rack'             => $firstItem['to_rack'] ?? '-',
+                'items'               => $txItems,
             ];
-        }
-
-        $warehouse = DB::table('transaction_items')
-            ->join('locations', 'transaction_items.from_location_id', '=', 'locations.id')
-            ->join('warehouses', 'locations.warehouse_id', '=', 'warehouses.id')
-            ->where('transaction_items.transaction_id', $session->id)
-            ->select('warehouses.name', 'warehouses.code')
-            ->first();
-
-        if (! $warehouse) {
-            $warehouse = DB::table('warehouses')
-                ->where('tenant_id', $tenant->id)
-                ->where('is_active', true)
-                ->select('name', 'code')
-                ->first();
-        }
-
-        $rawItems = DB::table('transaction_items')
-            ->join('skus', 'transaction_items.sku_id', '=', 'skus.id')
-            ->join('products', 'skus.product_id', '=', 'products.id')
-            ->leftJoin('locations', 'transaction_items.from_location_id', '=', 'locations.id')
-            ->where('transaction_items.transaction_id', $session->id)
-            ->select(
-                'transaction_items.id',
-                'transaction_items.sku_id',
-                'transaction_items.from_location_id as location_id',
-                'skus.sku_code as sku',
-                'skus.barcode',
-                'products.name as product_name',
-                'locations.rack_code as target_rack',
-                'locations.zone as rack_zone',
-                'transaction_items.quantity as system_qty',
-                'transaction_items.good_qty as physical_qty',
-                'transaction_items.damage_note'
-            )
-            ->orderBy('locations.rack_code')
-            ->orderBy('skus.sku_code')
-            ->get();
-
-        $items = $rawItems->map(function ($item) use ($isForMobile) {
-            $systemQty   = (int) ($item->system_qty ?? 0);
-            $physicalQty = (int) ($item->physical_qty ?? 0);
-            $varianceQty = $physicalQty - $systemQty;
-
-            $base = [
-                'id'           => (int) $item->id,
-                'sku_id'       => (int) $item->sku_id,
-                'location_id'  => $item->location_id ? (int) $item->location_id : null,
-                'sku'          => $item->sku,
-                'barcode'      => $item->barcode ?? $item->sku,
-                'product_name' => $item->product_name,
-                'target_rack'  => $item->target_rack ?? '-',
-                'physical_qty' => $physicalQty,
-                'is_unlisted'  => $item->damage_note === 'UNLISTED',
-            ];
-
-            if (! $isForMobile) {
-                $base['system_qty']   = $systemQty;
-                $base['variance_qty'] = $varianceQty;
-            }
-
-            return $base;
         });
 
-        $totalSystem   = $rawItems->sum(fn ($i) => (int) ($i->system_qty ?? 0));
-        $totalPhysical = $rawItems->sum(fn ($i) => (int) ($i->physical_qty ?? 0));
-        $matchedSkus   = $rawItems->filter(fn ($i) => (int) ($i->good_qty ?? 0) === (int) ($i->quantity ?? 0))->count();
-        $deficitUnits  = $rawItems->sum(fn ($i) => max(0, (int) ($i->quantity ?? 0) - (int) ($i->good_qty ?? 0)));
-        $surplusUnits  = $rawItems->sum(fn ($i) => max(0, (int) ($i->good_qty ?? 0) - (int) ($i->quantity ?? 0)));
-
-        $sessionData = [
-            'id'                 => (int) $session->id,
-            'session_code'       => $session->session_code,
-            'status'             => $session->status,
-            'warehouse_name'     => $warehouse->name ?? $tenant->name,
-            'warehouse_code'     => $warehouse->code ?? 'WH-MAIN',
-            'zone'               => $session->zone ?? 'All Zones',
-            'auditor_name'       => $session->auditor_name ?? '-',
-            'auditor_avatar'     => '-',
-            'cut_off_date'       => $session->cut_off_date,
-            'total_skus'         => $items->count(),
-            'total_physical'     => (int) $totalPhysical,
-            'total_system_units' => $isForMobile ? 0 : (int) $totalSystem,
-            'matched_skus'       => $isForMobile ? 0 : $matchedSkus,
-            'deficit_units'      => $isForMobile ? 0 : (int) $deficitUnits,
-            'surplus_units'      => $isForMobile ? 0 : (int) $surplusUnits,
-            'net_variance'       => $isForMobile ? 0 : (int) ($totalPhysical - $totalSystem),
+        $stats = [
+            'total'     => DB::table('transactions')->where('tenant_id', $tenant->id)->where('transaction_type', self::TRANSACTION_TYPE)->count(),
+            'completed' => DB::table('transactions')->where('tenant_id', $tenant->id)->where('transaction_type', self::TRANSACTION_TYPE)->whereRaw("UPPER(status) IN ('COMPLETED', 'COMMITTED')")->count(),
+            'pending'   => DB::table('transactions')->where('tenant_id', $tenant->id)->where('transaction_type', self::TRANSACTION_TYPE)->whereRaw("UPPER(status) IN ('PENDING', 'DRAFT', 'IN_TRANSIT')")->count(),
+            'cancelled' => DB::table('transactions')->where('tenant_id', $tenant->id)->where('transaction_type', self::TRANSACTION_TYPE)->whereRaw("UPPER(status) = 'CANCELLED'")->count(),
         ];
 
         return [
-            'session' => $sessionData,
-            'items'   => $items->values()->all(),
+            'transfers' => $paginator,
+            'stats'     => $stats,
         ];
     }
 
-    public function createSession(string $tenantSlug, array $data, ?int $userId = null): array
+    public function createStockTransfer(string $tenant_slug, array $data, ?int $userId = null): array
     {
-        $tenant = Tenant::where('slug', $tenantSlug)->firstOrFail();
+        $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
         $userId ??= auth()->id();
 
-        if (! $userId) {
-            throw new RuntimeException('Authenticated user is required to create a stock opname session.');
+        if (!$userId) {
+            throw new RuntimeException('Authenticated user is required to create a stock transfer.');
         }
 
-        $opnameCode = 'OPN-' . now()->format('Ymd') . '-' . Str::upper(Str::random(4));
+        $incomingUuid = !empty($data['local_uuid']) ? trim($data['local_uuid']) : null;
+        $transferCode = $incomingUuid ?? ('TX-TRF-' . Str::upper(Str::random(8)));
 
-        return DB::transaction(function () use ($tenant, $data, $userId, $opnameCode) {
-            $hasActive = DB::table('transactions')
-                ->where('tenant_id', $tenant->id)
-                ->where('transaction_type', self::TRANSACTION_TYPE)
-                ->whereIn('status', ['DRAFT', 'COUNTING', 'REVIEW'])
-                ->exists();
-
-            if ($hasActive) {
-                throw ValidationException::withMessages([
-                    'session' => 'Masih terdapat sesi Stock Opname yang aktif. Selesaikan atau batalkan sesi sebelumnya terlebih dahulu.',
-                ]);
+        return DB::transaction(function () use ($tenant, $data, $userId, $incomingUuid, $transferCode) {
+            // Idempotency guard: cegah eksekusi pemindahan stok ganda jika client retry
+            if ($incomingUuid) {
+                $existing = $this->findTransferTransaction($tenant->id, $incomingUuid, true);
+                if ($existing) {
+                    return [
+                        'transfer_code'  => $existing->local_uuid,
+                        'status'         => strtoupper($existing->status),
+                        'already_synced' => true,
+                        'message'        => 'Transfer stok sudah diproses sebelumnya.',
+                    ];
+                }
             }
 
             $transactionId = DB::table('transactions')->insertGetId([
                 'tenant_id'        => $tenant->id,
                 'user_id'          => $userId,
                 'created_by'       => $userId,
-                'local_uuid'       => $opnameCode,
-                'status'           => 'COUNTING',
-                'sync_status'      => 'synced',
+                'local_uuid'       => $transferCode,
+                'status'           => 'COMPLETED',
+                'sync_status'      => 'SYNCED',
                 'transaction_type' => self::TRANSACTION_TYPE,
-                'dock_bay'         => $data['zone'] ?? 'All Zones',
                 'notes'            => $data['notes'] ?? null,
                 'created_at'       => now(),
                 'updated_at'       => now(),
             ]);
 
-            $stocks = DB::table('inventory_stocks')
-                ->join('locations', 'inventory_stocks.location_id', '=', 'locations.id')
-                ->join('warehouses', 'locations.warehouse_id', '=', 'warehouses.id')
-                ->where('warehouses.tenant_id', $tenant->id)
-                ->when(! empty($data['warehouse_id']), fn ($q) => $q->where('warehouses.id', $data['warehouse_id']))
-                ->when(! empty($data['zone']) && $data['zone'] !== 'All Zones', fn ($q) => $q->where('locations.zone', $data['zone']))
-                ->select(
-                    'inventory_stocks.sku_id',
-                    'inventory_stocks.location_id',
-                    DB::raw('COALESCE(SUM(inventory_stocks.quantity), 0) as sys_qty')
-                )
-                ->groupBy('inventory_stocks.sku_id', 'inventory_stocks.location_id')
-                ->get();
-
-            foreach ($stocks as $stock) {
-                DB::table('transaction_items')->insert([
-                    'transaction_id'   => $transactionId,
-                    'sku_id'           => $stock->sku_id,
-                    'from_location_id' => $stock->location_id,
-                    'quantity'         => (int) $stock->sys_qty,
-                    'good_qty'         => 0,
-                    'damaged_qty'      => 0,
-                    'created_by'       => $userId,
-                    'created_at'       => now(),
-                    'updated_at'       => now(),
-                ]);
-            }
+            $this->executeFefoTransferItems($tenant->id, $transactionId, $data['items'], $userId);
 
             return [
-                'session_id'   => $transactionId,
-                'session_code' => $opnameCode,
+                'transfer_code'  => $transferCode,
+                'status'         => 'COMPLETED',
+                'already_synced' => false,
+                'message'        => 'Transfer stok berhasil dieksekusi.',
             ];
         });
     }
 
-    public function updateItemPhysicalQty(string $tenantSlug, array $data, ?int $userId = null): array
+    public function syncOfflineTransfer(string $tenant_slug, array $payload, int $userId): array
     {
-        $tenant = Tenant::where('slug', $tenantSlug)->firstOrFail();
-        $userId ??= auth()->id();
+        $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
+        $incomingCode = trim($payload['transfer_code'] ?? $payload['local_uuid'] ?? '');
 
-        if (! $userId) {
-            throw new RuntimeException('Authenticated user is required to record physical count.');
+        if ($incomingCode === '') {
+            throw ValidationException::withMessages([
+                'local_uuid' => 'transfer_code atau local_uuid wajib diisi saat sinkronisasi.',
+            ]);
         }
 
-        return DB::transaction(function () use ($tenant, $data, $userId) {
-            if (! empty($data['item_id'])) {
-                $item = DB::table('transaction_items')
-                    ->join('transactions', 'transaction_items.transaction_id', '=', 'transactions.id')
-                    ->where('transactions.tenant_id', $tenant->id)
-                    ->where('transactions.transaction_type', self::TRANSACTION_TYPE)
-                    ->where('transaction_items.id', $data['item_id'])
-                    ->select('transaction_items.*')
-                    ->lockForUpdate()
-                    ->first();
+        return DB::transaction(function () use ($tenant, $payload, $userId, $incomingCode) {
+            // 1. Idempotency Guard: jika transfer ini sudah pernah masuk & selesai, balas sukses
+            $existing = $this->findTransferTransaction($tenant->id, $incomingCode, true);
 
-                if (! $item) {
-                    throw ValidationException::withMessages(['item_id' => 'Item opname tidak ditemukan.']);
-                }
-
-                $newQty = ! empty($data['is_increment'])
-                    ? ((int) $item->good_qty + (int) ($data['physical_qty'] ?? 1))
-                    : (int) $data['physical_qty'];
-
-                DB::table('transaction_items')
-                    ->where('id', $item->id)
-                    ->update([
-                        'good_qty'   => max(0, $newQty),
-                        'updated_at' => now(),
-                    ]);
-
+            if ($existing && in_array(strtoupper($existing->status), ['COMPLETED', 'COMMITTED'], true)) {
                 return [
-                    'success'      => true,
-                    'physical_qty' => max(0, $newQty),
-                    'message'      => 'Kuantitas fisik berhasil diperbarui.',
+                    'transfer_code'  => $existing->local_uuid,
+                    'status'         => 'COMPLETED',
+                    'already_synced' => true,
+                    'message'        => 'Data transfer stok offline sudah tersinkronisasi sebelumnya.',
                 ];
             }
 
-            if (! empty($data['session_id']) && ! empty($data['barcode'])) {
-                $session = DB::table('transactions')
-                    ->where('tenant_id', $tenant->id)
-                    ->where('id', $data['session_id'])
-                    ->where('transaction_type', self::TRANSACTION_TYPE)
-                    ->where('status', 'COUNTING')
-                    ->first();
+            // 2. Resolusi kode rak (from_rack / to_rack) ke location_id jika mobile mengirim string rack_code
+            $rackMap = DB::table('locations')
+                ->join('warehouses', 'locations.warehouse_id', '=', 'warehouses.id')
+                ->where('warehouses.tenant_id', $tenant->id)
+                ->where('locations.is_active', true)
+                ->pluck('locations.id', 'locations.rack_code');
 
-                if (! $session) {
-                    throw ValidationException::withMessages(['session_id' => 'Sesi opname tidak valid atau sudah ditutup.']);
+            $normalizedItems = [];
+            foreach ($payload['items'] as $index => $item) {
+                $fromLocId = !empty($item['from_location_id'])
+                    ? (int) $item['from_location_id']
+                    : (!empty($item['from_rack']) ? ($rackMap[trim((string) $item['from_rack'])] ?? null) : null);
+
+                $toLocId = !empty($item['to_location_id'])
+                    ? (int) $item['to_location_id']
+                    : (!empty($item['to_rack']) ? ($rackMap[trim((string) $item['to_rack'])] ?? null) : null);
+
+                if (!$fromLocId) {
+                    throw ValidationException::withMessages([
+                        "items.{$index}.from_location_id" => 'Lokasi rak asal tidak ditemukan.',
+                    ]);
                 }
 
-                $sku = DB::table('skus')
-                    ->join('products', 'skus.product_id', '=', 'products.id')
-                    ->where('products.tenant_id', $tenant->id)
-                    ->where(function ($q) use ($data) {
-                        $q->where('skus.barcode', $data['barcode'])
-                          ->orWhere('skus.sku_code', $data['barcode']);
-                    })
-                    ->select('skus.id', 'skus.sku_code', 'products.name')
-                    ->first();
-
-                if (! $sku) {
-                    throw ValidationException::withMessages(['barcode' => 'Barcode SKU tidak terdaftar pada tenant ini.']);
+                if (!$toLocId) {
+                    throw ValidationException::withMessages([
+                        "items.{$index}.to_location_id" => 'Lokasi rak tujuan tidak ditemukan.',
+                    ]);
                 }
 
-                $locationId = $data['location_id'] ?? null;
+                $normalizedItems[] = [
+                    'sku_id'           => (int) $item['sku_id'],
+                    'from_location_id' => $fromLocId,
+                    'to_location_id'   => $toLocId,
+                    'quantity'         => (int) $item['quantity'],
+                    'batch_number'     => $item['batch_number'] ?? null,
+                    'expiry_date'      => $item['expiry_date'] ?? null,
+                ];
+            }
 
-                $existingItem = DB::table('transaction_items')
-                    ->where('transaction_id', $session->id)
-                    ->where('sku_id', $sku->id)
-                    ->when($locationId, fn ($q) => $q->where('from_location_id', $locationId))
-                    ->lockForUpdate()
-                    ->first();
-
-                if ($existingItem) {
-                    $newQty = (int) $existingItem->good_qty + (int) ($data['physical_qty'] ?? 1);
-                    DB::table('transaction_items')
-                        ->where('id', $existingItem->id)
-                        ->update([
-                            'good_qty'   => $newQty,
-                            'updated_at' => now(),
-                        ]);
-
-                    return [
-                        'success'      => true,
-                        'physical_qty' => $newQty,
-                        'message'      => "Scan berhasil: {$sku->name} (+1).",
-                    ];
-                }
-
-                $qtyToAdd = (int) ($data['physical_qty'] ?? 1);
-                DB::table('transaction_items')->insert([
-                    'transaction_id'   => $session->id,
-                    'sku_id'           => $sku->id,
-                    'from_location_id' => $locationId,
-                    'quantity'         => 0,
-                    'good_qty'         => $qtyToAdd,
-                    'damaged_qty'      => 0,
-                    'damage_note'      => 'UNLISTED',
+            // 3. Buat atau perbarui header transaksi
+            if (!$existing) {
+                $transactionId = DB::table('transactions')->insertGetId([
+                    'tenant_id'        => $tenant->id,
+                    'user_id'          => $userId,
                     'created_by'       => $userId,
+                    'local_uuid'       => $incomingCode,
+                    'status'           => 'COMPLETED',
+                    'sync_status'      => 'SYNCED',
+                    'transaction_type' => self::TRANSACTION_TYPE,
+                    'notes'            => $payload['notes'] ?? null,
                     'created_at'       => now(),
                     'updated_at'       => now(),
                 ]);
-
-                return [
-                    'success'      => true,
-                    'physical_qty' => $qtyToAdd,
-                    'message'      => "Item baru di luar daftar dicatat: {$sku->name}.",
-                ];
+            } else {
+                $transactionId = $existing->id;
+                DB::table('transaction_items')->where('transaction_id', $transactionId)->delete();
+                DB::table('transactions')
+                    ->where('id', $transactionId)
+                    ->update([
+                        'status'      => 'COMPLETED',
+                        'sync_status' => 'SYNCED',
+                        'notes'       => $payload['notes'] ?? $existing->notes,
+                        'updated_at'  => now(),
+                    ]);
             }
 
-            throw ValidationException::withMessages(['payload' => 'Parameter input penghitungan fisik tidak lengkap.']);
+            // 4. Eksekusi perpindahan stok FEFO secara atomic
+            $this->executeFefoTransferItems($tenant->id, $transactionId, $normalizedItems, $userId);
+
+            return [
+                'transfer_code'  => $incomingCode,
+                'status'         => 'COMPLETED',
+                'already_synced' => false,
+                'message'        => 'Sinkronisasi transfer stok offline berhasil dieksekusi.',
+            ];
         });
     }
 
-    public function submitSessionForReview(string $tenantSlug, int $sessionId): bool
+    /**
+     * Engine pemindahan stok berbasis FEFO (expiry_date ASC NULLS LAST)
+     * yang digunakan bersama oleh store() online dan syncOffline().
+     */
+    private function executeFefoTransferItems(int $tenantId, int $transactionId, array $items, int $userId): void
     {
-        $tenant = Tenant::where('slug', $tenantSlug)->firstOrFail();
+        foreach ($items as $index => $item) {
+            $skuId          = (int) $item['sku_id'];
+            $fromLocationId = (int) $item['from_location_id'];
+            $toLocationId   = (int) $item['to_location_id'];
+            $qtyToMove      = (int) $item['quantity'];
 
-        return DB::table('transactions')
-            ->where('tenant_id', $tenant->id)
-            ->where('id', $sessionId)
-            ->where('transaction_type', self::TRANSACTION_TYPE)
-            ->where('status', 'COUNTING')
-            ->update([
-                'status'     => 'REVIEW',
-                'updated_at' => now(),
-            ]) > 0;
-    }
-
-    public function executeAdjustment(string $tenantSlug, int $sessionId, ?int $userId = null): bool
-    {
-        $tenant = Tenant::where('slug', $tenantSlug)->firstOrFail();
-        $userId ??= auth()->id();
-
-        if (! $userId) {
-            throw new RuntimeException('Authenticated user is required to execute stock adjustment.');
-        }
-
-        return DB::transaction(function () use ($tenant, $sessionId, $userId) {
-            $session = DB::table('transactions')
-                ->where('tenant_id', $tenant->id)
-                ->where('id', $sessionId)
-                ->where('transaction_type', self::TRANSACTION_TYPE)
-                ->lockForUpdate()
-                ->first();
-
-            if (! $session || $session->status === 'ADJUSTED') {
-                return false;
+            if ($fromLocationId === $toLocationId) {
+                throw ValidationException::withMessages([
+                    "items.{$index}.to_location_id" => 'Lokasi tujuan harus berbeda dengan lokasi asal.',
+                ]);
             }
 
-            $items = DB::table('transaction_items')
-                ->where('transaction_id', $sessionId)
+            $this->assertTenantSkuAndLocations($tenantId, $skuId, $fromLocationId, $toLocationId, $index);
+
+            $sourceStocks = DB::table('inventory_stocks')
+                ->where('sku_id', $skuId)
+                ->where('location_id', $fromLocationId)
+                ->where('quantity', '>', 0)
+                ->orderByRaw('expiry_date ASC NULLS LAST')
+                ->orderBy('id')
                 ->lockForUpdate()
                 ->get();
 
-            foreach ($items as $item) {
-                $systemQty   = (int) ($item->quantity ?? 0);
-                $physicalQty = (int) ($item->good_qty ?? 0);
+            $availableQty = (int) $sourceStocks->sum('quantity');
 
-                if ($systemQty !== $physicalQty && $item->from_location_id) {
-                    $existingStocks = DB::table('inventory_stocks')
-                        ->where('sku_id', $item->sku_id)
-                        ->where('location_id', $item->from_location_id)
-                        ->orderBy('id')
-                        ->lockForUpdate()
-                        ->get();
+            if ($availableQty < $qtyToMove) {
+                throw ValidationException::withMessages([
+                    "items.{$index}.quantity" => "Stok di rak asal tidak mencukupi (tersedia: {$availableQty}, diminta: {$qtyToMove}).",
+                ]);
+            }
 
-                    if ($existingStocks->isNotEmpty()) {
-                        $firstStock = $existingStocks->first();
-                        DB::table('inventory_stocks')
-                            ->where('id', $firstStock->id)
-                            ->update([
-                                'quantity'   => $physicalQty,
-                                'updated_at' => now(),
-                            ]);
+            $remainingToDeduct = $qtyToMove;
+            $primaryBatch      = null;
+            $primaryExpiry     = null;
 
-                        if ($existingStocks->count() > 1) {
-                            DB::table('inventory_stocks')
-                                ->whereIn('id', $existingStocks->skip(1)->pluck('id'))
-                                ->update(['quantity' => 0, 'updated_at' => now()]);
-                        }
-                    } else {
-                        DB::table('inventory_stocks')->insert([
-                            'sku_id'      => $item->sku_id,
-                            'location_id' => $item->from_location_id,
-                            'quantity'    => $physicalQty,
-                            'created_by'  => $userId,
-                            'created_at'  => now(),
-                            'updated_at'  => now(),
-                        ]);
-                    }
-
-                    $totalSkuStock = DB::table('inventory_stocks')
-                        ->where('sku_id', $item->sku_id)
-                        ->sum('quantity');
-
-                    DB::table('skus')
-                        ->where('id', $item->sku_id)
-                        ->update([
-                            'current_stock' => $totalSkuStock,
-                            'updated_at'    => now(),
-                        ]);
+            foreach ($sourceStocks as $stockRow) {
+                if ($remainingToDeduct <= 0) {
+                    break;
                 }
+
+                $deduct = min((int) $stockRow->quantity, $remainingToDeduct);
+
+                if ($primaryBatch === null && $stockRow->batch_number !== null) {
+                    $primaryBatch = $stockRow->batch_number;
+                }
+                if ($primaryExpiry === null && $stockRow->expiry_date !== null) {
+                    $primaryExpiry = $stockRow->expiry_date;
+                }
+
+                DB::table('inventory_stocks')
+                    ->where('id', $stockRow->id)
+                    ->update([
+                        'quantity'   => (int) $stockRow->quantity - $deduct,
+                        'updated_at' => now(),
+                    ]);
+
+                $this->incrementDestinationStock(
+                    $skuId,
+                    $toLocationId,
+                    $deduct,
+                    $stockRow->batch_number,
+                    $stockRow->expiry_date,
+                    $userId
+                );
+
+                $remainingToDeduct -= $deduct;
+            }
+
+            DB::table('transaction_items')->insert([
+                'transaction_id'   => $transactionId,
+                'sku_id'           => $skuId,
+                'from_location_id' => $fromLocationId,
+                'to_location_id'   => $toLocationId,
+                'quantity'         => $qtyToMove,
+                'batch_number'     => $item['batch_number'] ?? $primaryBatch,
+                'expiry_date'      => $item['expiry_date'] ?? $primaryExpiry,
+                'created_by'       => $userId,
+                'created_at'       => now(),
+                'updated_at'       => now(),
+            ]);
+        }
+    }
+
+    public function updateStockTransfer(string $tenant_slug, string $transfer_code, array $data): bool
+    {
+        $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
+
+        return DB::transaction(function () use ($tenant, $transfer_code, $data) {
+            $transaction = $this->findTransferTransaction($tenant->id, $transfer_code, true);
+
+            if (!$transaction) {
+                throw ValidationException::withMessages([
+                    'transfer_code' => 'Dokumen transfer stok tidak ditemukan.',
+                ]);
+            }
+
+            if (!in_array(strtolower($transaction->status), ['draft', 'pending'], true)) {
+                throw ValidationException::withMessages([
+                    'status' => 'Hanya transfer stok berstatus draft atau pending yang dapat diperbarui.',
+                ]);
+            }
+
+            foreach ($data['items'] as $index => $item) {
+                $this->assertTenantSkuAndLocations(
+                    $tenant->id,
+                    (int) $item['sku_id'],
+                    (int) $item['from_location_id'],
+                    (int) $item['to_location_id'],
+                    $index
+                );
             }
 
             DB::table('transactions')
-                ->where('id', $sessionId)
+                ->where('id', $transaction->id)
                 ->update([
-                    'status'     => 'ADJUSTED',
-                    'notes'      => trim(($session->notes ?? '') . " [Adjusted by User ID: {$userId}]"),
+                    'notes'      => $data['notes'] ?? $transaction->notes,
+                    'updated_at' => now(),
+                ]);
+
+            DB::table('transaction_items')
+                ->where('transaction_id', $transaction->id)
+                ->delete();
+
+            foreach ($data['items'] as $item) {
+                DB::table('transaction_items')->insert([
+                    'transaction_id'   => $transaction->id,
+                    'sku_id'           => (int) $item['sku_id'],
+                    'from_location_id' => (int) $item['from_location_id'],
+                    'to_location_id'   => (int) $item['to_location_id'],
+                    'quantity'         => (int) $item['quantity'],
+                    'batch_number'     => $item['batch_number'] ?? null,
+                    'expiry_date'      => $item['expiry_date'] ?? null,
+                    'created_by'       => $transaction->created_by,
+                    'created_at'       => now(),
+                    'updated_at'       => now(),
+                ]);
+            }
+
+            return true;
+        });
+    }
+
+    public function cancelStockTransfer(string $tenant_slug, string $transfer_code, ?int $userId = null): bool
+    {
+        $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
+        $userId ??= auth()->id();
+
+        return DB::transaction(function () use ($tenant, $transfer_code, $userId) {
+            $transaction = $this->findTransferTransaction($tenant->id, $transfer_code, true);
+
+            if (!$transaction) {
+                throw ValidationException::withMessages([
+                    'transfer_code' => 'Dokumen transfer stok tidak ditemukan.',
+                ]);
+            }
+
+            $currentStatus = strtoupper($transaction->status);
+
+            if ($currentStatus === 'CANCELLED') {
+                throw ValidationException::withMessages([
+                    'status' => 'Transfer stok ini sudah dibatalkan sebelumnya.',
+                ]);
+            }
+
+            if (in_array($currentStatus, ['COMPLETED', 'COMMITTED'], true)) {
+                $items = DB::table('transaction_items')
+                    ->where('transaction_id', $transaction->id)
+                    ->lockForUpdate()
+                    ->get();
+
+                foreach ($items as $item) {
+                    $qtyToReverse = (int) $item->quantity;
+
+                    $destStocks = DB::table('inventory_stocks')
+                        ->where('sku_id', $item->sku_id)
+                        ->where('location_id', $item->to_location_id)
+                        ->where('quantity', '>', 0)
+                        ->orderByDesc('id')
+                        ->lockForUpdate()
+                        ->get();
+
+                    $destAvailable = (int) $destStocks->sum('quantity');
+
+                    if ($destAvailable < $qtyToReverse) {
+                        throw ValidationException::withMessages([
+                            'transfer_code' => 'Pembatalan gagal: sebagian stok di lokasi tujuan sudah keluar atau dipindahkan.',
+                        ]);
+                    }
+
+                    $remaining = $qtyToReverse;
+                    foreach ($destStocks as $destRow) {
+                        if ($remaining <= 0) {
+                            break;
+                        }
+
+                        $deduct = min((int) $destRow->quantity, $remaining);
+
+                        DB::table('inventory_stocks')
+                            ->where('id', $destRow->id)
+                            ->update([
+                                'quantity'   => (int) $destRow->quantity - $deduct,
+                                'updated_at' => now(),
+                            ]);
+
+                        $this->incrementDestinationStock(
+                            (int) $item->sku_id,
+                            (int) $item->from_location_id,
+                            $deduct,
+                            $destRow->batch_number ?? $item->batch_number,
+                            $destRow->expiry_date ?? $item->expiry_date,
+                            $userId
+                        );
+
+                        $remaining -= $deduct;
+                    }
+                }
+            }
+
+            $cancelNote = $userId ? " [Cancelled by User ID: {$userId}]" : ' [Cancelled]';
+
+            DB::table('transactions')
+                ->where('id', $transaction->id)
+                ->update([
+                    'status'     => 'CANCELLED',
+                    'notes'      => trim(($transaction->notes ?? '') . $cancelNote),
                     'updated_at' => now(),
                 ]);
 
             return true;
         });
+    }
+
+    private function assertTenantSkuAndLocations(
+        int $tenantId,
+        int $skuId,
+        int $fromLocationId,
+        int $toLocationId,
+        int $index
+    ): void {
+        $skuValid = DB::table('skus')
+            ->join('products', 'skus.product_id', '=', 'products.id')
+            ->where('products.tenant_id', $tenantId)
+            ->where('skus.id', $skuId)
+            ->where('skus.is_active', true)
+            ->exists();
+
+        if (!$skuValid) {
+            throw ValidationException::withMessages([
+                "items.{$index}.sku_id" => 'SKU tidak valid, nonaktif, atau bukan milik tenant ini.',
+            ]);
+        }
+
+        $fromValid = DB::table('locations')
+            ->join('warehouses', 'locations.warehouse_id', '=', 'warehouses.id')
+            ->where('warehouses.tenant_id', $tenantId)
+            ->where('warehouses.is_active', true)
+            ->where('locations.id', $fromLocationId)
+            ->where('locations.is_active', true)
+            ->exists();
+
+        if (!$fromValid) {
+            throw ValidationException::withMessages([
+                "items.{$index}.from_location_id" => 'Lokasi rak asal tidak valid atau nonaktif.',
+            ]);
+        }
+
+        $toValid = DB::table('locations')
+            ->join('warehouses', 'locations.warehouse_id', '=', 'warehouses.id')
+            ->where('warehouses.tenant_id', $tenantId)
+            ->where('warehouses.is_active', true)
+            ->where('locations.id', $toLocationId)
+            ->where('locations.is_active', true)
+            ->exists();
+
+        if (!$toValid) {
+            throw ValidationException::withMessages([
+                "items.{$index}.to_location_id" => 'Lokasi rak tujuan tidak valid atau nonaktif.',
+            ]);
+        }
+    }
+
+    private function incrementDestinationStock(
+        int $skuId,
+        int $locationId,
+        int $quantity,
+        ?string $batchNumber,
+        ?string $expiryDate,
+        ?int $userId
+    ): void {
+        $existing = DB::table('inventory_stocks')
+            ->where('sku_id', $skuId)
+            ->where('location_id', $locationId)
+            ->when(
+                $batchNumber !== null,
+                fn($q) => $q->where('batch_number', $batchNumber),
+                fn($q) => $q->whereNull('batch_number')
+            )
+            ->when(
+                $expiryDate !== null,
+                fn($q) => $q->where('expiry_date', $expiryDate),
+                fn($q) => $q->whereNull('expiry_date')
+            )
+            ->lockForUpdate()
+            ->first();
+
+        if ($existing) {
+            DB::table('inventory_stocks')
+                ->where('id', $existing->id)
+                ->update([
+                    'quantity'   => (int) $existing->quantity + $quantity,
+                    'updated_at' => now(),
+                ]);
+
+            return;
+        }
+
+        DB::table('inventory_stocks')->insert([
+            'sku_id'       => $skuId,
+            'location_id'  => $locationId,
+            'quantity'     => $quantity,
+            'batch_number' => $batchNumber,
+            'expiry_date'  => $expiryDate,
+            'created_by'   => $userId,
+            'created_at'   => now(),
+            'updated_at'   => now(),
+        ]);
     }
 }

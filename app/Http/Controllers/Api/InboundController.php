@@ -76,19 +76,49 @@ class InboundController extends Controller
         $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
 
         $validated = $request->validate([
-            'supplier_id' => ['required', 'integer', Rule::exists('suppliers', 'id')->where('tenant_id', $tenant->id)],
-            'items' => ['required', 'array', 'min:1'],
+            'local_uuid'     => ['nullable', 'string', 'max:64'],
+            'supplier_id'    => ['required', 'integer', Rule::exists('suppliers', 'id')->where('tenant_id', $tenant->id)],
+            'items'          => ['required', 'array', 'min:1'],
             'items.*.sku_id' => ['required', 'integer', Rule::exists('skus', 'id')],
             'items.*.po_qty' => ['required', 'integer', 'min:1'],
         ]);
 
-        $res = $this->service->createManifest($tenant_slug, $validated, auth()->id() ?? 1);
+        $res = $this->service->createManifest($tenant_slug, $validated, (int) $request->user()->id);
+        $statusCode = ! empty($res['already_synced']) ? 200 : 201;
 
         return response()->json([
             'success' => true,
-            'message' => 'Manifest Inbound PO berhasil dibuat.',
-            'data' => $res
-        ], 201);
+            'message' => ! empty($res['already_synced'])
+                ? 'Manifest Inbound sudah tersinkronisasi sebelumnya.'
+                : 'Manifest Inbound PO berhasil dibuat.',
+            'data'    => $res,
+        ], $statusCode);
+    }
+
+    public function syncOffline(Request $request, string $tenant_slug): JsonResponse
+    {
+        $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
+
+        $validated = $request->validate([
+            'local_uuid'          => ['required', 'string', 'max:64'],
+            'supplier_id'         => ['nullable', 'integer', Rule::exists('suppliers', 'id')->where('tenant_id', $tenant->id)],
+            'should_commit'       => ['nullable', 'boolean'],
+            'items'               => ['required', 'array', 'min:1'],
+            'items.*.sku_id'      => ['required', 'integer', Rule::exists('skus', 'id')],
+            'items.*.po_qty'      => ['nullable', 'integer', 'min:0'],
+            'items.*.good_qty'    => ['required', 'integer', 'min:0'],
+            'items.*.damaged_qty' => ['nullable', 'integer', 'min:0'],
+            'items.*.target_rack' => ['nullable', 'string', 'max:100'],
+            'items.*.damage_note' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $res = $this->service->syncOfflineManifest($tenant_slug, $validated, (int) $request->user()->id);
+
+        return response()->json([
+            'success' => true,
+            'message' => $res['message'],
+            'data'    => $res,
+        ]);
     }
 
     public function show(string $tenant_slug, string $manifest_code): JsonResponse
@@ -183,6 +213,4 @@ class InboundController extends Controller
     {
         return $this->verifyBarcode($request, $tenant_slug);
     }
-
-
 }

@@ -8,6 +8,8 @@ interface StockTransferContract
 
     public function createStockTransfer(string $tenant_slug, array $data, ?int $userId = null): array;
 
+    public function syncOfflineTransfer(string $tenant_slug, array $payload, int $userId): array;
+
     public function updateStockTransfer(string $tenant_slug, string $transfer_code, array $data): bool;
 
     public function cancelStockTransfer(string $tenant_slug, string $transfer_code, ?int $userId = null): bool;

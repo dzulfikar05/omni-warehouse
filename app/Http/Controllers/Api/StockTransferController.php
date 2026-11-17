@@ -99,7 +99,7 @@ class StockTransferController extends Controller
             'search'            => ['nullable', 'string', 'max:100'],
             'date_from'         => ['nullable', 'date'],
             'date_to'           => ['nullable', 'date', 'after_or_equal:date_from'],
-            'status'            => ['nullable', Rule::in(['pending', 'in_transit', 'completed', 'cancelled', 'draft'])],
+            'status'            => ['nullable', 'string', 'max:30'],
             'from_warehouse_id' => [
                 'nullable',
                 'integer',
@@ -112,13 +112,30 @@ class StockTransferController extends Controller
             ],
         ]);
 
-        $filters = array_filter($filters, fn ($value) => $value !== null && $value !== '');
-        $data = $this->stockTransferService->getTransferLogsList($tenant_slug, $filters);
+        $filters = array_filter($filters, fn($value) => $value !== null && $value !== '');
+        $rawData = $this->stockTransferService->getTransferLogsList($tenant_slug, $filters);
+
+        $transfersPaginator = $rawData['transfers'] ?? null;
+        $isPaginator = $transfersPaginator instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator;
+
+        $responseData = [
+            'transfers' => $isPaginator ? $transfersPaginator->items() : ($transfersPaginator ?? []),
+            'stats'     => $rawData['stats'] ?? null,
+        ];
+
+        if ($isPaginator) {
+            $responseData['pagination'] = [
+                'current_page' => $transfersPaginator->currentPage(),
+                'last_page'    => $transfersPaginator->lastPage(),
+                'per_page'     => $transfersPaginator->perPage(),
+                'total'        => $transfersPaginator->total(),
+            ];
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'Daftar riwayat transfer stok berhasil dimuat.',
-            'data'    => $data,
+            'data'    => $responseData,
         ]);
     }
 
@@ -127,9 +144,10 @@ class StockTransferController extends Controller
      */
     public function store(Request $request, string $tenant_slug): JsonResponse
     {
-        $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
+        Tenant::where('slug', $tenant_slug)->firstOrFail();
 
         $validated = $request->validate([
+            'local_uuid'               => ['nullable', 'string', 'max:100'],
             'items'                    => ['required', 'array', 'min:1'],
             'items.*.sku_id'           => ['required', 'integer', Rule::exists('skus', 'id')],
             'items.*.from_location_id' => ['required', 'integer', Rule::exists('locations', 'id')],
@@ -140,6 +158,8 @@ class StockTransferController extends Controller
                 Rule::exists('locations', 'id'),
             ],
             'items.*.quantity'         => ['required', 'integer', 'min:1'],
+            'items.*.batch_number'     => ['nullable', 'string', 'max:100'],
+            'items.*.expiry_date'      => ['nullable', 'date'],
             'notes'                    => ['nullable', 'string', 'max:2000'],
         ]);
 
@@ -153,9 +173,47 @@ class StockTransferController extends Controller
             'success' => true,
             'message' => $result['message'],
             'data'    => [
-                'transfer_code' => $result['transfer_code'],
+                'transfer_code'  => $result['transfer_code'],
+                'already_synced' => $result['already_synced'] ?? false,
             ],
         ], 201);
+    }
+
+    /**
+     * Synchronize offline-created stock transfer queue from mobile SQLite (Idempotent & FIFO).
+     */
+    public function syncOffline(Request $request, string $tenant_slug): JsonResponse
+    {
+        Tenant::where('slug', $tenant_slug)->firstOrFail();
+
+        $validated = $request->validate([
+            'transfer_code'            => ['nullable', 'string', 'max:100'],
+            'local_uuid'               => ['nullable', 'string', 'max:100'],
+            'transaction_uuid'         => ['nullable', 'string', 'max:100'],
+            'notes'                    => ['nullable', 'string', 'max:2000'],
+            'client_timestamp'         => ['nullable', 'string'],
+            'items'                    => ['required', 'array', 'min:1'],
+            'items.*.sku_id'           => ['required', 'integer'],
+            'items.*.from_location_id' => ['nullable', 'integer'],
+            'items.*.to_location_id'   => ['nullable', 'integer'],
+            'items.*.from_rack'        => ['nullable', 'string'],
+            'items.*.to_rack'          => ['nullable', 'string'],
+            'items.*.quantity'         => ['required', 'integer', 'min:1'],
+            'items.*.batch_number'     => ['nullable', 'string', 'max:100'],
+            'items.*.expiry_date'      => ['nullable', 'date'],
+        ]);
+
+        $result = $this->stockTransferService->syncOfflineTransfer(
+            $tenant_slug,
+            $validated,
+            (int) $request->user()->id
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => $result['message'],
+            'data'    => $result,
+        ]);
     }
 
     /**
@@ -163,7 +221,7 @@ class StockTransferController extends Controller
      */
     public function update(Request $request, string $tenant_slug, string $transfer_code): JsonResponse
     {
-        $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
+        Tenant::where('slug', $tenant_slug)->firstOrFail();
 
         $validated = $request->validate([
             'items'                    => ['required', 'array', 'min:1'],

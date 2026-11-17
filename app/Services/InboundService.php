@@ -7,10 +7,62 @@ use App\Models\InventoryStock;
 use App\Models\Sku;
 use App\Models\Tenant;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class InboundService implements InboundContract
 {
+    /**
+     * Helper terpusat untuk mencari transaksi inbound secara konsisten
+     * berdasarkan manifest_code (baik format TX-PO-... maupun UUID lokal).
+     */
+    private function findManifestTransaction(int $tenantId, string $manifestCode, bool $lock = false)
+    {
+        $cleanCode = trim($manifestCode);
+
+        $query = DB::table('transactions')
+            ->where('tenant_id', $tenantId)
+            ->whereIn('transaction_type', ['IN', 'INBOUND'])
+            ->where(function ($q) use ($cleanCode) {
+                $q->where('local_uuid', $cleanCode);
+
+                // Jika tabel transactions memiliki kolom transaction_code atau code, ikut dicari
+                if (Schema::hasColumn('transactions', 'transaction_code')) {
+                    $q->orWhere('transaction_code', $cleanCode);
+                }
+                if (Schema::hasColumn('transactions', 'code')) {
+                    $q->orWhere('code', $cleanCode);
+                }
+            });
+
+        if ($lock) {
+            $query->lockForUpdate();
+        }
+
+        return $query->first();
+    }
+
+    /**
+     * Helper terpusat untuk mengambil daftar lokasi rak milik tenant.
+     */
+    private function getTenantLocations(int $tenantId)
+    {
+        $query = DB::table('locations')
+            ->join('warehouses', 'locations.warehouse_id', '=', 'warehouses.id')
+            ->where('warehouses.tenant_id', $tenantId)
+            ->select(
+                'locations.id',
+                'locations.rack_code',
+                'locations.zone'
+            );
+
+        if (Schema::hasColumn('locations', 'is_active')) {
+            $query->where('locations.is_active', true);
+        }
+
+        return $query->orderBy('locations.rack_code')->get();
+    }
+
     public function getInboundManifestsList(string $tenant_slug, array $filters = []): array
     {
         $tenant = Tenant::where('slug', $tenant_slug)->first();
@@ -130,21 +182,33 @@ class InboundService implements InboundContract
     public function createManifest(string $tenant_slug, array $data, int $userId): array
     {
         $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
+        $incomingUuid = !empty($data['local_uuid']) ? trim($data['local_uuid']) : null;
 
-        return DB::transaction(function () use ($tenant, $data, $userId) {
-            $manifestCode = 'TX-PO-' . strtoupper(Str::random(8));
+        return DB::transaction(function () use ($tenant, $data, $userId, $incomingUuid) {
+            if ($incomingUuid) {
+                $existing = $this->findManifestTransaction($tenant->id, $incomingUuid);
+
+                if ($existing) {
+                    return [
+                        'manifest_code'  => $existing->local_uuid,
+                        'already_synced' => true,
+                    ];
+                }
+            }
+
+            $manifestCode = $incomingUuid ?? ('TX-INB-' . strtoupper(Str::random(8)));
 
             $transactionId = DB::table('transactions')->insertGetId([
-                'tenant_id' => $tenant->id,
-                'user_id' => $userId,
-                'supplier_id' => $data['supplier_id'] ?? null,
-                'local_uuid' => $manifestCode,
-                'status' => 'DRAFT',
-                'sync_status' => 'SYNCED',
+                'tenant_id'        => $tenant->id,
+                'user_id'          => $userId,
+                'supplier_id'      => $data['supplier_id'] ?? null,
+                'local_uuid'       => $manifestCode,
+                'status'           => 'DRAFT',
+                'sync_status'      => 'SYNCED',
                 'transaction_type' => 'INBOUND',
-                'created_by' => $userId,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'created_by'       => $userId,
+                'created_at'       => now(),
+                'updated_at'       => now(),
             ]);
 
             if (!empty($data['items']) && is_array($data['items'])) {
@@ -152,22 +216,27 @@ class InboundService implements InboundContract
                     $skuId = $item['sku_id'] ?? $item['product_id'] ?? null;
                     $quantity = $item['po_qty'] ?? $item['expected_qty'] ?? 1;
 
-                    if (!$skuId) continue;
+                    if (!$skuId) {
+                        continue;
+                    }
 
                     DB::table('transaction_items')->insert([
                         'transaction_id' => $transactionId,
-                        'sku_id' => $skuId,
-                        'quantity' => $quantity,
-                        'good_qty' => 0,
-                        'damaged_qty' => 0,
-                        'created_by' => $userId,
-                        'created_at' => now(),
-                        'updated_at' => now(),
+                        'sku_id'         => $skuId,
+                        'quantity'       => $quantity,
+                        'good_qty'       => 0,
+                        'damaged_qty'    => 0,
+                        'created_by'     => $userId,
+                        'created_at'     => now(),
+                        'updated_at'     => now(),
                     ]);
                 }
             }
 
-            return ['manifest_code' => $manifestCode];
+            return [
+                'manifest_code'  => $manifestCode,
+                'already_synced' => false,
+            ];
         });
     }
 
@@ -179,10 +248,20 @@ class InboundService implements InboundContract
     public function getManifestDetail(string $tenant_slug, string $manifest_code): array
     {
         $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
+        $cleanCode = trim($manifest_code);
 
         $transaction = DB::table('transactions')
             ->where('transactions.tenant_id', $tenant->id)
-            ->where('transactions.local_uuid', $manifest_code)
+            ->whereIn('transactions.transaction_type', ['IN', 'INBOUND'])
+            ->where(function ($q) use ($cleanCode) {
+                $q->where('transactions.local_uuid', $cleanCode);
+                if (Schema::hasColumn('transactions', 'transaction_code')) {
+                    $q->orWhere('transactions.transaction_code', $cleanCode);
+                }
+                if (Schema::hasColumn('transactions', 'code')) {
+                    $q->orWhere('transactions.code', $cleanCode);
+                }
+            })
             ->leftJoin('suppliers', 'transactions.supplier_id', '=', 'suppliers.id')
             ->leftJoin('users', 'transactions.user_id', '=', 'users.id')
             ->select(
@@ -193,8 +272,11 @@ class InboundService implements InboundContract
             ->first();
 
         if (!$transaction) {
-            abort(404, 'Manifest inbound tidak ditemukan.');
+            abort(404, "Manifest inbound '{$cleanCode}' tidak ditemukan.");
         }
+
+        // Pastikan satu sumber kebenaran untuk kode manifes yang dikembalikan ke client
+        $resolvedManifestCode = $transaction->local_uuid;
 
         $rawItems = DB::table('transaction_items')
             ->where('transaction_items.transaction_id', $transaction->id)
@@ -226,10 +308,10 @@ class InboundService implements InboundContract
             if ($damagedQty > 0) {
                 $status = 'issue';
                 $statusLabel = 'Ada Selisih / BAP';
-            } else if ($goodQty >= $poQty && $poQty > 0) {
+            } elseif ($goodQty >= $poQty && $poQty > 0) {
                 $status = 'valid';
                 $statusLabel = 'Sesuai / Valid';
-            } else if ($scanned > 0) {
+            } elseif ($scanned > 0) {
                 $status = 'process';
                 $statusLabel = 'Proses Scan';
             }
@@ -246,7 +328,7 @@ class InboundService implements InboundContract
                 'good_qty' => $goodQty,
                 'damaged_qty' => $damagedQty,
                 'unit' => $item->unit ?? 'Pcs',
-                'target_rack' => $item->target_rack ?? 'Belum Dialokasi',
+                'target_rack' => $item->target_rack, // Biarkan null jika belum dialokasi agar Flutter tahu belum dipilih
                 'damage_note' => $item->damage_note ?? '',
                 'status' => $status,
                 'status_label' => $statusLabel,
@@ -257,21 +339,38 @@ class InboundService implements InboundContract
         $totalGood = array_sum(array_column($items, 'good_qty'));
         $totalDamaged = array_sum(array_column($items, 'damaged_qty'));
 
+        // Sertakan daftar lokasi rak beserta stok saat ini agar Flutter bisa menyimpan cache offline
+        $locations = $this->getTenantLocations($tenant->id)->map(function ($loc) {
+            $currentStock = DB::table('inventory_stocks')
+                ->where('location_id', $loc->id)
+                ->sum('quantity');
+
+            return [
+                'id' => (int) $loc->id,
+                'rack_code' => $loc->rack_code,
+                'zone' => $loc->zone,
+                'stock_quantity' => (int) $currentStock,
+            ];
+        })->toArray();
+
         return [
             'manifest' => [
-                'manifest_code' => $transaction->local_uuid,
-                'po_number' => $transaction->local_uuid,
+                'manifest_code' => $resolvedManifestCode,
+                'po_number' => $resolvedManifestCode,
                 'status' => strtoupper($transaction->status),
+                'supplier_id' => (int) ($transaction->supplier_id ?? 0),
                 'supplier_name' => $transaction->supplier_name ?? '-',
                 'warehouse_name' => $tenant->name,
                 'operator_name' => $transaction->operator_name ?? 'Operator',
                 'total_skus' => count($items),
+                'total_units' => $totalPo,
                 'total_po_units' => $totalPo,
                 'good_units' => $totalGood,
                 'damaged_units' => $totalDamaged,
                 'progress_percentage' => $totalPo > 0 ? round((($totalGood + $totalDamaged) / $totalPo) * 100, 1) : 0,
             ],
             'items' => $items,
+            'available_locations' => $locations,
         ];
     }
 
@@ -281,14 +380,10 @@ class InboundService implements InboundContract
         $cleanBarcode = trim($barcode);
 
         return DB::transaction(function () use ($tenant, $manifest_code, $cleanBarcode) {
-            $transaction = DB::table('transactions')
-                ->where('tenant_id', $tenant->id)
-                ->where('local_uuid', $manifest_code)
-                ->lockForUpdate()
-                ->first();
+            $transaction = $this->findManifestTransaction($tenant->id, $manifest_code, true);
 
             if (!$transaction) {
-                return ['success' => false, 'message' => 'Manifest tidak ditemukan.'];
+                return ['success' => false, 'message' => "Manifest '{$manifest_code}' tidak ditemukan."];
             }
 
             $currentStatus = strtoupper($transaction->status);
@@ -354,22 +449,49 @@ class InboundService implements InboundContract
     {
         $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
 
+        $item = DB::table('transaction_items')
+            ->join('transactions', 'transaction_items.transaction_id', '=', 'transactions.id')
+            ->where('transactions.tenant_id', $tenant->id)
+            ->where('transaction_items.id', $data['item_id'])
+            ->select('transaction_items.id', 'transactions.id as transaction_id', 'transactions.status')
+            ->first();
+
+        if (!$item) {
+            abort(404, 'Item inbound tidak ditemukan pada tenant ini.');
+        }
+
+        if (strtoupper($item->status) === 'COMMITTED') {
+            abort(422, 'Manifest sudah di-commit dan tidak dapat diubah.');
+        }
+
         $location = DB::table('locations')
             ->join('warehouses', 'locations.warehouse_id', '=', 'warehouses.id')
             ->where('warehouses.tenant_id', $tenant->id)
-            ->where('locations.rack_code', $data['target_rack'])
+            ->where('locations.rack_code', trim($data['target_rack']))
             ->select('locations.id')
             ->first();
 
-        DB::table('transaction_items')
-            ->where('id', $data['item_id'])
-            ->update([
-                'to_location_id' => $location?->id,
-                'good_qty' => $data['good_qty'] ?? 0,
-                'damaged_qty' => $data['damaged_qty'] ?? 0,
-                'damage_note' => $data['damage_note'] ?? null,
-                'updated_at' => now(),
-            ]);
+        if (!$location) {
+            abort(422, "Lokasi rak '{$data['target_rack']}' tidak ditemukan.");
+        }
+
+        DB::transaction(function () use ($item, $location, $data) {
+            DB::table('transaction_items')
+                ->where('id', $item->id)
+                ->update([
+                    'to_location_id' => $location->id,
+                    'good_qty'       => $data['good_qty'] ?? 0,
+                    'damaged_qty'    => $data['damaged_qty'] ?? 0,
+                    'damage_note'    => $data['damage_note'] ?? null,
+                    'updated_at'     => now(),
+                ]);
+
+            if (in_array(strtoupper($item->status), ['DRAFT', 'PENDING'])) {
+                DB::table('transactions')
+                    ->where('id', $item->transaction_id)
+                    ->update(['status' => 'RECEIVING', 'updated_at' => now()]);
+            }
+        });
 
         return ['success' => true, 'message' => 'Alokasi rak dan fisik berhasil diperbarui.'];
     }
@@ -379,22 +501,36 @@ class InboundService implements InboundContract
         $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
 
         return DB::transaction(function () use ($tenant, $manifest_code) {
-            $transaction = DB::table('transactions')
-                ->where('tenant_id', $tenant->id)
-                ->where('local_uuid', $manifest_code)
-                ->lockForUpdate()
-                ->firstOrFail();
+            $transaction = $this->findManifestTransaction($tenant->id, $manifest_code, true);
+
+            if (!$transaction) {
+                abort(404, "Manifest '{$manifest_code}' tidak ditemukan saat commit.");
+            }
+
+            // Idempotency guard: cegah penambahan stok ganda jika client melakukan retry akibat timeout
+            if (strtoupper($transaction->status) === 'COMMITTED') {
+                return true;
+            }
 
             $items = DB::table('transaction_items')
                 ->where('transaction_id', $transaction->id)
+                ->lockForUpdate()
                 ->get();
+
+            // Validasi bisnis: pastikan item yang memiliki good_qty > 0 sudah dialokasikan ke rak
+            foreach ($items as $item) {
+                $goodQty = (int) ($item->good_qty ?? 0);
+                if ($goodQty > 0 && !$item->to_location_id) {
+                    abort(422, 'Terdapat item dengan jumlah baik > 0 yang belum dialokasikan ke lokasi rak.');
+                }
+            }
 
             foreach ($items as $item) {
                 $goodQty = (int) ($item->good_qty ?? 0);
                 if ($goodQty > 0 && $item->to_location_id) {
                     $stock = InventoryStock::firstOrNew([
-                        'sku_id' => $item->sku_id,
-                        'location_id' => $item->to_location_id,
+                        'sku_id'       => $item->sku_id,
+                        'location_id'  => $item->to_location_id,
                         'batch_number' => $item->batch_number ?? 'DEFAULT',
                     ]);
 
@@ -408,7 +544,11 @@ class InboundService implements InboundContract
 
             DB::table('transactions')
                 ->where('id', $transaction->id)
-                ->update(['status' => 'COMMITTED', 'updated_at' => now()]);
+                ->update([
+                    'status'      => 'COMMITTED',
+                    'sync_status' => 'SYNCED',
+                    'updated_at'  => now(),
+                ]);
 
             return true;
         });
@@ -417,12 +557,16 @@ class InboundService implements InboundContract
     public function holdInbound(string $tenant_slug, string $manifest_code, ?string $reason = 'Hold by Operator'): bool
     {
         $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
+        $transaction = $this->findManifestTransaction($tenant->id, $manifest_code);
+
+        if (!$transaction) {
+            return false;
+        }
 
         return DB::table('transactions')
-            ->where('tenant_id', $tenant->id)
-            ->where('local_uuid', $manifest_code)
+            ->where('id', $transaction->id)
             ->update([
-                'status' => 'ON_HOLD',
+                'status'     => 'ON_HOLD',
                 'updated_at' => now(),
             ]) > 0;
     }
@@ -430,17 +574,19 @@ class InboundService implements InboundContract
     public function resumeInbound(string $tenant_slug, string $manifest_code): bool
     {
         $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
+        $transaction = $this->findManifestTransaction($tenant->id, $manifest_code);
+
+        if (!$transaction) {
+            return false;
+        }
 
         return DB::table('transactions')
-            ->where('tenant_id', $tenant->id)
-            ->where('local_uuid', $manifest_code)
+            ->where('id', $transaction->id)
             ->update([
-                'status' => 'RECEIVING',
+                'status'     => 'RECEIVING',
                 'updated_at' => now(),
             ]) > 0;
     }
-
-
 
     public function holdInboundSession(string $tenant_slug, string $manifest_code, ?string $reason = 'Penundaan Operator'): bool
     {
@@ -450,5 +596,109 @@ class InboundService implements InboundContract
     public function resumeInboundSession(string $tenant_slug, string $manifest_code): bool
     {
         return $this->resumeInbound($tenant_slug, $manifest_code);
+    }
+
+    public function syncOfflineManifest(string $tenant_slug, array $payload, int $userId): array
+    {
+        $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
+        $incomingCode = trim($payload['manifest_code'] ?? $payload['local_uuid'] ?? '');
+        if ($incomingCode === '') {
+            abort(422, 'manifest_code atau local_uuid wajib diisi saat sinkronisasi.');
+        }
+
+        $shouldCommit = (bool) ($payload['should_commit'] ?? false);
+
+        return DB::transaction(function () use ($tenant_slug, $tenant, $payload, $userId, $incomingCode, $shouldCommit) {
+            $transaction = $this->findManifestTransaction($tenant->id, $incomingCode, true);
+
+            if ($transaction && strtoupper($transaction->status) === 'COMMITTED') {
+                return [
+                    'manifest_code'  => $transaction->local_uuid,
+                    'status'         => 'COMMITTED',
+                    'already_synced' => true,
+                    'message'        => 'Data offline inbound sudah ter-commit sebelumnya.',
+                ];
+            }
+
+            if (!$transaction) {
+                $transactionId = DB::table('transactions')->insertGetId([
+                    'tenant_id'        => $tenant->id,
+                    'user_id'          => $userId,
+                    'supplier_id'      => $payload['supplier_id'] ?? null,
+                    'local_uuid'       => $incomingCode,
+                    'status'           => 'RECEIVING',
+                    'sync_status'      => 'SYNCED',
+                    'transaction_type' => 'INBOUND',
+                    'created_by'       => $userId,
+                    'created_at'       => now(),
+                    'updated_at'       => now(),
+                ]);
+                $persistedCode = $incomingCode;
+            } else {
+                $transactionId = $transaction->id;
+                $persistedCode = $transaction->local_uuid;
+                DB::table('transactions')
+                    ->where('id', $transactionId)
+                    ->update([
+                        'status'      => 'RECEIVING',
+                        'sync_status' => 'SYNCED',
+                        'updated_at'  => now(),
+                    ]);
+            }
+
+            // Perbaikan bug join warehouses.tenant_id (sebelumnya locations.tenant_id yang berisiko SQL error)
+            $rackMap = $this->getTenantLocations($tenant->id)->pluck('id', 'rack_code');
+
+            foreach ($payload['items'] as $itemData) {
+                $skuId = (int) $itemData['sku_id'];
+                $goodQty = (int) ($itemData['good_qty'] ?? 0);
+                $damagedQty = (int) ($itemData['damaged_qty'] ?? 0);
+                $poQty = (int) ($itemData['po_qty'] ?? ($goodQty + $damagedQty));
+                $targetRack = isset($itemData['target_rack']) ? trim((string) $itemData['target_rack']) : null;
+                $toLocationId = $targetRack ? ($rackMap[$targetRack] ?? null) : null;
+
+                $existingItem = DB::table('transaction_items')
+                    ->where('transaction_id', $transactionId)
+                    ->where('sku_id', $skuId)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($existingItem) {
+                    DB::table('transaction_items')
+                        ->where('id', $existingItem->id)
+                        ->update([
+                            'to_location_id' => $toLocationId ?? $existingItem->to_location_id,
+                            'good_qty'       => $goodQty,
+                            'damaged_qty'    => $damagedQty,
+                            'damage_note'    => $itemData['damage_note'] ?? $existingItem->damage_note,
+                            'updated_at'     => now(),
+                        ]);
+                } else {
+                    DB::table('transaction_items')->insert([
+                        'transaction_id' => $transactionId,
+                        'sku_id'         => $skuId,
+                        'to_location_id' => $toLocationId,
+                        'quantity'       => max(1, $poQty),
+                        'good_qty'       => $goodQty,
+                        'damaged_qty'    => $damagedQty,
+                        'damage_note'    => $itemData['damage_note'] ?? null,
+                        'created_by'     => $userId,
+                        'created_at'     => now(),
+                        'updated_at'     => now(),
+                    ]);
+                }
+            }
+
+            if ($shouldCommit) {
+                $this->commitInbound($tenant_slug, $persistedCode);
+            }
+
+            return [
+                'manifest_code'  => $persistedCode,
+                'status'         => $shouldCommit ? 'COMMITTED' : 'RECEIVING',
+                'already_synced' => false,
+                'message'        => 'Sinkronisasi transaksi inbound offline berhasil.',
+            ];
+        });
     }
 }

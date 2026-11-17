@@ -5,12 +5,45 @@ namespace App\Services;
 use App\Contracts\StockOpnameContract;
 use App\Models\Tenant;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class StockOpnameService implements StockOpnameContract
 {
     private const TRANSACTION_TYPE = 'STOCK_OPNAME';
+
+    /**
+     * Helper terpusat untuk mencari sesi Stock Opname berdasarkan ID integer,
+     * session_code (TX-OPN-... / OPN-YYYYMMDD-...), atau local_uuid.
+     */
+    private function findOpnameSession(int $tenantId, int|string $identifier, bool $lock = false)
+    {
+        $query = DB::table('transactions')
+            ->where('tenant_id', $tenantId)
+            ->where('transaction_type', self::TRANSACTION_TYPE);
+
+        if (is_int($identifier) || ctype_digit((string) $identifier)) {
+            $query->where('id', (int) $identifier);
+        } else {
+            $cleanCode = trim((string) $identifier);
+            $query->where(function ($q) use ($cleanCode) {
+                $q->where('local_uuid', $cleanCode);
+                if (Schema::hasColumn('transactions', 'transaction_code')) {
+                    $q->orWhere('transaction_code', $cleanCode);
+                }
+                if (Schema::hasColumn('transactions', 'code')) {
+                    $q->orWhere('code', $cleanCode);
+                }
+            });
+        }
+
+        if ($lock) {
+            $query->lockForUpdate();
+        }
+
+        return $query->first();
+    }
 
     public function getActiveSessionData(string $tenantSlug, bool $isForMobile = false): array
     {
@@ -33,14 +66,13 @@ class StockOpnameService implements StockOpnameContract
             ->latest('transactions.created_at')
             ->first();
 
-        if (! $session) {
+        if (!$session) {
             return [
                 'session' => null,
                 'items'   => [],
             ];
         }
 
-        // Ambil informasi gudang dari item pertama yang diaudit, atau fallback ke gudang aktif pertama
         $warehouse = DB::table('transaction_items')
             ->join('locations', 'transaction_items.from_location_id', '=', 'locations.id')
             ->join('warehouses', 'locations.warehouse_id', '=', 'warehouses.id')
@@ -48,7 +80,7 @@ class StockOpnameService implements StockOpnameContract
             ->select('warehouses.name', 'warehouses.code')
             ->first();
 
-        if (! $warehouse) {
+        if (!$warehouse) {
             $warehouse = DB::table('warehouses')
                 ->where('tenant_id', $tenant->id)
                 ->where('is_active', true)
@@ -56,9 +88,6 @@ class StockOpnameService implements StockOpnameContract
                 ->first();
         }
 
-        // Pemetaan kolom transaction_items:
-        // quantity = system_qty (snapshot)
-        // good_qty = physical_qty (hasil hitung fisik)
         $rawItems = DB::table('transaction_items')
             ->join('skus', 'transaction_items.sku_id', '=', 'skus.id')
             ->join('products', 'skus.product_id', '=', 'products.id')
@@ -98,8 +127,7 @@ class StockOpnameService implements StockOpnameContract
                 'is_unlisted'  => $item->damage_note === 'UNLISTED',
             ];
 
-            // Blind Counting: Sembunyikan stok sistem & selisih untuk operator mobile
-            if (! $isForMobile) {
+            if (!$isForMobile) {
                 $base['system_qty']   = $systemQty;
                 $base['variance_qty'] = $varianceQty;
             }
@@ -107,16 +135,17 @@ class StockOpnameService implements StockOpnameContract
             return $base;
         });
 
-        $totalSystem   = $rawItems->sum(fn ($i) => (int) ($i->system_qty ?? 0));
-        $totalPhysical = $rawItems->sum(fn ($i) => (int) ($i->physical_qty ?? 0));
-        $matchedSkus   = $rawItems->filter(fn ($i) => (int) ($i->good_qty ?? 0) === (int) ($i->quantity ?? 0))->count();
-        $deficitUnits  = $rawItems->sum(fn ($i) => max(0, (int) ($i->quantity ?? 0) - (int) ($i->good_qty ?? 0)));
-        $surplusUnits  = $rawItems->sum(fn ($i) => max(0, (int) ($i->good_qty ?? 0) - (int) ($i->quantity ?? 0)));
+        // Fix bug alias kolom: gunakan system_qty & physical_qty sesuai select()
+        $totalSystem   = $rawItems->sum(fn($i) => (int) ($i->system_qty ?? 0));
+        $totalPhysical = $rawItems->sum(fn($i) => (int) ($i->physical_qty ?? 0));
+        $matchedSkus   = $rawItems->filter(fn($i) => (int) ($i->physical_qty ?? 0) === (int) ($i->system_qty ?? 0))->count();
+        $deficitUnits  = $rawItems->sum(fn($i) => max(0, (int) ($i->system_qty ?? 0) - (int) ($i->physical_qty ?? 0)));
+        $surplusUnits  = $rawItems->sum(fn($i) => max(0, (int) ($i->physical_qty ?? 0) - (int) ($i->system_qty ?? 0)));
 
         $sessionData = [
             'id'                 => (int) $session->id,
             'session_code'       => $session->session_code,
-            'status'             => $session->status,
+            'status'             => strtoupper($session->status),
             'warehouse_name'     => $warehouse->name ?? $tenant->name,
             'warehouse_code'     => $warehouse->code ?? 'WH-MAIN',
             'zone'               => $session->zone ?? 'All Zones',
@@ -141,7 +170,7 @@ class StockOpnameService implements StockOpnameContract
     public function createSession(string $tenantSlug, array $data, ?int $userId = null): array
     {
         $tenant     = Tenant::where('slug', $tenantSlug)->firstOrFail();
-        $opnameCode = 'OPN-' . now()->format('Ymd') . '-' . Str::upper(Str::random(4));
+        $opnameCode = 'TX-OPN-' . Str::upper(Str::random(8));
 
         return DB::transaction(function () use ($tenant, $data, $userId, $opnameCode) {
             $hasActive = DB::table('transactions')
@@ -162,7 +191,7 @@ class StockOpnameService implements StockOpnameContract
                 'created_by'       => $userId,
                 'local_uuid'       => $opnameCode,
                 'status'           => 'COUNTING',
-                'sync_status'      => 'synced',
+                'sync_status'      => 'SYNCED',
                 'transaction_type' => self::TRANSACTION_TYPE,
                 'dock_bay'         => $data['zone'] ?? 'All Zones',
                 'notes'            => $data['notes'] ?? null,
@@ -174,8 +203,8 @@ class StockOpnameService implements StockOpnameContract
                 ->join('locations', 'inventory_stocks.location_id', '=', 'locations.id')
                 ->join('warehouses', 'locations.warehouse_id', '=', 'warehouses.id')
                 ->where('warehouses.tenant_id', $tenant->id)
-                ->when(! empty($data['warehouse_id']), fn ($q) => $q->where('warehouses.id', $data['warehouse_id']))
-                ->when(! empty($data['zone']) && $data['zone'] !== 'All Zones', fn ($q) => $q->where('locations.zone', $data['zone']))
+                ->when(!empty($data['warehouse_id']), fn($q) => $q->where('warehouses.id', $data['warehouse_id']))
+                ->when(!empty($data['zone']) && $data['zone'] !== 'All Zones', fn($q) => $q->where('locations.zone', $data['zone']))
                 ->select(
                     'inventory_stocks.sku_id',
                     'inventory_stocks.location_id',
@@ -189,8 +218,8 @@ class StockOpnameService implements StockOpnameContract
                     'transaction_id'   => $transactionId,
                     'sku_id'           => $stock->sku_id,
                     'from_location_id' => $stock->location_id,
-                    'quantity'         => (int) $stock->sys_qty, // Snapshot stok sistem
-                    'good_qty'         => 0,                     // Hasil hitung fisik awal
+                    'quantity'         => (int) $stock->sys_qty,
+                    'good_qty'         => 0,
                     'damaged_qty'      => 0,
                     'created_by'       => $userId,
                     'created_at'       => now(),
@@ -211,21 +240,24 @@ class StockOpnameService implements StockOpnameContract
 
         return DB::transaction(function () use ($tenant, $data, $userId) {
             // Mode 1: Update berdasarkan item_id yang sudah ada di daftar sesi
-            if (! empty($data['item_id'])) {
+            if (!empty($data['item_id'])) {
                 $item = DB::table('transaction_items')
                     ->join('transactions', 'transaction_items.transaction_id', '=', 'transactions.id')
                     ->where('transactions.tenant_id', $tenant->id)
                     ->where('transactions.transaction_type', self::TRANSACTION_TYPE)
+                    ->whereIn('transactions.status', ['DRAFT', 'COUNTING'])
                     ->where('transaction_items.id', $data['item_id'])
                     ->select('transaction_items.*')
                     ->lockForUpdate()
                     ->first();
 
-                if (! $item) {
-                    throw ValidationException::withMessages(['item_id' => 'Item opname tidak ditemukan.']);
+                if (!$item) {
+                    throw ValidationException::withMessages([
+                        'item_id' => 'Item opname tidak ditemukan atau sesi sudah dikunci.',
+                    ]);
                 }
 
-                $newQty = ! empty($data['is_increment'])
+                $newQty = !empty($data['is_increment'])
                     ? ((int) $item->good_qty + (int) ($data['physical_qty'] ?? 1))
                     : (int) $data['physical_qty'];
 
@@ -243,39 +275,45 @@ class StockOpnameService implements StockOpnameContract
                 ];
             }
 
-            // Mode 2: Scan barcode langsung dari mobile (mendukung item unlisted)
-            if (! empty($data['session_id']) && ! empty($data['barcode'])) {
-                $session = DB::table('transactions')
-                    ->where('tenant_id', $tenant->id)
-                    ->where('id', $data['session_id'])
-                    ->where('transaction_type', self::TRANSACTION_TYPE)
-                    ->where('status', 'COUNTING')
-                    ->first();
+            // Mode 2: Scan barcode langsung dari mobile (mendukung session_id atau session_code + item unlisted)
+            $sessionIdentifier = $data['session_id'] ?? $data['session_code'] ?? null;
 
-                if (! $session) {
-                    throw ValidationException::withMessages(['session_id' => 'Sesi opname tidak valid atau sudah ditutup.']);
+            if (!empty($sessionIdentifier) && !empty($data['barcode'])) {
+                $session = $this->findOpnameSession($tenant->id, $sessionIdentifier, true);
+
+                if (!$session || !in_array(strtoupper($session->status), ['DRAFT', 'COUNTING'], true)) {
+                    throw ValidationException::withMessages([
+                        'session_id' => 'Sesi opname tidak valid atau sudah ditutup untuk penghitungan.',
+                    ]);
                 }
 
+                $cleanBarcode = trim((string) $data['barcode']);
                 $sku = DB::table('skus')
                     ->join('products', 'skus.product_id', '=', 'products.id')
                     ->where('products.tenant_id', $tenant->id)
-                    ->where(function ($q) use ($data) {
-                        $q->where('skus.barcode', $data['barcode'])
-                          ->orWhere('skus.sku_code', $data['barcode']);
+                    ->where(function ($q) use ($cleanBarcode) {
+                        $q->where('skus.barcode', $cleanBarcode)
+                            ->orWhere('skus.sku_code', $cleanBarcode);
                     })
                     ->select('skus.id', 'skus.sku_code', 'products.name')
                     ->first();
 
-                if (! $sku) {
-                    throw ValidationException::withMessages(['barcode' => 'Barcode SKU tidak terdaftar pada tenant ini.']);
+                if (!$sku) {
+                    throw ValidationException::withMessages([
+                        'barcode' => 'Barcode SKU tidak terdaftar pada tenant ini.',
+                    ]);
                 }
 
-                $locationId = $data['location_id'] ?? null;
+                $locationId = $this->resolveTenantLocationId(
+                    $tenant->id,
+                    $data['location_id'] ?? null,
+                    $data['target_rack'] ?? null
+                );
 
                 $existingItem = DB::table('transaction_items')
                     ->where('transaction_id', $session->id)
                     ->where('sku_id', $sku->id)
-                    ->when($locationId, fn ($q) => $q->where('from_location_id', $locationId))
+                    ->when($locationId !== null, fn($q) => $q->where('from_location_id', $locationId))
                     ->lockForUpdate()
                     ->first();
 
@@ -295,13 +333,12 @@ class StockOpnameService implements StockOpnameContract
                     ];
                 }
 
-                // Jika barang tidak ada di snapshot awal rak, tambahkan sebagai temuan UNLISTED
                 $qtyToAdd = (int) ($data['physical_qty'] ?? 1);
                 DB::table('transaction_items')->insert([
                     'transaction_id'   => $session->id,
                     'sku_id'           => $sku->id,
                     'from_location_id' => $locationId,
-                    'quantity'         => 0, // System qty 0 karena unlisted
+                    'quantity'         => 0,
                     'good_qty'         => $qtyToAdd,
                     'damaged_qty'      => 0,
                     'damage_note'      => 'UNLISTED',
@@ -317,23 +354,201 @@ class StockOpnameService implements StockOpnameContract
                 ];
             }
 
-            throw ValidationException::withMessages(['payload' => 'Parameter input penghitungan fisik tidak lengkap.']);
+            throw ValidationException::withMessages([
+                'payload' => 'Parameter input penghitungan fisik tidak lengkap.',
+            ]);
         });
     }
 
-    public function submitSessionForReview(string $tenantSlug, int $sessionId): bool
+    public function syncOfflineOpname(string $tenantSlug, array $payload, int $userId): array
+    {
+        $tenant = Tenant::where('slug', $tenantSlug)->firstOrFail();
+        $sessionIdentifier = $payload['session_id']
+            ?? $payload['session_code']
+            ?? $payload['local_uuid']
+            ?? null;
+
+        if (!$sessionIdentifier) {
+            throw ValidationException::withMessages([
+                'session_code' => 'session_id atau session_code wajib disertakan saat sinkronisasi opname.',
+            ]);
+        }
+
+        $syncUuid = !empty($payload['transaction_uuid']) ? trim($payload['transaction_uuid']) : null;
+        $shouldSubmitReview = (bool) ($payload['should_submit_review'] ?? false);
+
+        return DB::transaction(function () use ($tenant, $sessionIdentifier, $payload, $userId, $syncUuid, $shouldSubmitReview) {
+            $session = $this->findOpnameSession($tenant->id, $sessionIdentifier, true);
+
+            if (!$session) {
+                throw ValidationException::withMessages([
+                    'session_code' => "Sesi Stock Opname '{$sessionIdentifier}' tidak ditemukan.",
+                ]);
+            }
+
+            $currentStatus = strtoupper($session->status);
+
+            // Idempotency Guard 1: jika sesi sudah REVIEW atau ADJUSTED, jangan timpa ulang
+            if (in_array($currentStatus, ['REVIEW', 'ADJUSTED'], true)) {
+                return [
+                    'session_id'     => (int) $session->id,
+                    'session_code'   => $session->local_uuid,
+                    'status'         => $currentStatus,
+                    'already_synced' => true,
+                    'message'        => 'Sesi Stock Opname sudah dikirim/diproses sebelumnya.',
+                ];
+            }
+
+            // Idempotency Guard 2: jika sync_uuid yang sama sudah pernah diproses pada sesi ini
+            if ($syncUuid && str_contains((string) ($session->notes ?? ''), "[SYNC:{$syncUuid}]")) {
+                return [
+                    'session_id'     => (int) $session->id,
+                    'session_code'   => $session->local_uuid,
+                    'status'         => $currentStatus,
+                    'already_synced' => true,
+                    'message'        => 'Batch sinkronisasi opname ini sudah diproses sebelumnya.',
+                ];
+            }
+
+            foreach ($payload['items'] as $index => $itemData) {
+                $physicalQty = max(0, (int) $itemData['physical_qty']);
+
+                // Prioritas 1: Cocokkan berdasarkan item_id baris snapshot
+                if (!empty($itemData['item_id'])) {
+                    $existingById = DB::table('transaction_items')
+                        ->where('transaction_id', $session->id)
+                        ->where('id', (int) $itemData['item_id'])
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($existingById) {
+                        DB::table('transaction_items')
+                            ->where('id', $existingById->id)
+                            ->update([
+                                'good_qty'   => $physicalQty,
+                                'updated_at' => now(),
+                            ]);
+                        continue;
+                    }
+                }
+
+                // Prioritas 2: Cocokkan berdasarkan sku_id / barcode + lokasi rak
+                $skuId = !empty($itemData['sku_id']) ? (int) $itemData['sku_id'] : null;
+
+                if (!$skuId && !empty($itemData['barcode'])) {
+                    $cleanBarcode = trim((string) $itemData['barcode']);
+                    $skuRow = DB::table('skus')
+                        ->join('products', 'skus.product_id', '=', 'products.id')
+                        ->where('products.tenant_id', $tenant->id)
+                        ->where(function ($q) use ($cleanBarcode) {
+                            $q->where('skus.barcode', $cleanBarcode)
+                                ->orWhere('skus.sku_code', $cleanBarcode);
+                        })
+                        ->select('skus.id')
+                        ->first();
+                    $skuId = $skuRow ? (int) $skuRow->id : null;
+                }
+
+                if (!$skuId) {
+                    throw ValidationException::withMessages([
+                        "items.{$index}.sku_id" => 'SKU atau barcode pada item opname tidak valid untuk tenant ini.',
+                    ]);
+                }
+
+                $locationId = $this->resolveTenantLocationId(
+                    $tenant->id,
+                    $itemData['location_id'] ?? null,
+                    $itemData['target_rack'] ?? null
+                );
+
+                $existingBySku = DB::table('transaction_items')
+                    ->where('transaction_id', $session->id)
+                    ->where('sku_id', $skuId)
+                    ->when($locationId !== null, fn($q) => $q->where('from_location_id', $locationId))
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($existingBySku) {
+                    DB::table('transaction_items')
+                        ->where('id', $existingBySku->id)
+                        ->update([
+                            'good_qty'   => $physicalQty,
+                            'updated_at' => now(),
+                        ]);
+                } else {
+                    // Temuan barang di luar snapshot awal saat auditor melakukan scan offline (UNLISTED)
+                    DB::table('transaction_items')->insert([
+                        'transaction_id'   => $session->id,
+                        'sku_id'           => $skuId,
+                        'from_location_id' => $locationId,
+                        'quantity'         => 0,
+                        'good_qty'         => $physicalQty,
+                        'damaged_qty'      => 0,
+                        'damage_note'      => 'UNLISTED',
+                        'created_by'       => $userId,
+                        'created_at'       => now(),
+                        'updated_at'       => now(),
+                    ]);
+                }
+            }
+
+            $nextStatus = $shouldSubmitReview ? 'REVIEW' : 'COUNTING';
+            $updatedNotes = $session->notes ?? '';
+            if ($syncUuid) {
+                $updatedNotes = trim($updatedNotes . " [SYNC:{$syncUuid}]");
+            }
+
+            DB::table('transactions')
+                ->where('id', $session->id)
+                ->update([
+                    'status'      => $nextStatus,
+                    'sync_status' => 'SYNCED',
+                    'notes'       => $updatedNotes !== '' ? $updatedNotes : null,
+                    'updated_at'  => now(),
+                ]);
+
+            return [
+                'session_id'     => (int) $session->id,
+                'session_code'   => $session->local_uuid,
+                'status'         => $nextStatus,
+                'already_synced' => false,
+                'message'        => $shouldSubmitReview
+                    ? 'Hasil opname offline tersinkronisasi dan dikirim untuk review supervisor.'
+                    : 'Hasil penghitungan fisik offline berhasil disinkronkan.',
+            ];
+        });
+    }
+
+    public function submitSessionForReview(string $tenantSlug, int|string $sessionIdentifier): bool
     {
         $tenant = Tenant::where('slug', $tenantSlug)->firstOrFail();
 
-        return DB::table('transactions')
-            ->where('tenant_id', $tenant->id)
-            ->where('id', $sessionId)
-            ->where('transaction_type', self::TRANSACTION_TYPE)
-            ->where('status', 'COUNTING')
-            ->update([
-                'status'     => 'REVIEW',
-                'updated_at' => now(),
-            ]) > 0;
+        return DB::transaction(function () use ($tenant, $sessionIdentifier) {
+            $session = $this->findOpnameSession($tenant->id, $sessionIdentifier, true);
+
+            if (!$session) {
+                return false;
+            }
+
+            $currentStatus = strtoupper($session->status);
+
+            // Idempotent: jika sudah REVIEW, anggap berhasil
+            if ($currentStatus === 'REVIEW') {
+                return true;
+            }
+
+            if (!in_array($currentStatus, ['DRAFT', 'COUNTING'], true)) {
+                return false;
+            }
+
+            return DB::table('transactions')
+                ->where('id', $session->id)
+                ->update([
+                    'status'      => 'REVIEW',
+                    'sync_status' => 'SYNCED',
+                    'updated_at'  => now(),
+                ]) > 0;
+        });
     }
 
     public function executeAdjustment(string $tenantSlug, int $sessionId, ?int $userId = null): bool
@@ -348,7 +563,7 @@ class StockOpnameService implements StockOpnameContract
                 ->lockForUpdate()
                 ->first();
 
-            if (! $session || $session->status === 'ADJUSTED') {
+            if (!$session || strtoupper($session->status) === 'ADJUSTED') {
                 return false;
             }
 
@@ -378,7 +593,6 @@ class StockOpnameService implements StockOpnameContract
                                 'updated_at' => now(),
                             ]);
 
-                        // Nol-kan baris lot duplikat di lokasi yang sama jika ada agar total akurat
                         if ($existingStocks->count() > 1) {
                             DB::table('inventory_stocks')
                                 ->whereIn('id', $existingStocks->skip(1)->pluck('id'))
@@ -395,7 +609,6 @@ class StockOpnameService implements StockOpnameContract
                         ]);
                     }
 
-                    // Sinkronkan total stok pada tabel master skus
                     $totalSkuStock = DB::table('inventory_stocks')
                         ->where('sku_id', $item->sku_id)
                         ->sum('quantity');
@@ -419,5 +632,35 @@ class StockOpnameService implements StockOpnameContract
 
             return true;
         });
+    }
+
+    /**
+     * Resolusi location_id atau target_rack dengan tetap mengunci isolasi tenant_id.
+     */
+    private function resolveTenantLocationId(int $tenantId, ?int $locationId, ?string $rackCode): ?int
+    {
+        if (!empty($locationId)) {
+            $loc = DB::table('locations')
+                ->join('warehouses', 'locations.warehouse_id', '=', 'warehouses.id')
+                ->where('warehouses.tenant_id', $tenantId)
+                ->where('locations.id', (int) $locationId)
+                ->select('locations.id')
+                ->first();
+
+            return $loc ? (int) $loc->id : null;
+        }
+
+        if (!empty($rackCode) && trim($rackCode) !== '-') {
+            $loc = DB::table('locations')
+                ->join('warehouses', 'locations.warehouse_id', '=', 'warehouses.id')
+                ->where('warehouses.tenant_id', $tenantId)
+                ->where('locations.rack_code', trim($rackCode))
+                ->select('locations.id')
+                ->first();
+
+            return $loc ? (int) $loc->id : null;
+        }
+
+        return null;
     }
 }
