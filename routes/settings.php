@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
+use App\Http\Controllers\Settings\PaymentController;
+use App\Http\Controllers\Settings\PaymentSettingController;
+
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->group(function () {
@@ -19,6 +22,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('settings/password', [SecurityController::class, 'update'])
         ->middleware('throttle:6,1')
         ->name('user-password.update');
+    
+    Route::post('settings/payment/create-link', [PaymentController::class, 'createPaymentLink'])->name('tenant.payment.create');
+
+    Route::get('settings/payment', [PaymentSettingController::class, 'edit'])->name('payment.edit');
+    Route::put('settings/payment', [PaymentSettingController::class, 'update'])->name('payment.update');
 
     Route::inertia('settings/appearance', 'settings/appearance')->name('appearance.edit');
     

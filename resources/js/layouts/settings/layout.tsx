@@ -9,6 +9,7 @@ import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cn, toUrl } from '@/lib/utils';
 import { edit as editAppearance } from '@/routes/appearance';
 import { edit as editLanguage } from '@/routes/language';
+import { edit as editPayment } from '@/routes/payment';
 import { edit } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
 import type { NavItem } from '@/types';
@@ -32,6 +33,11 @@ const sidebarNavItems: NavItem[] = [
     {
         title: 'Language',
         href: editLanguage(),
+        icon: null,
+    },
+    {
+        title: 'Payment',
+        href: '/settings/payment',
         icon: null,
     },
 ];

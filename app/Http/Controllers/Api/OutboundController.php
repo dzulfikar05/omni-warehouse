@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Contracts\OutboundContract;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Models\InventoryStock;
 use App\Models\Location;
 use App\Models\Sku;
 use App\Models\Tenant;
@@ -33,14 +34,23 @@ class OutboundController extends Controller
             ->with('product:id,name')
             ->where('is_active', true)
             ->get()
-            ->map(fn($sku) => [
-                'id' => $sku->id,
-                'sku' => $sku->sku_code,
-                'barcode' => $sku->barcode ?? $sku->sku_code,
-                'name' => $sku->product->name ?? '-',
-            ]);
+            ->map(function ($sku) use ($tenant) {
+                // Filter via sku.product.tenant_id — konsisten dengan StockSummaryReportController
+                // location.tenant_id tidak reliable (nullable, bisa null untuk lokasi lama)
+                $totalStock = (int) InventoryStock::where('sku_id', $sku->id)
+                    ->whereHas('sku.product', fn($q) => $q->where('tenant_id', $tenant->id))
+                    ->sum('quantity');
 
-        $locations = Location::where('tenant_id', $tenant->id)
+                return [
+                    'id'            => $sku->id,
+                    'sku'           => $sku->sku_code,
+                    'barcode'       => $sku->barcode ?? $sku->sku_code,
+                    'name'          => $sku->product->name ?? '-',
+                    'current_stock' => $totalStock,
+                ];
+            });
+
+        $locations = Location::whereHas('warehouse', fn($q) => $q->where('tenant_id', $tenant->id))
             ->where('is_active', true)
             ->pluck('rack_code');
 
@@ -96,7 +106,9 @@ class OutboundController extends Controller
     {
         $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
         $data = $this->service->getManifestDetail($tenant_slug, $manifest_code);
-        $locations = Location::where('tenant_id', $tenant->id)->where('is_active', true)->get(['id', 'rack_code', 'zone']);
+        $locations = Location::whereHas('warehouse', fn($q) => $q->where('tenant_id', $tenant->id))
+            ->where('is_active', true)
+            ->get(['id', 'rack_code', 'zone']);
 
         return response()->json([
             'success' => true,

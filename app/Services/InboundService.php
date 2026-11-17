@@ -391,8 +391,10 @@ class InboundService implements InboundContract
         }
 
         $location = DB::table('locations')
-            ->where('tenant_id', $tenant->id)
-            ->where('rack_code', $data['target_rack'])
+            ->join('warehouses', 'locations.warehouse_id', '=', 'warehouses.id')
+            ->where('warehouses.tenant_id', $tenant->id)
+            ->where('locations.rack_code', $data['target_rack'])
+            ->select('locations.id')
             ->first();
 
         DB::table('transaction_items')
