@@ -9,6 +9,7 @@ interface MasterSku {
     id: number;
     sku: string;
     product_name: string;
+    current_stock?: number;
 }
 
 interface CustomerOption {
@@ -64,10 +65,12 @@ export const CreateManifestModal: React.FC<CreateManifestModalProps> = ({
             toast.error(t('Tidak ada Master SKU tersedia di database!'));
             return;
         }
+        const defaultSku = masterSkus[0];
+        const defaultStock = defaultSku.current_stock ?? 0;
         const newRow: SkuRowFormItem = {
             id: String(Date.now()),
-            sku_id: masterSkus[0].id,
-            so_qty: 10,
+            sku_id: defaultSku.id,
+            so_qty: defaultStock > 0 ? Math.min(10, defaultStock) : 1,
         };
         setData('items', [...data.items, newRow]);
     };
@@ -78,9 +81,11 @@ export const CreateManifestModal: React.FC<CreateManifestModalProps> = ({
 
     const handleSkuChange = (rowId: string, skuIdStr: string) => {
         const selectedId = Number(skuIdStr);
+        const skuInfo = masterSkus.find((m) => m.id === selectedId);
+        const stock = skuInfo?.current_stock ?? 0;
         setData(
             'items',
-            data.items.map((r) => (r.id === rowId ? { ...r, sku_id: selectedId } : r))
+            data.items.map((r) => (r.id === rowId ? { ...r, sku_id: selectedId, so_qty: stock > 0 ? Math.min(r.so_qty || 1, stock) : 1 } : r))
         );
     };
 
@@ -100,6 +105,18 @@ export const CreateManifestModal: React.FC<CreateManifestModalProps> = ({
         if (!data.items.length) {
             toast.error(t('Manifest Outbound harus memiliki minimal 1 item barang!'));
             return;
+        }
+
+        // Validasi Pre-flight: Tidak boleh melebihi stok gudang
+        for (const item of data.items) {
+            const skuInfo = masterSkus.find((m) => m.id === item.sku_id);
+            const available = skuInfo?.current_stock ?? 0;
+            if (item.so_qty > available) {
+                toast.error(
+                    t(`Kuantitas untuk SKU ${skuInfo?.sku ?? ''} melebihi stok gudang! (Tersedia: ${available} unit, Diminta: ${item.so_qty} unit)`)
+                );
+                return;
+            }
         }
 
         post(`/${tenantSlug}/transactions/outbound`, {
@@ -198,46 +215,65 @@ export const CreateManifestModal: React.FC<CreateManifestModalProps> = ({
                         </div>
 
                         <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                            {data.items.map((row) => (
-                                <div key={row.id} className="grid grid-cols-12 gap-2 items-center bg-card border border-border p-2 rounded-lg shadow-2xs">
-                                    <div className="col-span-8">
-                                        <Select
-                                            value={String(row.sku_id)}
-                                            onValueChange={(val) => handleSkuChange(row.id, val)}
-                                        >
-                                            <SelectTrigger className="h-8 w-full bg-background text-foreground font-medium text-[11px]">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {masterSkus.map((m) => (
-                                                    <SelectItem key={m.id} value={String(m.id)}>
-                                                        {m.sku} - {m.product_name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                            {data.items.map((row) => {
+                                const selectedSku = masterSkus.find((m) => m.id === row.sku_id);
+                                const availableStock = selectedSku?.current_stock ?? 0;
+                                const isExceeded = row.so_qty > availableStock;
+
+                                return (
+                                    <div key={row.id} className="grid grid-cols-12 gap-2 items-center bg-card border border-border p-2 rounded-lg shadow-2xs">
+                                        <div className="col-span-8">
+                                            <Select
+                                                value={String(row.sku_id)}
+                                                onValueChange={(val) => handleSkuChange(row.id, val)}
+                                            >
+                                                <SelectTrigger className="h-8 w-full bg-background text-foreground font-medium text-[11px]">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {masterSkus.map((m) => (
+                                                        <SelectItem key={m.id} value={String(m.id)}>
+                                                            {m.sku} - {m.product_name} (Stok: {m.current_stock ?? 0})
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            <div className="flex items-center gap-1.5 mt-1 px-1">
+                                                <span className={`text-[10px] font-medium ${availableStock > 0 ? 'text-muted-foreground' : 'text-amber-600 dark:text-amber-400'}`}>
+                                                    {t("Stok Gudang:")} <strong className="font-mono">{availableStock}</strong>
+                                                </span>
+                                                {isExceeded && (
+                                                    <span className="text-[10px] text-red-500 font-semibold">
+                                                        ⚠️ {t("Melebihi stok!")}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="col-span-3">
+                                            <input
+                                                type="number"
+                                                min={1}
+                                                max={availableStock > 0 ? availableStock : 1}
+                                                value={row.so_qty}
+                                                onChange={(e) => handleQtyChange(row.id, parseInt(e.target.value) || 1)}
+                                                placeholder={t("Qty")}
+                                                className={`w-full h-8 px-1.5 bg-background border rounded text-center font-bold text-[11px] text-foreground ${
+                                                    isExceeded ? 'border-red-500 bg-red-50/20 text-red-600' : 'border-input'
+                                                }`}
+                                            />
+                                        </div>
+                                        <div className="col-span-1 flex justify-center">
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveRow(row.id)}
+                                                className="text-muted-foreground hover:text-red-500 cursor-pointer p-1 transition-colors"
+                                            >
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div className="col-span-3">
-                                        <input
-                                            type="number"
-                                            min={1}
-                                            value={row.so_qty}
-                                            onChange={(e) => handleQtyChange(row.id, parseInt(e.target.value) || 1)}
-                                            placeholder={t("Qty")}
-                                            className="w-full h-8 px-1.5 bg-background border border-input rounded text-center font-bold text-[11px] text-foreground"
-                                        />
-                                    </div>
-                                    <div className="col-span-1 flex justify-center">
-                                        <button
-                                            type="button"
-                                            onClick={() => handleRemoveRow(row.id)}
-                                            className="text-muted-foreground hover:text-red-500 cursor-pointer p-1 transition-colors"
-                                        >
-                                            <Trash2 className="w-3.5 h-3.5" />
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
 

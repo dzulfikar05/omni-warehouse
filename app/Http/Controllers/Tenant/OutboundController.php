@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Tenant;
 use App\Contracts\OutboundContract;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Models\InventoryStock;
 use App\Models\Location;
 use App\Models\Sku;
 use App\Models\Tenant;
@@ -32,19 +33,28 @@ class OutboundController extends Controller
         $masterSkus = Sku::whereHas('product', fn($q) => $q->where('tenant_id', $tenant->id))
             ->with('product:id,name')
             ->get()
-            ->map(fn($sku) => [
-                'id'           => $sku->id,
-                'sku'          => $sku->sku_code,
-                'product_name' => $sku->product->name ?? '-',
-            ]);
+            ->map(function ($sku) use ($tenant) {
+                // Filter via sku.product.tenant_id — konsisten dengan StockSummaryReportController
+                // location.tenant_id tidak reliable (nullable, bisa null untuk lokasi lama)
+                $totalStock = (int) InventoryStock::where('sku_id', $sku->id)
+                    ->whereHas('sku.product', fn($q) => $q->where('tenant_id', $tenant->id))
+                    ->sum('quantity');
+
+                return [
+                    'id'            => $sku->id,
+                    'sku'           => $sku->sku_code,
+                    'product_name'  => $sku->product->name ?? '-',
+                    'current_stock' => $totalStock,
+                ];
+            });
 
         return Inertia::render('Tenant/Transactions/Outbound/Index', [
-            'manifests'  => $data['manifests'],
-            'summary'    => $data['summary'],
-            'statuses'   => $data['statuses'],
-            'customers'  => Customer::where('tenant_id', $tenant->id)->orderBy('name')->get(['id', 'name']),
+            'manifests' => $data['manifests'],
+            'summary' => $data['summary'],
+            'statuses' => $data['statuses'],
+            'customers' => Customer::where('tenant_id', $tenant->id)->orderBy('name')->get(['id', 'name']),
             'masterSkus' => $masterSkus,
-            'filters'    => $request->only(['search', 'date_from', 'date_to', 'status', 'customer_id']),
+            'filters' => $request->only(['search', 'date_from', 'date_to', 'status', 'customer_id']),
         ]);
     }
 
@@ -53,11 +63,11 @@ class OutboundController extends Controller
         $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
 
         $validated = $request->validate([
-            'customer_id'    => ['required', 'integer', Rule::exists('customers', 'id')->where('tenant_id', $tenant->id)],
-            'vehicle_no'     => ['nullable', 'string'],
-            'driver_name'    => ['nullable', 'string'],
-            'notes'          => ['nullable', 'string'],
-            'items'          => ['required', 'array', 'min:1'],
+            'customer_id' => ['required', 'integer', Rule::exists('customers', 'id')->where('tenant_id', $tenant->id)],
+            'vehicle_no' => ['nullable', 'string'],
+            'driver_name' => ['nullable', 'string'],
+            'notes' => ['nullable', 'string'],
+            'items' => ['required', 'array', 'min:1'],
             'items.*.sku_id' => ['required', 'integer', Rule::exists('skus', 'id')],
             'items.*.so_qty' => ['required', 'integer', 'min:1'],
         ]);
@@ -65,7 +75,7 @@ class OutboundController extends Controller
         $res = $this->service->createManifest($tenant_slug, $validated, auth()->id());
 
         return redirect()->route('tenant.transactions.outbound.show', [
-            'tenant_slug'   => $tenant_slug,
+            'tenant_slug' => $tenant_slug,
             'manifest_code' => $res['manifest_code']
         ])->with('success', __('Manifest Outbound SO berhasil dibuat.'));
     }
@@ -74,11 +84,13 @@ class OutboundController extends Controller
     {
         $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
         $data = $this->service->getManifestDetail($tenant_slug, $manifest_code);
-        $locations = Location::where('tenant_id', $tenant->id)->where('is_active', true)->get(['id', 'rack_code', 'zone']);
+        $locations = Location::whereHas('warehouse', fn($q) => $q->where('tenant_id', $tenant->id))
+            ->where('is_active', true)
+            ->get(['id', 'rack_code', 'zone']);
 
         return Inertia::render('Tenant/Transactions/Outbound/Show', [
-            'manifest'  => $data['manifest'],
-            'items'     => $data['items'],
+            'manifest' => $data['manifest'],
+            'items' => $data['items'],
             'locations' => $locations,
         ]);
     }
@@ -87,7 +99,7 @@ class OutboundController extends Controller
     {
         $request->validate([
             'manifest_code' => 'required|string',
-            'barcode'       => 'required|string',
+            'barcode' => 'required|string',
         ]);
 
         $res = $this->service->verifyBarcode($tenant_slug, $request->input('manifest_code'), $request->input('barcode'));
@@ -102,11 +114,11 @@ class OutboundController extends Controller
     public function updatePicking(Request $request, string $tenant_slug): RedirectResponse
     {
         $request->validate([
-            'item_id'        => 'required',
-            'good_qty'       => 'required|numeric|min:0',
-            'damaged_qty'    => 'required|numeric|min:0',
+            'item_id' => 'required',
+            'good_qty' => 'required|numeric|min:0',
+            'damaged_qty' => 'required|numeric|min:0',
             'source_rack_id' => 'nullable',
-            'damage_note'    => 'nullable|string',
+            'damage_note' => 'nullable|string',
         ]);
 
         $res = $this->service->updatePickingAllocation($tenant_slug, $request->all());
@@ -126,7 +138,7 @@ class OutboundController extends Controller
     {
         $request->validate([
             'manifest_code' => 'required|string',
-            'reason'        => 'nullable|string',
+            'reason' => 'nullable|string',
         ]);
 
         $this->service->holdOutboundSession(
