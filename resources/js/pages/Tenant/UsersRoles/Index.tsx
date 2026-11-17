@@ -200,7 +200,7 @@ export default function Index({ users, roles, filters }: PageProps) {
             <div className="space-y-6 p-4">
                 <PageHeader
                     title={t("Team & Access Control")}
-                    description={t("Manage organization members, Spatie RBAC roles, and operational module permissions.")}
+                    description={t("Manage organization members and operational module permissions.")}
                     renderAction={
                         <Button
                             asChild

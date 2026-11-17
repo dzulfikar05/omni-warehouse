@@ -14,10 +14,13 @@ class UnitService implements UnitContract
 {
     public function getPaginatedUnits(array $filters, int $perPage = 10): LengthAwarePaginator
     {
-        $sortBy    = $filters['sort_by'] ?? 'created_at';
+        $tenant = app('current_tenant');
+
+        $sortBy = $filters['sort_by'] ?? 'created_at';
         $sortOrder = strtolower($filters['sort_order'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
 
         return Unit::query()
+            ->where('tenant_id', $tenant->id)
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -28,10 +31,8 @@ class UnitService implements UnitContract
             ->when($sortBy, function ($q) use ($sortBy, $sortOrder) {
                 match ($sortBy) {
                     'id', 'name', 'symbol', 'created_at' => $q->orderBy($sortBy, $sortOrder),
-                    default                              => $q->orderBy('created_at', $sortOrder),
+                    default => $q->orderBy('created_at', $sortOrder),
                 };
-            }, function ($q) use ($sortOrder) {
-                $q->orderBy('created_at', $sortOrder);
             })
             ->paginate($perPage)
             ->withQueryString();
@@ -39,7 +40,10 @@ class UnitService implements UnitContract
 
     public function getUnitStats(array $filters): array
     {
+        $tenant = app('current_tenant');
+
         $baseQuery = Unit::query()
+            ->where('tenant_id', $tenant->id)
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -48,8 +52,8 @@ class UnitService implements UnitContract
             });
 
         return [
-            'total_units'    => (clone $baseQuery)->count(),
-            'short_symbols'  => (clone $baseQuery)->whereRaw('CHAR_LENGTH(symbol) <= 3')->count(),
+            'total_units' => (clone $baseQuery)->count(),
+            'short_symbols' => (clone $baseQuery)->whereRaw('CHAR_LENGTH(symbol) <= 3')->count(),
             'custom_symbols' => (clone $baseQuery)->whereRaw('CHAR_LENGTH(symbol) > 3')->count(),
         ];
     }
@@ -59,9 +63,9 @@ class UnitService implements UnitContract
         $tenant = app('current_tenant');
 
         return Unit::create([
-            'tenant_id'  => $tenant?->id,
-            'name'       => $data['name'],
-            'symbol'     => $data['symbol'],
+            'tenant_id' => $tenant->id,
+            'name' => $data['name'],
+            'symbol' => $data['symbol'],
             'created_by' => auth()->id(),
         ]);
     }
@@ -69,7 +73,7 @@ class UnitService implements UnitContract
     public function updateUnit(Unit $unit, array $data): Unit
     {
         $unit->update([
-            'name'   => $data['name'],
+            'name' => $data['name'],
             'symbol' => $data['symbol'],
         ]);
 
@@ -84,14 +88,15 @@ class UnitService implements UnitContract
     public function exportPdf(string $tenantSlug): void
     {
         $tenant = Tenant::where('slug', $tenantSlug)->firstOrFail();
-        $units = Unit::all()->toArray();
+
+        $units = Unit::where('tenant_id', $tenant->id)->get()->toArray();
 
         $log = ExportLog::create([
             'tenant_id' => $tenant->id,
-            'user_id'   => auth()->id(),
-            'type'      => 'pdf',
-            'filename'  => 'Unit_Master_' . date('Ymd_His') . '.pdf',
-            'status'    => 'pending',
+            'user_id' => auth()->id(),
+            'type' => 'pdf',
+            'filename' => 'Unit_Master_' . date('Ymd_His') . '.pdf',
+            'status' => 'pending',
         ]);
 
         ExportUnitPdfJob::dispatch($log->id, $units);
@@ -100,14 +105,15 @@ class UnitService implements UnitContract
     public function exportExcel(string $tenantSlug): void
     {
         $tenant = Tenant::where('slug', $tenantSlug)->firstOrFail();
-        $units = Unit::all()->toArray();
+
+        $units = Unit::where('tenant_id', $tenant->id)->get()->toArray();
 
         $log = ExportLog::create([
             'tenant_id' => $tenant->id,
-            'user_id'   => auth()->id(),
-            'type'      => 'excel',
-            'filename'  => 'Unit_Master_' . date('Ymd_His') . '.xlsx',
-            'status'    => 'pending',
+            'user_id' => auth()->id(),
+            'type' => 'excel',
+            'filename' => 'Unit_Master_' . date('Ymd_His') . '.xlsx',
+            'status' => 'pending',
         ]);
 
         ExportUnitExcelJob::dispatch($log->id, $units);

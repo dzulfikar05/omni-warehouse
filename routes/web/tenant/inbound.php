@@ -8,6 +8,10 @@ Route::prefix('{tenant_slug}')->middleware(['identify_tenant', 'auth', 'verified
         ->middleware('permission:tenant.inbound.view')
         ->name('tenant.transactions.inbound.index');
 
+    Route::post('/transactions/inbound', [InboundController::class, 'store'])
+        ->middleware('permission:tenant.inbound.create')
+        ->name('tenant.transactions.inbound.store');
+
     Route::get('/transactions/inbound/{manifest_code}', [InboundController::class, 'show'])
         ->middleware('permission:tenant.inbound.show')
         ->name('tenant.transactions.inbound.show');
@@ -27,5 +31,8 @@ Route::prefix('{tenant_slug}')->middleware(['identify_tenant', 'auth', 'verified
     Route::post('/transactions/inbound/hold', [InboundController::class, 'hold'])
         ->middleware('permission:tenant.inbound.hold')
         ->name('tenant.transactions.inbound.hold');
-});
 
+    Route::post('/transactions/inbound/resume', [InboundController::class, 'resume'])
+        ->middleware('permission:tenant.inbound.resume')
+        ->name('tenant.transactions.inbound.resume');
+});

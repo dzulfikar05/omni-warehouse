@@ -9,9 +9,16 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Http\UploadedFile;
+use App\Services\UserService;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class TenantService implements TenantContract
 {
+    public function __construct(
+        private UserService $userService
+    ) {}
     public function getPaginatedTenants(Request $request, int $perPage = 10): LengthAwarePaginator
     {
         // 1. Ambil per_page langsung dari request jika ada
@@ -52,8 +59,8 @@ class TenantService implements TenantContract
         $query->when($sortBy, function ($q) use ($sortBy, $sortOrder) {
             match ($sortBy) {
                 'status' => $q->leftJoin('subscriptions', 'tenants.id', '=', 'subscriptions.tenant_id')
-                              ->orderBy('subscriptions.status', $sortOrder)
-                              ->select('tenants.*'),
+                    ->orderBy('subscriptions.status', $sortOrder)
+                    ->select('tenants.*'),
                 'id', 'name', 'tax_number', 'created_at' => $q->orderBy("tenants.{$sortBy}", $sortOrder),
                 default => $q->orderBy('tenants.created_at', $sortOrder),
             };
@@ -71,8 +78,8 @@ class TenantService implements TenantContract
             'active_tenants'   => Subscription::where('status', 'active')->count(),
             'inactive_tenants' => Subscription::where('status', 'inactive')->count(),
             'new_this_month'   => Tenant::whereMonth('created_at', now()->month)
-                                        ->whereYear('created_at', now()->year)
-                                        ->count(),
+                ->whereYear('created_at', now()->year)
+                ->count(),
         ];
     }
 
@@ -144,34 +151,87 @@ class TenantService implements TenantContract
     public function registerTenant(array $data): array
     {
         return DB::transaction(function () use ($data) {
-            $slug = !empty($data['slug']) ? Str::slug($data['slug']) : Str::slug($data['name']);
 
+            // 1. Buat slug dari nama perusahaan
+            $companyName = $data['company_name'];
+
+            $baseSlug = Str::slug(
+                $data['slug'] ?? $companyName
+            );
+
+            $slug = $baseSlug;
+            $counter = 1;
+
+            while (Tenant::where('slug', $slug)->exists()) {
+                $slug = $baseSlug . '-' . $counter++;
+            }
+
+            // 2. Simpan perusahaan
             $tenant = Tenant::create([
-                'name'       => $data['name'],
+                'name'       => $companyName,
                 'slug'       => $slug,
                 'phone'      => $data['phone'] ?? null,
-                'email'      => $data['email'] ?? null,
+                'email'      => $data['company_email'] ?? null,
                 'website'    => $data['website'] ?? null,
                 'tax_number' => $data['tax_number'] ?? null,
                 'address'    => $data['address'] ?? null,
-                'created_by' => auth()->id(),
+                'created_by' => null,
             ]);
 
-            if (isset($data['logo']) && $data['logo'] instanceof \Illuminate\Http\UploadedFile) {
-                $tenant->addMedia($data['logo'])->toMediaCollection('logo');
+            // 3. Simpan logo jika tersedia
+            if (
+                isset($data['logo']) &&
+                $data['logo'] instanceof UploadedFile
+            ) {
+                $tenant
+                    ->addMedia($data['logo'])
+                    ->toMediaCollection('logo');
             }
 
+            // 4. Buat akun admin tenant
+            $user = $this->userService->storeTenantAdmin(
+                $data,
+                $tenant->id
+            );
+
+            // 5. Buat role superadmin khusus tenant ini
+            $superadminRole = Role::where('name', 'superadmin')
+                ->where('guard_name', 'web')
+                ->firstOrFail();
+
+            // 6. Ambil seluruh permission tenant
+            $tenantPermissions = Permission::where(
+                'name',
+                'LIKE',
+                'tenant.%'
+            )->get();
+
+            // 7. Berikan seluruh permission tenant ke superadmin
+            $superadminRole->syncPermissions(
+                $tenantPermissions
+            );
+
+            // 8. Assign role superadmin ke admin tenant
+            $user->syncRoles([$superadminRole]);
+
+            // 9. Hubungkan tenant dengan admin pembuat
+            $tenant->update([
+                'created_by' => $user->id,
+            ]);
+
+            // 10. Buat subscription
             Subscription::create([
                 'tenant_id'  => $tenant->id,
                 'plan_id'    => $data['plan_id'],
                 'status'     => 'active',
                 'ends_at'    => now()->addYear(),
-                'created_by' => auth()->id(),
+                'created_by' => $user->id,
             ]);
 
+            // 11. Kembalikan hasil
             return [
-                'tenant_id'   => $tenant->id,
-                'tenant_slug' => $tenant->slug,
+                'tenant' => $tenant->fresh(),
+                'user'   => $user->fresh()->load('roles'),
             ];
         });
     }

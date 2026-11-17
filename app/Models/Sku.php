@@ -27,4 +27,10 @@ class Sku extends Model
     {
         return $this->hasMany(InventoryStock::class);
     }
+
+    public function unitModel(): BelongsTo
+    {
+        // Sesuaikan 'unit_id' dengan Foreign Key di tabel skus
+        return $this->belongsTo(Unit::class, 'unit_id');
+    }
 }

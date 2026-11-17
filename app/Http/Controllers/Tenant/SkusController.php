@@ -34,12 +34,12 @@ class SkusController extends Controller
             $perPage = 10;
         }
 
-        // Subquery untuk menghitung total stok aktual secara dinamis dari tabel inventory_stocks
-        $stockSubquery = DB::table('inventory_stocks')
-            ->selectRaw('COALESCE(SUM(quantity), 0)')
-            ->whereColumn('sku_id', 'skus.id');
+        $tenant = app('current_tenant');
 
         $query = Sku::query()
+            ->whereHas('product', function ($q) use ($tenant) {
+                $q->where('tenant_id', $tenant->id);
+            })
             ->with(['product.category', 'unit'])
             ->addSelect(['current_stock' => $stockSubquery]) // Menyisipkan kalkulasi stok aktual
             ->when($search, function ($q, $search) {
@@ -79,8 +79,8 @@ class SkusController extends Controller
                     'stock_low'  => $q->orderBy('current_stock', 'asc'),
                     'stock_high' => $q->orderBy('current_stock', 'desc'),
                     'product_id' => $q->join('products', 'skus.product_id', '=', 'products.id')
-                                        ->orderBy('products.name', $sortDir)
-                                        ->select('skus.*'),
+                        ->orderBy('products.name', $sortDir)
+                        ->select('skus.*'),
                     'sku_code', 'base_cost', 'current_stock', 'created_at', 'id' => $q->orderBy($sortBy, $sortDir),
                     default      => $q->orderBy('created_at', $sortDir),
                 };
@@ -90,8 +90,8 @@ class SkusController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
-        $categories = Category::select('id', 'name')->get();
-        $units      = Unit::select('id', 'name', 'symbol')->get();
+        $categories = Category::where('tenant_id', $tenant->id)->select('id', 'name')->get();
+        $units = Unit::where('tenant_id', $tenant->id)->select('id', 'name', 'symbol')->get();
 
         return Inertia::render('Tenant/InventoryManagement/Sku/Index', [
             'tenant_slug' => $tenantSlug,
@@ -112,8 +112,9 @@ class SkusController extends Controller
 
     public function create(Request $request): Response
     {
-        $products = Product::select('id', 'name')->get();
-        $units    = Unit::select('id', 'name', 'symbol')->get();
+        $tenant = app('current_tenant');
+        $products = Product::where('tenant_id', $tenant->id)->select('id', 'name')->get();
+        $units    = Unit::where('tenant_id', $tenant->id)->select('id', 'name', 'symbol')->get();
 
         return Inertia::render('Tenant/InventoryManagement/Sku/Create', [
             'tenant_slug' => $request->route('tenant_slug'),
@@ -127,8 +128,11 @@ class SkusController extends Controller
         $validated = $request->validated();
         $tenant = app('current_tenant');
 
+        Product::where('tenant_id', $tenant->id)
+            ->findOrFail($validated['product_id']);
+
         Sku::create(array_merge($validated, [
-            'created_by' => $tenant ? $tenant->id : null,
+            'created_by' => auth()->id(),
         ]));
 
         return to_route('tenant.inventory.skus.index', ['tenant_slug' => $tenant_slug])
@@ -152,13 +156,9 @@ class SkusController extends Controller
 
     public function edit(Request $request, string $tenant_slug, Sku $sku): Response
     {
-        // Subquery untuk menghitung total stok aktual dari inventory_stocks
-        $sku->current_stock = DB::table('inventory_stocks')
-            ->where('sku_id', $sku->id)
-            ->sum('quantity');
-
-        $products = Product::select('id', 'name')->get();
-        $units    = Unit::select('id', 'name', 'symbol')->get();
+        $tenant = app('current_tenant');
+        $products = Product::where('tenant_id', $tenant->id)->select('id', 'name')->get();
+        $units    = Unit::where('tenant_id', $tenant->id)->select('id', 'name', 'symbol')->get();
 
         return Inertia::render('Tenant/InventoryManagement/Sku/Edit', [
             'tenant_slug' => $tenant_slug,

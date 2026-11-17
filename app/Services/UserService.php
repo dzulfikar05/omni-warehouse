@@ -6,6 +6,7 @@ use App\Contracts\UserContract;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class UserService implements UserContract
 {
@@ -25,7 +26,7 @@ class UserService implements UserContract
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%");
+                        ->orWhere('email', 'like', "%{$search}%");
                 });
             })
             ->with('roles')
@@ -56,6 +57,32 @@ class UserService implements UserContract
         if (isset($data['role'])) {
             $user->assignRole($data['role']);
         }
+
+        return $user;
+    }
+
+    public function storeTenantAdmin(
+        array $data,
+        int $tenantId
+    ): User {
+        $user = User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => Hash::make($data['password']),
+            'tenant_id' => $tenantId,
+        ]);
+
+        $role = Role::where('name', 'superadmin')
+            ->where('guard_name', 'web')
+            ->first();
+
+        if (!$role) {
+            throw new \RuntimeException(
+                'Role superadmin belum tersedia.'
+            );
+        }
+
+        $user->assignRole($role);
 
         return $user;
     }

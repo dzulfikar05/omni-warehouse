@@ -34,9 +34,14 @@ class ProductsController extends Controller
             $perPage = 10;
         }
 
-        $products   = $this->productService->getPaginatedProducts($filters, $perPage);
-        $stats      = $this->productService->getProductStats($filters);
-        $categories = Category::select('id', 'name')->get();
+        $tenant = app('current_tenant');
+
+        $products = $this->productService->getPaginatedProducts($filters, $perPage);
+        $stats = $this->productService->getProductStats($filters);
+
+        $categories = Category::where('tenant_id', $tenant->id)
+            ->select('id', 'name')
+            ->get();
 
         return Inertia::render('Tenant/InventoryManagement/Products/Index', [
             'tenant_slug' => $tenantSlug,
@@ -49,57 +54,93 @@ class ProductsController extends Controller
 
     public function create(Request $request): Response
     {
-        $categories = Category::select('id', 'name')->get();
+        $tenant = app('current_tenant');
+
+        $categories = Category::where('tenant_id', $tenant->id)
+            ->select('id', 'name')
+            ->get();
 
         return Inertia::render('Tenant/InventoryManagement/Products/Create', [
             'tenant_slug' => $request->route('tenant_slug'),
-            'categories'  => $categories,
+            'categories' => $categories,
         ]);
     }
 
     public function store(ProductRequest $request, string $tenant_slug): RedirectResponse
     {
-        $this->productService->createProduct($request->validated());
+        $tenant = app('current_tenant');
 
-        return to_route('tenant.inventory.products.index', ['tenant_slug' => $tenant_slug])
-            ->with('success', __('Product created successfully.'));
+        $this->productService->createProduct(array_merge(
+            $request->validated(),
+            [
+                'tenant_id' => $tenant->id,
+                'created_by' => auth()->id(),
+            ]
+        ));
+
+        return to_route('tenant.inventory.products.index', [
+            'tenant_slug' => $tenant_slug
+        ])->with('success', __('Product created successfully.'));
     }
 
     public function show(Request $request, string $tenant_slug, Product $product): Response
     {
+        $tenant = app('current_tenant');
+
+        $product = Product::where('tenant_id', $tenant->id)
+            ->findOrFail($product->id);
+
         $product->load(['category', 'skus.unit']);
 
         return Inertia::render('Tenant/InventoryManagement/Products/Show', [
             'tenant_slug' => $tenant_slug,
-            'product'     => $product,
+            'product' => $product,
         ]);
     }
-
     public function edit(Request $request, string $tenant_slug, Product $product): Response
     {
-        $categories = Category::select('id', 'name')->get();
+        $tenant = app('current_tenant');
+
+        $product = Product::where('tenant_id', $tenant->id)
+            ->findOrFail($product->id);
+
+        $categories = Category::where('tenant_id', $tenant->id)
+            ->select('id', 'name')
+            ->get();
 
         return Inertia::render('Tenant/InventoryManagement/Products/Edit', [
             'tenant_slug' => $tenant_slug,
-            'product'     => $product,
-            'categories'  => $categories,
+            'product' => $product,
+            'categories' => $categories,
         ]);
     }
 
     public function update(ProductRequest $request, string $tenant_slug, Product $product): RedirectResponse
     {
+        $tenant = app('current_tenant');
+
+        $product = Product::where('tenant_id', $tenant->id)
+            ->findOrFail($product->id);
+
         $this->productService->updateProduct($product, $request->validated());
 
-        return to_route('tenant.inventory.products.index', ['tenant_slug' => $tenant_slug])
-            ->with('success', __('Product updated successfully.'));
+        return to_route('tenant.inventory.products.index', [
+            'tenant_slug' => $tenant_slug
+        ])->with('success', __('Product updated successfully.'));
     }
 
     public function destroy(Request $request, string $tenant_slug, Product $product): RedirectResponse
     {
+        $tenant = app('current_tenant');
+
+        $product = Product::where('tenant_id', $tenant->id)
+            ->findOrFail($product->id);
+
         $this->productService->deleteProduct($product);
 
-        return to_route('tenant.inventory.products.index', ['tenant_slug' => $tenant_slug])
-            ->with('success', __('Product deleted successfully.'));
+        return to_route('tenant.inventory.products.index', [
+            'tenant_slug' => $tenant_slug
+        ])->with('success', __('Product deleted successfully.'));
     }
 
     public function exportPdf(Request $request, string $tenant_slug): RedirectResponse
