@@ -40,7 +40,7 @@ class InboundController extends Controller
                 'name' => $sku->product->name ?? '-',
             ]);
 
-        $locations = Location::where('tenant_id', $tenant->id)
+        $locations = Location::whereHas('warehouse', fn($q) => $q->where('tenant_id', $tenant->id))
             ->where('is_active', true)
             ->pluck('rack_code');
 
@@ -50,9 +50,7 @@ class InboundController extends Controller
             'data' => [
                 'suppliers' => $suppliers,
                 'products' => $products,
-                'available_racks' => $locations->isEmpty()
-                    ? ['RACK-A1-01', 'RACK-A1-02', 'RACK-B1-01']
-                    : $locations,
+                'available_racks' => $locations,
             ]
         ]);
     }
@@ -97,7 +95,9 @@ class InboundController extends Controller
     {
         $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
         $data = $this->service->getManifestDetail($tenant_slug, $manifest_code);
-        $locations = Location::where('tenant_id', $tenant->id)->where('is_active', true)->get(['id', 'rack_code', 'zone']);
+        $locations = Location::whereHas('warehouse', fn($q) => $q->where('tenant_id', $tenant->id))
+            ->where('is_active', true)
+            ->get(['id', 'rack_code', 'zone']);
 
         return response()->json([
             'success' => true,
