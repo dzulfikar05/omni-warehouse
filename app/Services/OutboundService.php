@@ -11,6 +11,7 @@ use App\Models\Transaction;
 use App\Models\TransactionItem;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class OutboundService implements OutboundContract
 {
@@ -82,6 +83,24 @@ class OutboundService implements OutboundContract
         $tenant = Tenant::where('slug', $tenantSlug)->firstOrFail();
 
         return DB::transaction(function () use ($tenant, $data, $userId) {
+            // 1. Validasi ketersediaan stok fisik untuk setiap item demand SO di gudang
+            foreach ($data['items'] as $item) {
+                $sku = Sku::where('id', $item['sku_id'])
+                    ->whereHas('product', fn($q) => $q->where('tenant_id', $tenant->id))
+                    ->firstOrFail();
+
+                $requestedQty = (int) $item['so_qty'];
+                $currentStock = (int) InventoryStock::where('sku_id', $sku->id)
+                    ->whereHas('sku.product', fn($q) => $q->where('tenant_id', $tenant->id))
+                    ->sum('quantity');
+
+                if ($requestedQty > $currentStock) {
+                    throw ValidationException::withMessages([
+                        'items' => ["Stok barang {$sku->sku_code} ({$sku->product->name}) tidak mencukupi di rak gudang! Tersedia: {$currentStock} unit, Diminta: {$requestedQty} unit."],
+                    ]);
+                }
+            }
+
             $manifestCode = 'OUT-' . strtoupper(Str::random(8));
 
             $transaction = Transaction::create([
@@ -99,13 +118,24 @@ class OutboundService implements OutboundContract
             ]);
 
             foreach ($data['items'] as $item) {
+                $requestedQty = (int) $item['so_qty'];
+
+                // 2. Auto-Suggest Source Rack: Cari rak aktif yang memiliki stok SKU ini
+                $suggestedStock = InventoryStock::where('sku_id', $item['sku_id'])
+                    ->where('quantity', '>', 0)
+                    ->whereHas('sku.product', fn($q) => $q->where('tenant_id', $tenant->id))
+                    ->orderByRaw("CASE WHEN quantity >= {$requestedQty} THEN 0 ELSE 1 END")
+                    ->orderByDesc('quantity')
+                    ->first();
+
                 TransactionItem::create([
-                    'transaction_id' => $transaction->id,
-                    'sku_id'         => $item['sku_id'],
-                    'quantity'       => $item['so_qty'],
-                    'good_qty'       => 0,
-                    'damaged_qty'    => 0,
-                    'created_by'     => $userId,
+                    'transaction_id'   => $transaction->id,
+                    'sku_id'           => $item['sku_id'],
+                    'from_location_id' => $suggestedStock?->location_id,
+                    'quantity'         => $requestedQty,
+                    'good_qty'         => 0,
+                    'damaged_qty'      => 0,
+                    'created_by'       => $userId,
                 ]);
             }
 
@@ -139,8 +169,10 @@ class OutboundService implements OutboundContract
             'status'         => $tx->status,
             'customer_name'  => $tx->customer->name ?? '-',
             'vehicle_no'     => $tx->vehicle_no ?? '-',
-            'driver_name'   => $tx->driver_name ?? '-',
+            'driver_name'    => $tx->driver_name ?? '-',
             'total_skus'     => $totalSkus,
+            'total_units'    => $totalPoUnits,
+            'total_so_units' => $totalPoUnits,
             'total_po_units' => $totalPoUnits,
             'good_units'     => $goodUnits,
             'damaged_units'  => $damagedUnits,
@@ -159,23 +191,38 @@ class OutboundService implements OutboundContract
                 $statusLabel = 'Dalam Process Pick';
             }
 
+            $rackStock = 0;
+            if ($ti->from_location_id) {
+                $stockRecord = InventoryStock::where('sku_id', $ti->sku_id)
+                    ->where('location_id', $ti->from_location_id)
+                    ->first();
+                $rackStock = (int) ($stockRecord?->quantity ?? 0);
+            }
+
             return [
-                'id'           => $ti->id,
-                'sku_id'       => $ti->sku_id,
-                'sku'          => $ti->sku->sku_code ?? '-',
-                'barcode'      => $ti->sku->barcode ?? '-',
-                'product_name' => $ti->sku->product->name ?? '-',
-                'category'     => '-',
-                'batch_no'     => $ti->batch_number ?? '-',
-                'exp_date'     => $ti->expiry_date ? $ti->expiry_date->format('Y-m-d') : '-',
-                'po_qty'       => $ti->quantity,
-                'good_qty'     => $ti->good_qty,
-                'damaged_qty'  => $ti->damaged_qty,
-                'unit'         => $ti->sku->unitModel->symbol ?? 'PCS',
-                'target_rack'  => $ti->fromLocation->rack_code ?? 'Belum Dialokasi',
-                'damage_note'  => $ti->damage_note,
-                'status'       => $status,
-                'status_label' => $statusLabel,
+                'id'             => $ti->id,
+                'sku_id'         => $ti->sku_id,
+                'sku'            => $ti->sku->sku_code ?? '-',
+                'barcode'        => $ti->sku->barcode ?? '-',
+                'product_name'   => $ti->sku->product->name ?? '-',
+                'category'       => '-',
+                'batch_no'       => $ti->batch_number ?? '-',
+                'exp_date'       => $ti->expiry_date ? $ti->expiry_date->format('Y-m-d') : '-',
+                'quantity'       => $ti->quantity,
+                'so_qty'         => $ti->quantity,
+                'order_qty'      => $ti->quantity,
+                'po_qty'         => $ti->quantity,
+                'good_qty'       => $ti->good_qty,
+                'damaged_qty'    => $ti->damaged_qty,
+                'unit'           => $ti->sku->unitModel->symbol ?? 'PCS',
+                'source_rack'    => $ti->fromLocation->rack_code ?? 'Belum Dialokasi',
+                'target_rack'    => $ti->fromLocation->rack_code ?? 'Belum Dialokasi',
+                'source_rack_id' => $ti->from_location_id,
+                'rack_stock'     => $rackStock,
+                'current_stock'  => (int) InventoryStock::where('sku_id', $ti->sku_id)->sum('quantity'),
+                'damage_note'    => $ti->damage_note,
+                'status'         => $status,
+                'status_label'   => $statusLabel,
             ];
         });
 
@@ -243,21 +290,32 @@ class OutboundService implements OutboundContract
             $tx = Transaction::where('tenant_id', $tenant->id)
                 ->where('transaction_type', 'OUTBOUND')
                 ->where('local_uuid', $manifestCode)
+                ->with(['items.sku', 'items.fromLocation'])
                 ->firstOrFail();
 
             foreach ($tx->items as $item) {
-                if ($item->from_location_id && $item->good_qty > 0) {
+                if ($item->good_qty > 0) {
+                    if (!$item->from_location_id) {
+                        $skuName = $item->sku->sku_code ?? 'Item';
+                        throw new \Exception("Item {$skuName} belum dialokasikan ke rak asal pengambilan!");
+                    }
+
                     $stock = InventoryStock::where('sku_id', $item->sku_id)
                         ->where('location_id', $item->from_location_id)
                         ->first();
 
-                    if ($stock) {
-                        $stock->decrement('quantity', $item->good_qty);
+                    if (!$stock || $stock->quantity < $item->good_qty) {
+                        $rackCode = $item->fromLocation->rack_code ?? 'terpilih';
+                        $available = $stock?->quantity ?? 0;
+                        $skuName = $item->sku->sku_code ?? 'Item';
+                        throw new \Exception("Stok barang {$skuName} di Rak {$rackCode} tidak mencukupi (Tersedia: {$available}, Ingin dipotong: {$item->good_qty})");
                     }
 
-                    // Potong master total stock SKU
+                    $stock->decrement('quantity', $item->good_qty);
+
+                    // Potong master total stock SKU jika ada saldo
                     $sku = Sku::find($item->sku_id);
-                    if ($sku) {
+                    if ($sku && (float) $sku->current_stock >= (float) $item->good_qty) {
                         $sku->decrement('current_stock', $item->good_qty);
                     }
                 }
