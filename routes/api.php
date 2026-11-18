@@ -1,12 +1,12 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\InboundController;
 use App\Http\Controllers\Api\OutboundController;
 use App\Http\Controllers\Api\StockOpnameController;
 use App\Http\Controllers\Api\StockTransferController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,7 +36,6 @@ Route::get('/health-check', function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [AuthController::class, 'profile']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);
-
 
     Route::get('/dashboard/summary', [DashboardController::class, 'summary']);
     /*
@@ -95,6 +94,9 @@ Route::middleware('auth:sanctum')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::prefix('{tenant_slug}/stock-opname')->group(function () {
+        Route::get('/', [StockOpnameController::class, 'index']);
+        Route::get('/sessions/{session_id}', [StockOpnameController::class, 'show'])
+            ->whereNumber('session_id');
         Route::get('/active', [StockOpnameController::class, 'activeSession']);
         Route::post('/sync-offline', [StockOpnameController::class, 'syncOffline']);
         Route::post('/record-count', [StockOpnameController::class, 'recordCount']);

@@ -52,8 +52,8 @@ class StockTransferService implements StockTransferContract
             ->where('transactions.tenant_id', $tenant->id)
             ->where('transactions.transaction_type', self::TRANSACTION_TYPE);
 
-        if (!empty($filters['search'])) {
-            $search = '%' . trim($filters['search']) . '%';
+        if (! empty($filters['search'])) {
+            $search = '%'.trim($filters['search']).'%';
             $baseQuery->where(function ($q) use ($search) {
                 $q->where('transactions.local_uuid', 'ilike', $search)
                     ->orWhere('transactions.notes', 'ilike', $search)
@@ -71,19 +71,19 @@ class StockTransferService implements StockTransferContract
             });
         }
 
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $baseQuery->whereRaw('UPPER(transactions.status) = ?', [strtoupper($filters['status'])]);
         }
 
-        if (!empty($filters['date_from'])) {
+        if (! empty($filters['date_from'])) {
             $baseQuery->whereDate('transactions.created_at', '>=', $filters['date_from']);
         }
 
-        if (!empty($filters['date_to'])) {
+        if (! empty($filters['date_to'])) {
             $baseQuery->whereDate('transactions.created_at', '<=', $filters['date_to']);
         }
 
-        if (!empty($filters['from_warehouse_id'])) {
+        if (! empty($filters['from_warehouse_id'])) {
             $fromWhId = (int) $filters['from_warehouse_id'];
             $baseQuery->whereExists(function ($sub) use ($fromWhId) {
                 $sub->select(DB::raw(1))
@@ -94,7 +94,7 @@ class StockTransferService implements StockTransferContract
             });
         }
 
-        if (!empty($filters['to_warehouse_id'])) {
+        if (! empty($filters['to_warehouse_id'])) {
             $toWhId = (int) $filters['to_warehouse_id'];
             $baseQuery->whereExists(function ($sub) use ($toWhId) {
                 $sub->select(DB::raw(1))
@@ -154,51 +154,51 @@ class StockTransferService implements StockTransferContract
                 ->groupBy('transaction_id');
 
         $paginator->getCollection()->transform(function ($tx) use ($itemsByTx) {
-            $txItems = ($itemsByTx->get($tx->id) ?? collect())->map(fn($item) => [
-                'id'                  => (int) $item->id,
-                'sku_id'              => (int) $item->sku_id,
-                'sku_code'            => $item->sku_code,
-                'product_name'        => $item->product_name,
-                'from_location_id'    => (int) $item->from_location_id,
-                'from_rack'           => $item->from_rack_code ?? '-',
+            $txItems = ($itemsByTx->get($tx->id) ?? collect())->map(fn ($item) => [
+                'id' => (int) $item->id,
+                'sku_id' => (int) $item->sku_id,
+                'sku_code' => $item->sku_code,
+                'product_name' => $item->product_name,
+                'from_location_id' => (int) $item->from_location_id,
+                'from_rack' => $item->from_rack_code ?? '-',
                 'from_warehouse_name' => $item->from_warehouse_name ?? '-',
-                'to_location_id'      => (int) $item->to_location_id,
-                'to_rack'             => $item->to_rack_code ?? '-',
-                'to_warehouse_name'   => $item->to_warehouse_name ?? '-',
-                'quantity'            => (int) $item->quantity,
-                'batch_number'        => $item->batch_number,
-                'expiry_date'         => $item->expiry_date,
+                'to_location_id' => (int) $item->to_location_id,
+                'to_rack' => $item->to_rack_code ?? '-',
+                'to_warehouse_name' => $item->to_warehouse_name ?? '-',
+                'quantity' => (int) $item->quantity,
+                'batch_number' => $item->batch_number,
+                'expiry_date' => $item->expiry_date,
             ])->values()->all();
 
             $firstItem = $txItems[0] ?? null;
 
             return [
-                'id'                  => (int) $tx->id,
-                'transfer_code'       => $tx->transfer_code,
-                'status'              => strtoupper($tx->status),
-                'notes'               => $tx->notes,
-                'created_by_name'     => $tx->created_by_name ?? '-',
-                'created_at'          => $tx->created_at,
-                'total_items'         => count($txItems),
-                'total_quantity'      => array_sum(array_column($txItems, 'quantity')),
+                'id' => (int) $tx->id,
+                'transfer_code' => $tx->transfer_code,
+                'status' => strtoupper($tx->status),
+                'notes' => $tx->notes,
+                'created_by_name' => $tx->created_by_name ?? '-',
+                'created_at' => $tx->created_at,
+                'total_items' => count($txItems),
+                'total_quantity' => array_sum(array_column($txItems, 'quantity')),
                 'from_warehouse_name' => $firstItem['from_warehouse_name'] ?? '-',
-                'to_warehouse_name'   => $firstItem['to_warehouse_name'] ?? '-',
-                'from_rack'           => $firstItem['from_rack'] ?? '-',
-                'to_rack'             => $firstItem['to_rack'] ?? '-',
-                'items'               => $txItems,
+                'to_warehouse_name' => $firstItem['to_warehouse_name'] ?? '-',
+                'from_rack' => $firstItem['from_rack'] ?? '-',
+                'to_rack' => $firstItem['to_rack'] ?? '-',
+                'items' => $txItems,
             ];
         });
 
         $stats = [
-            'total'     => DB::table('transactions')->where('tenant_id', $tenant->id)->where('transaction_type', self::TRANSACTION_TYPE)->count(),
+            'total' => DB::table('transactions')->where('tenant_id', $tenant->id)->where('transaction_type', self::TRANSACTION_TYPE)->count(),
             'completed' => DB::table('transactions')->where('tenant_id', $tenant->id)->where('transaction_type', self::TRANSACTION_TYPE)->whereRaw("UPPER(status) IN ('COMPLETED', 'COMMITTED')")->count(),
-            'pending'   => DB::table('transactions')->where('tenant_id', $tenant->id)->where('transaction_type', self::TRANSACTION_TYPE)->whereRaw("UPPER(status) IN ('PENDING', 'DRAFT', 'IN_TRANSIT')")->count(),
+            'pending' => DB::table('transactions')->where('tenant_id', $tenant->id)->where('transaction_type', self::TRANSACTION_TYPE)->whereRaw("UPPER(status) IN ('PENDING', 'DRAFT', 'IN_TRANSIT')")->count(),
             'cancelled' => DB::table('transactions')->where('tenant_id', $tenant->id)->where('transaction_type', self::TRANSACTION_TYPE)->whereRaw("UPPER(status) = 'CANCELLED'")->count(),
         ];
 
         return [
             'transfers' => $paginator,
-            'stats'     => $stats,
+            'stats' => $stats,
         ];
     }
 
@@ -207,12 +207,12 @@ class StockTransferService implements StockTransferContract
         $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
         $userId ??= auth()->id();
 
-        if (!$userId) {
+        if (! $userId) {
             throw new RuntimeException('Authenticated user is required to create a stock transfer.');
         }
 
-        $incomingUuid = !empty($data['local_uuid']) ? trim($data['local_uuid']) : null;
-        $transferCode = $incomingUuid ?? ('TX-TRF-' . Str::upper(Str::random(8)));
+        $incomingUuid = ! empty($data['local_uuid']) ? trim($data['local_uuid']) : null;
+        $transferCode = $incomingUuid ?? ('TX-TRF-'.Str::upper(Str::random(8)));
 
         return DB::transaction(function () use ($tenant, $data, $userId, $incomingUuid, $transferCode) {
             // Idempotency guard: cegah eksekusi pemindahan stok ganda jika client retry
@@ -220,34 +220,34 @@ class StockTransferService implements StockTransferContract
                 $existing = $this->findTransferTransaction($tenant->id, $incomingUuid, true);
                 if ($existing) {
                     return [
-                        'transfer_code'  => $existing->local_uuid,
-                        'status'         => strtoupper($existing->status),
+                        'transfer_code' => $existing->local_uuid,
+                        'status' => strtoupper($existing->status),
                         'already_synced' => true,
-                        'message'        => 'Transfer stok sudah diproses sebelumnya.',
+                        'message' => 'Transfer stok sudah diproses sebelumnya.',
                     ];
                 }
             }
 
             $transactionId = DB::table('transactions')->insertGetId([
-                'tenant_id'        => $tenant->id,
-                'user_id'          => $userId,
-                'created_by'       => $userId,
-                'local_uuid'       => $transferCode,
-                'status'           => 'COMPLETED',
-                'sync_status'      => 'SYNCED',
+                'tenant_id' => $tenant->id,
+                'user_id' => $userId,
+                'created_by' => $userId,
+                'local_uuid' => $transferCode,
+                'status' => 'COMPLETED',
+                'sync_status' => 'SYNCED',
                 'transaction_type' => self::TRANSACTION_TYPE,
-                'notes'            => $data['notes'] ?? null,
-                'created_at'       => now(),
-                'updated_at'       => now(),
+                'notes' => $data['notes'] ?? null,
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
 
             $this->executeFefoTransferItems($tenant->id, $transactionId, $data['items'], $userId);
 
             return [
-                'transfer_code'  => $transferCode,
-                'status'         => 'COMPLETED',
+                'transfer_code' => $transferCode,
+                'status' => 'COMPLETED',
                 'already_synced' => false,
-                'message'        => 'Transfer stok berhasil dieksekusi.',
+                'message' => 'Transfer stok berhasil dieksekusi.',
             ];
         });
     }
@@ -255,11 +255,16 @@ class StockTransferService implements StockTransferContract
     public function syncOfflineTransfer(string $tenant_slug, array $payload, int $userId): array
     {
         $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
-        $incomingCode = trim($payload['transfer_code'] ?? $payload['local_uuid'] ?? '');
+        $incomingCode = trim(
+            $payload['transfer_code']
+                ?? $payload['local_uuid']
+                ?? $payload['transaction_uuid']
+                ?? ''
+        );
 
         if ($incomingCode === '') {
             throw ValidationException::withMessages([
-                'local_uuid' => 'transfer_code atau local_uuid wajib diisi saat sinkronisasi.',
+                'local_uuid' => 'transfer_code, local_uuid, atau transaction_uuid wajib diisi saat sinkronisasi.',
             ]);
         }
 
@@ -269,10 +274,10 @@ class StockTransferService implements StockTransferContract
 
             if ($existing && in_array(strtoupper($existing->status), ['COMPLETED', 'COMMITTED'], true)) {
                 return [
-                    'transfer_code'  => $existing->local_uuid,
-                    'status'         => 'COMPLETED',
+                    'transfer_code' => $existing->local_uuid,
+                    'status' => 'COMPLETED',
                     'already_synced' => true,
-                    'message'        => 'Data transfer stok offline sudah tersinkronisasi sebelumnya.',
+                    'message' => 'Data transfer stok offline sudah tersinkronisasi sebelumnya.',
                 ];
             }
 
@@ -285,49 +290,49 @@ class StockTransferService implements StockTransferContract
 
             $normalizedItems = [];
             foreach ($payload['items'] as $index => $item) {
-                $fromLocId = !empty($item['from_location_id'])
+                $fromLocId = ! empty($item['from_location_id'])
                     ? (int) $item['from_location_id']
-                    : (!empty($item['from_rack']) ? ($rackMap[trim((string) $item['from_rack'])] ?? null) : null);
+                    : (! empty($item['from_rack']) ? ($rackMap[trim((string) $item['from_rack'])] ?? null) : null);
 
-                $toLocId = !empty($item['to_location_id'])
+                $toLocId = ! empty($item['to_location_id'])
                     ? (int) $item['to_location_id']
-                    : (!empty($item['to_rack']) ? ($rackMap[trim((string) $item['to_rack'])] ?? null) : null);
+                    : (! empty($item['to_rack']) ? ($rackMap[trim((string) $item['to_rack'])] ?? null) : null);
 
-                if (!$fromLocId) {
+                if (! $fromLocId) {
                     throw ValidationException::withMessages([
                         "items.{$index}.from_location_id" => 'Lokasi rak asal tidak ditemukan.',
                     ]);
                 }
 
-                if (!$toLocId) {
+                if (! $toLocId) {
                     throw ValidationException::withMessages([
                         "items.{$index}.to_location_id" => 'Lokasi rak tujuan tidak ditemukan.',
                     ]);
                 }
 
                 $normalizedItems[] = [
-                    'sku_id'           => (int) $item['sku_id'],
+                    'sku_id' => (int) $item['sku_id'],
                     'from_location_id' => $fromLocId,
-                    'to_location_id'   => $toLocId,
-                    'quantity'         => (int) $item['quantity'],
-                    'batch_number'     => $item['batch_number'] ?? null,
-                    'expiry_date'      => $item['expiry_date'] ?? null,
+                    'to_location_id' => $toLocId,
+                    'quantity' => (int) $item['quantity'],
+                    'batch_number' => $item['batch_number'] ?? null,
+                    'expiry_date' => $item['expiry_date'] ?? null,
                 ];
             }
 
             // 3. Buat atau perbarui header transaksi
-            if (!$existing) {
+            if (! $existing) {
                 $transactionId = DB::table('transactions')->insertGetId([
-                    'tenant_id'        => $tenant->id,
-                    'user_id'          => $userId,
-                    'created_by'       => $userId,
-                    'local_uuid'       => $incomingCode,
-                    'status'           => 'COMPLETED',
-                    'sync_status'      => 'SYNCED',
+                    'tenant_id' => $tenant->id,
+                    'user_id' => $userId,
+                    'created_by' => $userId,
+                    'local_uuid' => $incomingCode,
+                    'status' => 'COMPLETED',
+                    'sync_status' => 'SYNCED',
                     'transaction_type' => self::TRANSACTION_TYPE,
-                    'notes'            => $payload['notes'] ?? null,
-                    'created_at'       => now(),
-                    'updated_at'       => now(),
+                    'notes' => $payload['notes'] ?? null,
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ]);
             } else {
                 $transactionId = $existing->id;
@@ -335,10 +340,10 @@ class StockTransferService implements StockTransferContract
                 DB::table('transactions')
                     ->where('id', $transactionId)
                     ->update([
-                        'status'      => 'COMPLETED',
+                        'status' => 'COMPLETED',
                         'sync_status' => 'SYNCED',
-                        'notes'       => $payload['notes'] ?? $existing->notes,
-                        'updated_at'  => now(),
+                        'notes' => $payload['notes'] ?? $existing->notes,
+                        'updated_at' => now(),
                     ]);
             }
 
@@ -346,10 +351,10 @@ class StockTransferService implements StockTransferContract
             $this->executeFefoTransferItems($tenant->id, $transactionId, $normalizedItems, $userId);
 
             return [
-                'transfer_code'  => $incomingCode,
-                'status'         => 'COMPLETED',
+                'transfer_code' => $incomingCode,
+                'status' => 'COMPLETED',
                 'already_synced' => false,
-                'message'        => 'Sinkronisasi transfer stok offline berhasil dieksekusi.',
+                'message' => 'Sinkronisasi transfer stok offline berhasil dieksekusi.',
             ];
         });
     }
@@ -361,10 +366,10 @@ class StockTransferService implements StockTransferContract
     private function executeFefoTransferItems(int $tenantId, int $transactionId, array $items, int $userId): void
     {
         foreach ($items as $index => $item) {
-            $skuId          = (int) $item['sku_id'];
+            $skuId = (int) $item['sku_id'];
             $fromLocationId = (int) $item['from_location_id'];
-            $toLocationId   = (int) $item['to_location_id'];
-            $qtyToMove      = (int) $item['quantity'];
+            $toLocationId = (int) $item['to_location_id'];
+            $qtyToMove = (int) $item['quantity'];
 
             if ($fromLocationId === $toLocationId) {
                 throw ValidationException::withMessages([
@@ -392,8 +397,8 @@ class StockTransferService implements StockTransferContract
             }
 
             $remainingToDeduct = $qtyToMove;
-            $primaryBatch      = null;
-            $primaryExpiry     = null;
+            $primaryBatch = null;
+            $primaryExpiry = null;
 
             foreach ($sourceStocks as $stockRow) {
                 if ($remainingToDeduct <= 0) {
@@ -412,7 +417,7 @@ class StockTransferService implements StockTransferContract
                 DB::table('inventory_stocks')
                     ->where('id', $stockRow->id)
                     ->update([
-                        'quantity'   => (int) $stockRow->quantity - $deduct,
+                        'quantity' => (int) $stockRow->quantity - $deduct,
                         'updated_at' => now(),
                     ]);
 
@@ -429,16 +434,16 @@ class StockTransferService implements StockTransferContract
             }
 
             DB::table('transaction_items')->insert([
-                'transaction_id'   => $transactionId,
-                'sku_id'           => $skuId,
+                'transaction_id' => $transactionId,
+                'sku_id' => $skuId,
                 'from_location_id' => $fromLocationId,
-                'to_location_id'   => $toLocationId,
-                'quantity'         => $qtyToMove,
-                'batch_number'     => $item['batch_number'] ?? $primaryBatch,
-                'expiry_date'      => $item['expiry_date'] ?? $primaryExpiry,
-                'created_by'       => $userId,
-                'created_at'       => now(),
-                'updated_at'       => now(),
+                'to_location_id' => $toLocationId,
+                'quantity' => $qtyToMove,
+                'batch_number' => $item['batch_number'] ?? $primaryBatch,
+                'expiry_date' => $item['expiry_date'] ?? $primaryExpiry,
+                'created_by' => $userId,
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
         }
     }
@@ -450,13 +455,13 @@ class StockTransferService implements StockTransferContract
         return DB::transaction(function () use ($tenant, $transfer_code, $data) {
             $transaction = $this->findTransferTransaction($tenant->id, $transfer_code, true);
 
-            if (!$transaction) {
+            if (! $transaction) {
                 throw ValidationException::withMessages([
                     'transfer_code' => 'Dokumen transfer stok tidak ditemukan.',
                 ]);
             }
 
-            if (!in_array(strtolower($transaction->status), ['draft', 'pending'], true)) {
+            if (! in_array(strtolower($transaction->status), ['draft', 'pending'], true)) {
                 throw ValidationException::withMessages([
                     'status' => 'Hanya transfer stok berstatus draft atau pending yang dapat diperbarui.',
                 ]);
@@ -475,7 +480,7 @@ class StockTransferService implements StockTransferContract
             DB::table('transactions')
                 ->where('id', $transaction->id)
                 ->update([
-                    'notes'      => $data['notes'] ?? $transaction->notes,
+                    'notes' => $data['notes'] ?? $transaction->notes,
                     'updated_at' => now(),
                 ]);
 
@@ -485,16 +490,16 @@ class StockTransferService implements StockTransferContract
 
             foreach ($data['items'] as $item) {
                 DB::table('transaction_items')->insert([
-                    'transaction_id'   => $transaction->id,
-                    'sku_id'           => (int) $item['sku_id'],
+                    'transaction_id' => $transaction->id,
+                    'sku_id' => (int) $item['sku_id'],
                     'from_location_id' => (int) $item['from_location_id'],
-                    'to_location_id'   => (int) $item['to_location_id'],
-                    'quantity'         => (int) $item['quantity'],
-                    'batch_number'     => $item['batch_number'] ?? null,
-                    'expiry_date'      => $item['expiry_date'] ?? null,
-                    'created_by'       => $transaction->created_by,
-                    'created_at'       => now(),
-                    'updated_at'       => now(),
+                    'to_location_id' => (int) $item['to_location_id'],
+                    'quantity' => (int) $item['quantity'],
+                    'batch_number' => $item['batch_number'] ?? null,
+                    'expiry_date' => $item['expiry_date'] ?? null,
+                    'created_by' => $transaction->created_by,
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ]);
             }
 
@@ -510,7 +515,7 @@ class StockTransferService implements StockTransferContract
         return DB::transaction(function () use ($tenant, $transfer_code, $userId) {
             $transaction = $this->findTransferTransaction($tenant->id, $transfer_code, true);
 
-            if (!$transaction) {
+            if (! $transaction) {
                 throw ValidationException::withMessages([
                     'transfer_code' => 'Dokumen transfer stok tidak ditemukan.',
                 ]);
@@ -560,7 +565,7 @@ class StockTransferService implements StockTransferContract
                         DB::table('inventory_stocks')
                             ->where('id', $destRow->id)
                             ->update([
-                                'quantity'   => (int) $destRow->quantity - $deduct,
+                                'quantity' => (int) $destRow->quantity - $deduct,
                                 'updated_at' => now(),
                             ]);
 
@@ -583,8 +588,8 @@ class StockTransferService implements StockTransferContract
             DB::table('transactions')
                 ->where('id', $transaction->id)
                 ->update([
-                    'status'     => 'CANCELLED',
-                    'notes'      => trim(($transaction->notes ?? '') . $cancelNote),
+                    'status' => 'CANCELLED',
+                    'notes' => trim(($transaction->notes ?? '').$cancelNote),
                     'updated_at' => now(),
                 ]);
 
@@ -606,7 +611,7 @@ class StockTransferService implements StockTransferContract
             ->where('skus.is_active', true)
             ->exists();
 
-        if (!$skuValid) {
+        if (! $skuValid) {
             throw ValidationException::withMessages([
                 "items.{$index}.sku_id" => 'SKU tidak valid, nonaktif, atau bukan milik tenant ini.',
             ]);
@@ -620,7 +625,7 @@ class StockTransferService implements StockTransferContract
             ->where('locations.is_active', true)
             ->exists();
 
-        if (!$fromValid) {
+        if (! $fromValid) {
             throw ValidationException::withMessages([
                 "items.{$index}.from_location_id" => 'Lokasi rak asal tidak valid atau nonaktif.',
             ]);
@@ -634,7 +639,7 @@ class StockTransferService implements StockTransferContract
             ->where('locations.is_active', true)
             ->exists();
 
-        if (!$toValid) {
+        if (! $toValid) {
             throw ValidationException::withMessages([
                 "items.{$index}.to_location_id" => 'Lokasi rak tujuan tidak valid atau nonaktif.',
             ]);
@@ -654,13 +659,13 @@ class StockTransferService implements StockTransferContract
             ->where('location_id', $locationId)
             ->when(
                 $batchNumber !== null,
-                fn($q) => $q->where('batch_number', $batchNumber),
-                fn($q) => $q->whereNull('batch_number')
+                fn ($q) => $q->where('batch_number', $batchNumber),
+                fn ($q) => $q->whereNull('batch_number')
             )
             ->when(
                 $expiryDate !== null,
-                fn($q) => $q->where('expiry_date', $expiryDate),
-                fn($q) => $q->whereNull('expiry_date')
+                fn ($q) => $q->where('expiry_date', $expiryDate),
+                fn ($q) => $q->whereNull('expiry_date')
             )
             ->lockForUpdate()
             ->first();
@@ -669,7 +674,7 @@ class StockTransferService implements StockTransferContract
             DB::table('inventory_stocks')
                 ->where('id', $existing->id)
                 ->update([
-                    'quantity'   => (int) $existing->quantity + $quantity,
+                    'quantity' => (int) $existing->quantity + $quantity,
                     'updated_at' => now(),
                 ]);
 
@@ -677,14 +682,14 @@ class StockTransferService implements StockTransferContract
         }
 
         DB::table('inventory_stocks')->insert([
-            'sku_id'       => $skuId,
-            'location_id'  => $locationId,
-            'quantity'     => $quantity,
+            'sku_id' => $skuId,
+            'location_id' => $locationId,
+            'quantity' => $quantity,
             'batch_number' => $batchNumber,
-            'expiry_date'  => $expiryDate,
-            'created_by'   => $userId,
-            'created_at'   => now(),
-            'updated_at'   => now(),
+            'expiry_date' => $expiryDate,
+            'created_by' => $userId,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
     }
 }
