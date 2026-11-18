@@ -16,16 +16,31 @@ class StockOpnameController extends Controller
     /**
      * Get active stock opname session for mobile scanner (Blind Counting Mode).
      */
-    public function activeSession(string $tenant_slug): JsonResponse
+    public function activeSession(Request $request, string $tenant_slug): JsonResponse
     {
-        $data = $this->service->getActiveSessionData($tenant_slug, true);
+        $validated = $request->validate([
+            'session_id' => ['nullable', 'integer'],
+        ]);
+        $data = $this->service->getActiveSessionData(
+            $tenant_slug,
+            true,
+            $validated['session_id'] ?? null
+        );
+
+        if (isset($validated['session_id'])
+            && (! $data['session'] || ! in_array($data['session']['status'], ['DRAFT', 'COUNTING', 'REVIEW'], true))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sesi stock opname aktif tidak ditemukan.',
+            ], 404);
+        }
 
         return response()->json([
             'success' => true,
             'message' => $data['session']
                 ? 'Sesi stock opname aktif berhasil dimuat.'
                 : 'Tidak ada sesi stock opname aktif saat ini.',
-            'data'    => $data,
+            'data' => $data,
         ]);
     }
 
@@ -35,18 +50,18 @@ class StockOpnameController extends Controller
     public function syncOffline(Request $request, string $tenant_slug): JsonResponse
     {
         $validated = $request->validate([
-            'session_id'             => ['nullable', 'integer'],
-            'session_code'           => ['nullable', 'string', 'max:100'],
-            'local_uuid'             => ['nullable', 'string', 'max:100'],
-            'transaction_uuid'       => ['nullable', 'string', 'max:100'],
-            'should_submit_review'   => ['nullable', 'boolean'],
-            'items'                  => ['required', 'array', 'min:1'],
-            'items.*.item_id'        => ['nullable', 'integer'],
-            'items.*.sku_id'         => ['nullable', 'integer'],
-            'items.*.barcode'        => ['nullable', 'string', 'max:100'],
-            'items.*.location_id'    => ['nullable', 'integer'],
-            'items.*.target_rack'    => ['nullable', 'string', 'max:100'],
-            'items.*.physical_qty'   => ['required', 'integer', 'min:0'],
+            'session_id' => ['nullable', 'integer'],
+            'session_code' => ['nullable', 'string', 'max:100'],
+            'local_uuid' => ['nullable', 'string', 'max:100'],
+            'transaction_uuid' => ['nullable', 'string', 'max:100'],
+            'should_submit_review' => ['nullable', 'boolean'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.item_id' => ['nullable', 'integer'],
+            'items.*.sku_id' => ['nullable', 'integer'],
+            'items.*.barcode' => ['nullable', 'string', 'max:100'],
+            'items.*.location_id' => ['nullable', 'integer'],
+            'items.*.target_rack' => ['nullable', 'string', 'max:100'],
+            'items.*.physical_qty' => ['required', 'integer', 'min:0'],
         ]);
 
         $res = $this->service->syncOfflineOpname(
@@ -58,7 +73,7 @@ class StockOpnameController extends Controller
         return response()->json([
             'success' => true,
             'message' => $res['message'],
-            'data'    => $res,
+            'data' => $res,
         ]);
     }
 
@@ -68,12 +83,12 @@ class StockOpnameController extends Controller
     public function recordCount(Request $request, string $tenant_slug): JsonResponse
     {
         $validated = $request->validate([
-            'item_id'      => ['nullable', 'integer'],
-            'session_id'   => ['nullable', 'integer'],
+            'item_id' => ['nullable', 'integer'],
+            'session_id' => ['nullable', 'integer'],
             'session_code' => ['nullable', 'string', 'max:100'],
-            'barcode'      => ['nullable', 'string', 'max:100'],
-            'location_id'  => ['nullable', 'integer'],
-            'target_rack'  => ['nullable', 'string', 'max:100'],
+            'barcode' => ['nullable', 'string', 'max:100'],
+            'location_id' => ['nullable', 'integer'],
+            'target_rack' => ['nullable', 'string', 'max:100'],
             'physical_qty' => ['nullable', 'integer', 'min:0'],
             'is_increment' => ['nullable', 'boolean'],
         ]);
@@ -83,7 +98,7 @@ class StockOpnameController extends Controller
         return response()->json([
             'success' => true,
             'message' => $res['message'],
-            'data'    => [
+            'data' => [
                 'physical_qty' => $res['physical_qty'],
             ],
         ]);
@@ -95,13 +110,13 @@ class StockOpnameController extends Controller
     public function submitReview(Request $request, string $tenant_slug): JsonResponse
     {
         $validated = $request->validate([
-            'session_id'   => ['nullable', 'integer'],
+            'session_id' => ['nullable', 'integer'],
             'session_code' => ['nullable', 'string', 'max:100'],
         ]);
 
         $identifier = $validated['session_id'] ?? $validated['session_code'] ?? null;
 
-        if (!$identifier) {
+        if (! $identifier) {
             return response()->json([
                 'success' => false,
                 'message' => 'session_id atau session_code wajib diisi.',

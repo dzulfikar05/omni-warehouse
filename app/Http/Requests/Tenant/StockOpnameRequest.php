@@ -15,25 +15,30 @@ class StockOpnameRequest extends FormRequest
     {
         if ($this->routeIs('*.store-session')) {
             return [
-                'warehouse_id' => 'required|integer|exists:warehouses,id',
-                'zone'         => 'required|string|max:100',
-                'audit_type'   => 'required|string|max:50',
-                'cut_off_date' => 'required|date',
-                'notes'        => 'nullable|string|max:255',
+                'warehouse_id' => 'required|integer',
+                'location_id' => 'required|string|max:20',
+                'notes' => 'nullable|string|max:255',
             ];
         }
 
         if ($this->routeIs('*.verify')) {
             return [
-                'item_id'      => 'required|integer',
+                'item_id' => 'required|integer',
                 'physical_qty' => 'required|numeric|min:0',
-                'notes'        => 'nullable|string|max:255',
+                'notes' => 'nullable|string|max:1000',
+            ];
+        }
+
+        if ($this->routeIs('*.scan')) {
+            return [
+                'session_id' => 'required|integer',
+                'barcode' => 'required|string|max:100',
             ];
         }
 
         if ($this->routeIs('*.adjust')) {
             return [
-                'session_id'   => 'required|integer',
+                'session_id' => 'required|integer',
             ];
         }
 
@@ -44,13 +49,10 @@ class StockOpnameRequest extends FormRequest
     {
         return [
             'warehouse_id.required' => __('A warehouse is required.'),
-            'warehouse_id.exists'   => __('The selected warehouse is invalid.'),
-            'zone.required'         => __('An audit zone is required.'),
-            'audit_type.required'   => __('An audit type is required.'),
-            'cut_off_date.required' => __('A cut-off date is required.'),
+            'location_id.required' => __('A location or rack is required.'),
             'physical_qty.required' => __('A physical quantity is required.'),
-            'physical_qty.min'      => __('The physical quantity must be zero or greater.'),
-            'session_id.required'   => __('The stocktake session could not be found.'),
+            'physical_qty.min' => __('The physical quantity must be zero or greater.'),
+            'session_id.required' => __('The stocktake session could not be found.'),
         ];
     }
 }

@@ -35,6 +35,9 @@ class SkusController extends Controller
         }
 
         $tenant = app('current_tenant');
+        $stockSubquery = DB::table('inventory_stocks')
+            ->selectRaw('COALESCE(SUM(quantity), 0)')
+            ->whereColumn('sku_id', 'skus.id');
 
         $query = Sku::query()
             ->whereHas('product', function ($q) use ($tenant) {
