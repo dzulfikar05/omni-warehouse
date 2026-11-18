@@ -12,6 +12,10 @@ Route::prefix('{tenant_slug}')->middleware(['identify_tenant', 'auth', 'verified
         ->middleware('permission:tenant.stock_opname.create_session')
         ->name('tenant.stock-opname.store-session');
 
+    Route::post('/stock-opname/scan', [StockOpnameController::class, 'scanSku'])
+        ->middleware('permission:tenant.stock_opname.verify')
+        ->name('tenant.stock-opname.scan');
+
     Route::post('/stock-opname/verify', [StockOpnameController::class, 'verifyCount'])
         ->middleware('permission:tenant.stock_opname.verify')
         ->name('tenant.stock-opname.verify');

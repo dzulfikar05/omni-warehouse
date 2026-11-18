@@ -1,6 +1,8 @@
-import React, { FormEvent } from 'react';
 import { useForm, usePage } from '@inertiajs/react';
-import { ClipboardCheck, X, PlusCircle } from 'lucide-react';
+import { ClipboardCheck, X, Plus } from 'lucide-react';
+import type { FormEvent } from 'react';
+import React, { useEffect } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,169 +12,239 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@/components/ui/select';import { useTranslation } from '@/context/language-context';
-
+} from '@/components/ui/select';
+import { useTranslation } from '@/context/language-context';
+import type { StockOpnameWarehouse } from '@/types/stock-opname';
 
 interface CreateOpnameModalProps {
     isOpen: boolean;
+    warehouses: StockOpnameWarehouse[];
     onClose: () => void;
 }
 
-export function CreateOpnameModal({ isOpen, onClose }: CreateOpnameModalProps) {
+export function CreateOpnameModal({
+    isOpen,
+    warehouses,
+    onClose,
+}: CreateOpnameModalProps) {
     const { t } = useTranslation();
     const { current_tenant, auth } = usePage().props as any;
-    const currentPathSlug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
-    const tenantSlug = current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
-
+    const currentPathSlug =
+        typeof window !== 'undefined'
+            ? window.location.pathname.split('/')[1]
+            : '';
+    const tenantSlug =
+        current_tenant?.slug || auth?.user?.tenant?.slug || currentPathSlug;
     const { data, setData, post, processing, errors, reset } = useForm({
-        warehouse_id: '1',
-        zone: 'ALL',
-        audit_type: 'monthly',
-        cut_off_date: '2026-09-17T18:00',
+        warehouse_id: warehouses[0] ? String(warehouses[0].id) : '',
+        location_id: 'all',
         notes: '',
     });
 
-    if (!isOpen) return null;
+    useEffect(() => {
+        if (isOpen && warehouses.length > 0) {
+            setData((current) => ({
+                ...current,
+                warehouse_id: warehouses.some(
+                    (warehouse) =>
+                        String(warehouse.id) === current.warehouse_id,
+                )
+                    ? current.warehouse_id
+                    : String(warehouses[0].id),
+            }));
+        }
+    }, [isOpen, warehouses, setData]);
 
-    const handleSubmit = (e: FormEvent) => {
-        e.preventDefault();
+    if (!isOpen) {
+        return null;
+    }
+
+    const selectedWarehouse = warehouses.find(
+        (warehouse) => String(warehouse.id) === data.warehouse_id,
+    );
+
+    const handleSubmit = (event: FormEvent) => {
+        event.preventDefault();
         post(`/${tenantSlug}/stock-opname/sessions`, {
             onSuccess: () => {
                 reset();
                 onClose();
             },
+            onError: (formErrors) => {
+                toast.error(
+                    Object.values(formErrors)[0] ||
+                        t('Permintaan gagal diproses.'),
+                );
+            },
         });
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in duration-150">
-            <div className="bg-card border border-border rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col text-card-foreground">
-                <div className="px-6 py-4 border-b border-border flex items-center justify-between">
-                    <div>
-                        <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
-                            <ClipboardCheck className="w-4 h-4 text-blue-600" />
-                            <span>{t("Inisiasi Sesi Stock Opname Baru")}</span>
-                        </h2>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                            {t("Jadwalkan area audit rak ke antrean tugas operator mobile")}</p>
-                    </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <section
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="create-opname-title"
+                className="w-full max-w-md overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-xl"
+            >
+                <header className="flex items-center justify-between border-b border-border px-5 py-4">
+                    <h2
+                        id="create-opname-title"
+                        className="flex items-center gap-2 text-base font-semibold"
+                    >
+                        <ClipboardCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                        {t('Buat sesi opname')}
+                    </h2>
                     <button
                         type="button"
                         onClick={onClose}
-                        className="w-7 h-7 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center cursor-pointer transition-colors"
+                        aria-label={t('Tutup')}
+                        className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                     >
-                        <X className="w-4 h-4" />
+                        <X className="h-4 w-4" />
                     </button>
-                </div>
+                </header>
 
-                <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4 text-xs">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                            <Label className="font-semibold text-foreground">
-                                {t("Pilih Gudang")}{' '}<span className="text-red-500">{t("*")}</span>
-                            </Label>
-                            <Select
-                                value={data.warehouse_id}
-                                onValueChange={(val) => setData('warehouse_id', val)}
-                            >
-                                <SelectTrigger className="h-9 text-xs rounded-xl border-border bg-background">
-                                    <SelectValue placeholder={t("Pilih Gudang")} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="1">{t("WH Cakung Utama (DC-JKT-01)")}</SelectItem>
-                                    <SelectItem value="2">{t("WH Surabaya Rungkut (DC-SBY-02)")}</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            {errors.warehouse_id && <span className="text-xs text-destructive">{errors.warehouse_id}</span>}
-                        </div>
+                <form onSubmit={handleSubmit} className="space-y-4 p-5">
+                    {warehouses.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">
+                            {t('Belum ada gudang aktif.')}
+                        </p>
+                    ) : (
+                        <>
+                            <div className="space-y-2">
+                                <Label htmlFor="opname-warehouse">
+                                    {t('Gudang')}
+                                </Label>
+                                <Select
+                                    value={data.warehouse_id}
+                                    onValueChange={(value) =>
+                                        setData((current) => ({
+                                            ...current,
+                                            warehouse_id: value,
+                                            location_id: 'all',
+                                        }))
+                                    }
+                                >
+                                    <SelectTrigger id="opname-warehouse">
+                                        <SelectValue
+                                            placeholder={t('Pilih gudang')}
+                                        />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {warehouses.map((warehouse) => (
+                                            <SelectItem
+                                                key={warehouse.id}
+                                                value={String(warehouse.id)}
+                                            >
+                                                {warehouse.name} (
+                                                {warehouse.code})
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                {errors.warehouse_id && (
+                                    <p className="text-xs text-destructive">
+                                        {errors.warehouse_id}
+                                    </p>
+                                )}
+                            </div>
 
-                        <div className="space-y-1.5">
-                            <Label className="font-semibold text-foreground">
-                                {t("Zona / Area Target")}{' '}<span className="text-red-500">{t("*")}</span>
-                            </Label>
-                            <Select
-                                value={data.zone}
-                                onValueChange={(val) => setData('zone', val)}
-                            >
-                                <SelectTrigger className="h-9 text-xs rounded-xl border-border bg-background">
-                                    <SelectValue placeholder={t("Pilih Zona")} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="ALL">{t("Semua Rak Gudang (Full Wall-to-Wall)")}</SelectItem>
-                                    <SelectItem value="A">{t("Zona A (Fast-Moving & Instant Food)")}</SelectItem>
-                                    <SelectItem value="B">{t("Zona B (Cooking Oil & Dry Goods)")}</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            {errors.zone && <span className="text-xs text-destructive">{errors.zone}</span>}
-                        </div>
-                    </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="opname-location">
+                                    {t('Lokasi / Rak')}
+                                </Label>
+                                <Select
+                                    value={data.location_id}
+                                    onValueChange={(value) =>
+                                        setData('location_id', value)
+                                    }
+                                >
+                                    <SelectTrigger id="opname-location">
+                                        <SelectValue
+                                            placeholder={t(
+                                                'Pilih lokasi / rak',
+                                            )}
+                                        />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">
+                                            {t('Semua lokasi')}
+                                        </SelectItem>
+                                        {selectedWarehouse?.locations.map(
+                                            (location) => (
+                                                <SelectItem
+                                                    key={location.id}
+                                                    value={String(location.id)}
+                                                >
+                                                    {location.rack_code}
+                                                    {location.zone
+                                                        ? ` · ${location.zone}`
+                                                        : ''}
+                                                </SelectItem>
+                                            ),
+                                        )}
+                                    </SelectContent>
+                                </Select>
+                                {errors.location_id && (
+                                    <p className="text-xs text-destructive">
+                                        {errors.location_id}
+                                    </p>
+                                )}
+                            </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                            <Label className="font-semibold text-foreground">
-                                {t("Tipe & Siklus Audit")}{' '}<span className="text-red-500">{t("*")}</span>
-                            </Label>
-                            <Select
-                                value={data.audit_type}
-                                onValueChange={(val) => setData('audit_type', val)}
-                            >
-                                <SelectTrigger className="h-9 text-xs rounded-xl border-border bg-background">
-                                    <SelectValue placeholder={t("Tipe Audit")} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="monthly">{t("Bulanan (Monthly Cut-Off)")}</SelectItem>
-                                    <SelectItem value="cycle_count">{t("Cycle Count (Harian / Mingguan ABC)")}</SelectItem>
-                                    <SelectItem value="annual">{t("Tahunan (Year-End Wall-to-Wall)")}</SelectItem>
-                                    <SelectItem value="adhoc">{t("Insidental / Ad-Hoc Discrepancy")}</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            {errors.audit_type && <span className="text-xs text-destructive">{errors.audit_type}</span>}
-                        </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="opname-notes">
+                                    {t('Catatan')}{' '}
+                                    <span className="font-normal text-muted-foreground">
+                                        ({t('opsional')})
+                                    </span>
+                                </Label>
+                                <Input
+                                    id="opname-notes"
+                                    value={data.notes}
+                                    onChange={(event) =>
+                                        setData('notes', event.target.value)
+                                    }
+                                    maxLength={255}
+                                />
+                                {errors.notes && (
+                                    <p className="text-xs text-destructive">
+                                        {errors.notes}
+                                    </p>
+                                )}
+                            </div>
+                        </>
+                    )}
+                    {errors.session && (
+                        <p role="alert" className="text-sm text-destructive">
+                            {errors.session}
+                        </p>
+                    )}
 
-                        <div className="space-y-1.5">
-                            <Label className="font-semibold text-foreground">
-                                {t("Batas Waktu Cut-Off Saldo")}{' '}<span className="text-red-500">{t("*")}</span>
-                            </Label>
-                            <Input
-                                type="datetime-local"
-                                value={data.cut_off_date}
-                                onChange={(e) => setData('cut_off_date', e.target.value)}
-                                className="h-9 text-xs rounded-xl border-border bg-background font-mono"
-                            />
-                            {errors.cut_off_date && <span className="text-xs text-destructive">{errors.cut_off_date}</span>}
-                        </div>
-                    </div>
-
-                    <div className="space-y-1.5">
-                        <Label className="font-semibold text-foreground">{t("Catatan / Alasan Sesi")}</Label>
-                        <Input
-                            type="text"
-                            value={data.notes}
-                            onChange={(e) => setData('notes', e.target.value)}
-                            placeholder={t("Cth: Audit rutin bulanan...")}
-                            className="h-9 text-xs rounded-xl border-border bg-background"
-                        />
-                    </div>
-
-                    <div className="pt-4 border-t border-border flex items-center justify-end gap-2 mt-2">
+                    <footer className="flex justify-end gap-2 border-t border-border pt-4">
                         <Button
                             type="button"
                             variant="outline"
                             onClick={onClose}
-                            className="h-9 px-4 rounded-xl border-border text-xs"
                         >
-                            {t("Batal")}</Button>
-                        <Button
-                            type="submit"
-                            disabled={processing}
-                            className="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold gap-1.5 shadow-md"
-                        >
-                            <PlusCircle className="w-3.5 h-3.5" />
-                            <span>{processing ? t("Saving...") : t("Buka Sesi Audit")}</span>
+                            {t('Batal')}
                         </Button>
-                    </div>
+                        {warehouses.length > 0 && (
+                            <Button
+                                type="submit"
+                                disabled={processing || !data.warehouse_id}
+                                className="bg-blue-600 text-white hover:bg-blue-700 focus-visible:ring-blue-500"
+                            >
+                                <Plus className="mr-1.5 h-4 w-4" />
+                                {processing
+                                    ? t('Menyimpan...')
+                                    : t('Mulai opname')}
+                            </Button>
+                        )}
+                    </footer>
                 </form>
-            </div>
+            </section>
         </div>
     );
 }
