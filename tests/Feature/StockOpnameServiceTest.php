@@ -1,6 +1,7 @@
 <?php
 
 use App\Services\StockOpnameService;
+use App\Services\StockTransferService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
@@ -48,6 +49,7 @@ beforeEach(function () {
         $table->unsignedBigInteger('unit_id')->nullable();
         $table->string('sku_code');
         $table->string('barcode')->nullable();
+        $table->boolean('is_active')->default(true);
         $table->integer('current_stock')->default(0);
         $table->timestamp('updated_at')->nullable();
     });
@@ -81,6 +83,7 @@ beforeEach(function () {
         $table->unsignedBigInteger('transaction_id');
         $table->unsignedBigInteger('sku_id');
         $table->unsignedBigInteger('from_location_id')->nullable();
+        $table->unsignedBigInteger('to_location_id')->nullable();
         $table->integer('quantity');
         $table->integer('good_qty')->default(0);
         $table->integer('damaged_qty')->default(0);
@@ -384,6 +387,70 @@ test('loads a completed session by id for read-only history', function () {
         ->and($history['session']['status'])->toBe('ADJUSTED')
         ->and($history['items'])->toHaveCount(2)
         ->and($service->getActiveSessionData('tenant-a')['session'])->toBeNull();
+});
+
+test('mobile API lists sessions and loads a selected completed session', function () {
+    [$warehouseId] = stockOpnameFixture();
+    $locationId = DB::table('locations')->where('rack_code', 'A-01')->value('id');
+    $session = app(StockOpnameService::class)->createSession('tenant-a', [
+        'warehouse_id' => $warehouseId,
+        'location_id' => $locationId,
+    ], 1);
+    DB::table('transactions')->where('id', $session['session_id'])->update(['status' => 'ADJUSTED']);
+
+    $this->withoutMiddleware()
+        ->getJson('/api/tenant-a/stock-opname')
+        ->assertOk()
+        ->assertJsonPath('success', true)
+        ->assertJsonPath('data.data.0.id', $session['session_id'])
+        ->assertJsonPath('data.data.0.status', 'ADJUSTED')
+        ->assertJsonPath('data.data.0.location_label', 'A-01 · A')
+        ->assertJsonPath('data.data.0.total_items', 2);
+
+    $this->getJson("/api/tenant-a/stock-opname/sessions/{$session['session_id']}")
+        ->assertOk()
+        ->assertJsonPath('success', true)
+        ->assertJsonPath('data.session.id', $session['session_id'])
+        ->assertJsonPath('data.session.status', 'ADJUSTED')
+        ->assertJsonPath('data.items.0.is_counted', false)
+        ->assertJsonMissingPath('data.items.0.system_qty');
+});
+
+test('syncs stock transfer using transaction uuid idempotently', function () {
+    [$warehouseId] = stockOpnameFixture();
+    $fromLocationId = DB::table('locations')->where('rack_code', 'A-01')->value('id');
+    $toLocationId = DB::table('locations')->where('rack_code', 'B-01')->value('id');
+    $skuId = DB::table('skus')->value('id');
+    $service = new StockTransferService;
+    $payload = [
+        'transaction_uuid' => 'offline-transfer-uuid-1',
+        'items' => [[
+            'sku_id' => $skuId,
+            'from_location_id' => $fromLocationId,
+            'to_location_id' => $toLocationId,
+            'quantity' => 2,
+            'batch_number' => 'BATCH-A',
+            'expiry_date' => '2027-01-01',
+        ]],
+    ];
+
+    $first = $service->syncOfflineTransfer('tenant-a', $payload, 1);
+    $second = $service->syncOfflineTransfer('tenant-a', $payload, 1);
+
+    expect($first['already_synced'])->toBeFalse()
+        ->and($second['already_synced'])->toBeTrue()
+        ->and($second['transfer_code'])->toBe('offline-transfer-uuid-1')
+        ->and((int) DB::table('inventory_stocks')
+            ->where('sku_id', $skuId)
+            ->where('location_id', $fromLocationId)
+            ->sum('quantity'))->toBe(7)
+        ->and((int) DB::table('inventory_stocks')
+            ->where('sku_id', $skuId)
+            ->where('location_id', $toLocationId)
+            ->sum('quantity'))->toBe(10)
+        ->and(DB::table('transactions')
+            ->where('local_uuid', 'offline-transfer-uuid-1')
+            ->count())->toBe(1);
 });
 
 test('requires every line to be counted and adjusts only the matching stock batches', function () {

@@ -4,14 +4,140 @@ namespace App\Http\Controllers\Api;
 
 use App\Contracts\StockOpnameContract;
 use App\Http\Controllers\Controller;
+use App\Models\Tenant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class StockOpnameController extends Controller
 {
     public function __construct(
         protected StockOpnameContract $service
     ) {}
+
+    /**
+     * List stock opname sessions for the mobile session picker.
+     */
+    public function index(Request $request, string $tenant_slug): JsonResponse
+    {
+        $validated = $request->validate([
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+        $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
+        $itemSummary = DB::table('transaction_items')
+            ->select('transaction_id')
+            ->selectRaw('COUNT(*) as total_items')
+            ->selectRaw('SUM(CASE WHEN counted_at IS NOT NULL THEN 1 ELSE 0 END) as counted_items')
+            ->groupBy('transaction_id');
+        $warehouseSummary = DB::table('transaction_items')
+            ->join('locations', 'transaction_items.from_location_id', '=', 'locations.id')
+            ->join('warehouses', 'locations.warehouse_id', '=', 'warehouses.id')
+            ->select('transaction_items.transaction_id')
+            ->selectRaw('MIN(warehouses.name) as fallback_warehouse_name')
+            ->selectRaw('MIN(warehouses.code) as fallback_warehouse_code')
+            ->groupBy('transaction_items.transaction_id');
+        $locationSummary = DB::table('transaction_items')
+            ->join('locations', 'transaction_items.from_location_id', '=', 'locations.id')
+            ->select('transaction_items.transaction_id')
+            ->selectRaw('COUNT(DISTINCT locations.id) as item_location_count')
+            ->selectRaw('MIN(locations.rack_code) as fallback_rack_code')
+            ->selectRaw('MIN(locations.zone) as fallback_location_zone')
+            ->groupBy('transaction_items.transaction_id');
+
+        $sessions = DB::table('transactions')
+            ->leftJoin('users', 'transactions.created_by', '=', 'users.id')
+            ->leftJoin('warehouses', 'transactions.warehouse_id', '=', 'warehouses.id')
+            ->leftJoin('locations as opname_location', 'transactions.location_id', '=', 'opname_location.id')
+            ->leftJoinSub($itemSummary, 'item_summary', function ($join) {
+                $join->on('transactions.id', '=', 'item_summary.transaction_id');
+            })
+            ->leftJoinSub($warehouseSummary, 'warehouse_summary', function ($join) {
+                $join->on('transactions.id', '=', 'warehouse_summary.transaction_id');
+            })
+            ->leftJoinSub($locationSummary, 'location_summary', function ($join) {
+                $join->on('transactions.id', '=', 'location_summary.transaction_id');
+            })
+            ->where('transactions.tenant_id', $tenant->id)
+            ->where('transactions.transaction_type', 'STOCK_OPNAME')
+            ->select(
+                'transactions.id',
+                'transactions.local_uuid as session_code',
+                'transactions.status',
+                'transactions.warehouse_id',
+                'transactions.location_id',
+                'transactions.dock_bay',
+                'transactions.created_at',
+                'users.name as auditor_name',
+                'warehouses.name as warehouse_name',
+                'warehouses.code as warehouse_code',
+                'warehouse_summary.fallback_warehouse_name',
+                'warehouse_summary.fallback_warehouse_code',
+                'opname_location.rack_code as location_rack',
+                'opname_location.zone as location_zone',
+                'location_summary.item_location_count',
+                'location_summary.fallback_rack_code',
+                'location_summary.fallback_location_zone',
+                'item_summary.total_items',
+                'item_summary.counted_items'
+            )
+            ->latest('transactions.created_at')
+            ->paginate($validated['per_page'] ?? 15);
+
+        $sessions->getCollection()->transform(function ($session) {
+            $session->status = strtoupper($session->status);
+            $session->warehouse_name = $session->warehouse_name ?? $session->fallback_warehouse_name ?? '-';
+            $session->warehouse_code = $session->warehouse_code ?? $session->fallback_warehouse_code ?? '-';
+            $session->location_label = $session->location_rack
+                ? $session->location_rack.($session->location_zone ? ' · '.$session->location_zone : '')
+                : ((int) $session->item_location_count === 1
+                    ? $session->fallback_rack_code.($session->fallback_location_zone ? ' · '.$session->fallback_location_zone : '')
+                    : (in_array(strtolower(trim((string) $session->dock_bay)), ['', 'all', 'all zones', 'semua zona', 'semua lokasi'], true)
+                        ? 'Semua lokasi'
+                        : 'Zona '.$session->dock_bay));
+            $session->total_items = (int) ($session->total_items ?? 0);
+            $session->counted_items = (int) ($session->counted_items ?? 0);
+
+            unset(
+                $session->dock_bay,
+                $session->fallback_warehouse_name,
+                $session->fallback_warehouse_code,
+                $session->location_rack,
+                $session->location_zone,
+                $session->item_location_count,
+                $session->fallback_rack_code,
+                $session->fallback_location_zone
+            );
+
+            return $session;
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Daftar sesi stock opname berhasil dimuat.',
+            'data' => $sessions,
+        ]);
+    }
+
+    /**
+     * Load a specific stock opname session for resume or read-only detail.
+     */
+    public function show(string $tenant_slug, int $session_id): JsonResponse
+    {
+        $data = $this->service->getActiveSessionData($tenant_slug, true, $session_id);
+
+        if (! $data['session']) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sesi stock opname tidak ditemukan.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Detail sesi stock opname berhasil dimuat.',
+            'data' => $data,
+        ]);
+    }
 
     /**
      * Get active stock opname session for mobile scanner (Blind Counting Mode).
