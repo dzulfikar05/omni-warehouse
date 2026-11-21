@@ -163,6 +163,11 @@ class SkusController extends Controller
         $products = Product::where('tenant_id', $tenant->id)->select('id', 'name')->get();
         $units    = Unit::where('tenant_id', $tenant->id)->select('id', 'name', 'symbol')->get();
 
+        // Hitung total stok aktual dari inventory_stocks (konsisten dengan show & index)
+        $sku->current_stock = (int) DB::table('inventory_stocks')
+            ->where('sku_id', $sku->id)
+            ->sum('quantity');
+
         return Inertia::render('Tenant/InventoryManagement/Sku/Edit', [
             'tenant_slug' => $tenant_slug,
             'sku'         => $sku,
@@ -173,7 +178,9 @@ class SkusController extends Controller
 
     public function update(SkuRequest $request, string $tenant_slug, Sku $sku): RedirectResponse
     {
-        $sku->update($request->validated());
+        $validated = $request->validated();
+        unset($validated['current_stock']); // Cegah manipulasi stok manual dari master SKU
+        $sku->update($validated);
 
         return to_route('tenant.inventory.skus.index', ['tenant_slug' => $tenant_slug])
             ->with('success', __('SKU updated successfully.'));

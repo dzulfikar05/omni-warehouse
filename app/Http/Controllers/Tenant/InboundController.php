@@ -71,7 +71,12 @@ class InboundController extends Controller
     {
         $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
         $data = $this->service->getManifestDetail($tenant_slug, $manifest_code);
-        $locations = Location::where('tenant_id', $tenant->id)->where('is_active', true)->get(['id', 'rack_code', 'zone']);
+        $locations = Location::where(function ($q) use ($tenant) {
+            $q->where('tenant_id', $tenant->id)
+              ->orWhereHas('warehouse', fn($wh) => $wh->where('tenant_id', $tenant->id));
+        })
+        ->where('is_active', true)
+        ->get(['id', 'rack_code', 'zone']);
 
         return Inertia::render('Tenant/Transactions/Inbound/Show', [
             'manifest' => $data['manifest'],

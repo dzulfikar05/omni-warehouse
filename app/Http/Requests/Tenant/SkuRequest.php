@@ -32,7 +32,9 @@ class SkuRequest extends FormRequest
                 Rule::unique('skus', 'barcode')->ignore($skuId),
             ],
             'base_cost'     => ['required', 'numeric', 'min:0'],
-            'current_stock' => ['required', 'integer', 'min:0'],
+            'current_stock' => $this->isMethod('put') || $this->isMethod('patch')
+                ? ['nullable', 'numeric', 'min:0']
+                : ['required', 'integer', 'min:0'],
             'min_stock'     => ['nullable', 'integer', 'min:0'],
             'max_stock'     => ['nullable', 'integer', 'min:0'],
             'weight_grams'  => ['nullable', 'numeric', 'min:0'],
