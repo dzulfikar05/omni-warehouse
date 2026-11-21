@@ -16,6 +16,7 @@ import {
     Truck,
     SlidersHorizontal,
     Pencil,
+    Warehouse,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -261,9 +262,17 @@ export default function Show({
                                         {manifest.status}
                                     </span>
                                 </div>
-                                <div className="mt-1 flex items-center gap-2 text-muted-foreground">
-                                    <Building2 className="h-3.5 w-3.5" />
-                                    <span>{manifest.supplier_name}</span>
+                                <div className="mt-1 flex flex-wrap items-center gap-3 text-muted-foreground text-xs">
+                                    <div className="flex items-center gap-1.5">
+                                        <Building2 className="h-3.5 w-3.5" />
+                                        <span>{manifest.supplier_name}</span>
+                                    </div>
+                                    {manifest.warehouse_name && (
+                                        <div className="flex items-center gap-1.5 border-l border-border pl-3">
+                                            <Warehouse className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                                            <span className="font-medium text-foreground">{manifest.warehouse_name}</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

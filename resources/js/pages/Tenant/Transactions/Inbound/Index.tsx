@@ -23,6 +23,7 @@ interface ManifestItem {
     manifest_code: string;
     status: string;
     supplier_name: string;
+    warehouse_name?: string;
     created_by: string;
     created_at: string;
     total_skus: number;
@@ -41,6 +42,12 @@ interface SupplierOption {
     name: string;
 }
 
+interface WarehouseOption {
+    id: number;
+    name: string;
+    code?: string;
+}
+
 interface MasterSkuOption {
     id: number;
     sku: string;
@@ -57,6 +64,7 @@ interface InboundIndexProps {
     };
     statuses: string[];
     suppliers: SupplierOption[];
+    warehouses?: WarehouseOption[];
     masterSkus: MasterSkuOption[];
     filters: Partial<TransactionFilters>;
 }
@@ -66,6 +74,7 @@ export default function Index({
     summary,
     statuses,
     suppliers,
+    warehouses = [],
     masterSkus,
     filters,
 }: InboundIndexProps) {
@@ -196,8 +205,14 @@ export default function Index({
                                             <td className="p-4 font-mono font-semibold text-primary">
                                                 {manifest.manifest_code}
                                             </td>
-                                            <td className="p-4 font-medium text-foreground">
-                                                {manifest.supplier_name}
+                                            <td className="p-4">
+                                                <div className="font-medium text-foreground">{manifest.supplier_name}</div>
+                                                {manifest.warehouse_name && (
+                                                    <div className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                                                        <Warehouse className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                                                        <span>{manifest.warehouse_name}</span>
+                                                    </div>
+                                                )}
                                             </td>
                                             <td className="p-4 text-muted-foreground">
                                                 {manifest.total_skus}{' '}
@@ -275,6 +290,7 @@ export default function Index({
                     isOpen={isCreateModalOpen}
                     onClose={() => setIsCreateModalOpen(false)}
                     suppliers={suppliers}
+                    warehouses={warehouses}
                     masterSkus={masterSkus}
                 />
             )}
