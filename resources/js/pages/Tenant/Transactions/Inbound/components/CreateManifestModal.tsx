@@ -1,7 +1,7 @@
 import React from 'react';
 import { useForm, usePage } from '@inertiajs/react';
 import { toast } from 'sonner';
-import { FileCheck2, Plus, Trash2, X } from 'lucide-react';
+import { FileCheck2, Plus, Trash2, X, Building2, Warehouse } from 'lucide-react';
 import { useTranslation } from '@/context/language-context';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -16,10 +16,17 @@ interface SupplierOption {
     name: string;
 }
 
+interface WarehouseOption {
+    id: number;
+    name: string;
+    code?: string;
+}
+
 interface CreateManifestModalProps {
     isOpen: boolean;
     onClose: () => void;
     suppliers: SupplierOption[];
+    warehouses?: WarehouseOption[];
     masterSkus: MasterSku[];
 }
 
@@ -31,6 +38,7 @@ export interface SkuRowFormItem {
 
 interface InboundManifestForm {
     supplier_id: string;
+    warehouse_id: string;
     items: SkuRowFormItem[];
 }
 
@@ -38,6 +46,7 @@ export const CreateManifestModal: React.FC<CreateManifestModalProps> = ({
     isOpen,
     onClose,
     suppliers = [],
+    warehouses = [],
     masterSkus = [],
 }) => {
     const { t } = useTranslation();
@@ -48,6 +57,7 @@ export const CreateManifestModal: React.FC<CreateManifestModalProps> = ({
 
     const { data, setData, post, processing, reset, errors } = useForm<InboundManifestForm>({
         supplier_id: '',
+        warehouse_id: warehouses[0]?.id ? String(warehouses[0].id) : '',
         items: [],
     });
 
@@ -91,6 +101,10 @@ export const CreateManifestModal: React.FC<CreateManifestModalProps> = ({
             toast.error(t('Pilih supplier terlebih dahulu!'));
             return;
         }
+        if (!data.warehouse_id) {
+            toast.error(t('Pilih gudang tujuan penyimpanan terlebih dahulu!'));
+            return;
+        }
         if (!data.items.length) {
             toast.error(t('Manifest harus memiliki minimal 1 item barang!'));
             return;
@@ -132,24 +146,53 @@ export const CreateManifestModal: React.FC<CreateManifestModalProps> = ({
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4 text-xs overflow-y-auto">
-                    <div className="flex flex-col gap-1.5">
-                        <label className="font-semibold text-foreground">{t("Pilih Supplier / Pemasok")}</label>
-                        <Select
-                            value={data.supplier_id}
-                            onValueChange={(val) => setData('supplier_id', val)}
-                        >
-                            <SelectTrigger className="h-9 w-full bg-background text-foreground font-medium">
-                                <SelectValue placeholder={t("Pilih Supplier...")} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {suppliers.map((sup) => (
-                                    <SelectItem key={sup.id} value={String(sup.id)}>
-                                        {sup.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        {errors.supplier_id && <span className="text-red-500 text-[10px]">{errors.supplier_id}</span>}
+                    {/* Grid Pemasok & Gudang Tujuan */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1.5">
+                            <label className="font-semibold text-foreground flex items-center gap-1.5">
+                                <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
+                                <span>{t("Pemasok / Supplier")} <span className="text-red-500">*</span></span>
+                            </label>
+                            <Select
+                                value={data.supplier_id}
+                                onValueChange={(val) => setData('supplier_id', val)}
+                            >
+                                <SelectTrigger className="h-9 w-full bg-background text-foreground font-medium">
+                                    <SelectValue placeholder={t("Pilih Supplier...")} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {suppliers.map((sup) => (
+                                        <SelectItem key={sup.id} value={String(sup.id)}>
+                                            {sup.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {errors.supplier_id && <span className="text-red-500 text-[10px]">{errors.supplier_id}</span>}
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                            <label className="font-semibold text-foreground flex items-center gap-1.5">
+                                <Warehouse className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                                <span>{t("Gudang Tujuan (Storage)")} <span className="text-red-500">*</span></span>
+                            </label>
+                            <Select
+                                value={data.warehouse_id}
+                                onValueChange={(val) => setData('warehouse_id', val)}
+                            >
+                                <SelectTrigger className="h-9 w-full bg-background text-foreground font-medium">
+                                    <SelectValue placeholder={t("Pilih Gudang...")} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {warehouses.map((wh) => (
+                                        <SelectItem key={wh.id} value={String(wh.id)}>
+                                            {wh.name} {wh.code ? `(${wh.code})` : ''}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {errors.warehouse_id && <span className="text-red-500 text-[10px]">{errors.warehouse_id}</span>}
+                        </div>
                     </div>
 
                     <div className="border border-border rounded-xl p-3 bg-muted/30 flex flex-col gap-2.5">

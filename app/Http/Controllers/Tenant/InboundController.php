@@ -8,6 +8,7 @@ use App\Models\Location;
 use App\Models\Sku;
 use App\Models\Supplier;
 use App\Models\Tenant;
+use App\Models\Warehouse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -38,11 +39,17 @@ class InboundController extends Controller
                 'product_name' => $sku->product->name ?? '-',
             ]);
 
+        $warehouses = Warehouse::where('tenant_id', $tenant->id)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'code']);
+
         return Inertia::render('Tenant/Transactions/Inbound/Index', [
             'manifests' => $data['manifests'],
             'summary' => $data['summary'],
             'statuses' => $data['statuses'],
             'suppliers' => Supplier::where('tenant_id', $tenant->id)->orderBy('name')->get(['id', 'name']),
+            'warehouses' => $warehouses,
             'masterSkus' => $masterSkus,
             'filters' => $request->only(['search', 'date_from', 'date_to', 'status', 'supplier_id']),
         ]);
@@ -54,6 +61,7 @@ class InboundController extends Controller
 
         $validated = $request->validate([
             'supplier_id' => ['required', 'integer', Rule::exists('suppliers', 'id')->where('tenant_id', $tenant->id)],
+            'warehouse_id' => ['required', 'integer', Rule::exists('warehouses', 'id')->where('tenant_id', $tenant->id)],
             'items' => ['required', 'array', 'min:1'],
             'items.*.sku_id' => ['required', 'integer', Rule::exists('skus', 'id')],
             'items.*.po_qty' => ['required', 'integer', 'min:1'],
@@ -71,7 +79,18 @@ class InboundController extends Controller
     {
         $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
         $data = $this->service->getManifestDetail($tenant_slug, $manifest_code);
-        $locations = Location::where('tenant_id', $tenant->id)->where('is_active', true)->get(['id', 'rack_code', 'zone']);
+        $warehouseId = $data['manifest']['warehouse_id'] ?? null;
+
+        $locationsQuery = Location::where('is_active', true);
+        if ($warehouseId) {
+            $locationsQuery->where('warehouse_id', $warehouseId);
+        } else {
+            $locationsQuery->where(function ($q) use ($tenant) {
+                $q->where('tenant_id', $tenant->id)
+                  ->orWhereHas('warehouse', fn($wh) => $wh->where('tenant_id', $tenant->id));
+            });
+        }
+        $locations = $locationsQuery->get(['id', 'rack_code', 'zone']);
 
         return Inertia::render('Tenant/Transactions/Inbound/Show', [
             'manifest' => $data['manifest'],

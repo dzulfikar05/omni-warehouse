@@ -1457,7 +1457,7 @@
     "btn_export_pdf": "Ekspor PDF",
     "status_draft": "Draf",
     "status_verified": "Terverifikasi",
-    "status_committed": "Selesai",
+    "status_committed": "Ditetapkan",
     "status_on_hold": "Ditangguhkan",
     "status_pending": "Menunggu",
     "status_completed": "Selesai",

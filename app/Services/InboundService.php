@@ -45,7 +45,7 @@ class InboundService implements InboundContract
     /**
      * Helper terpusat untuk mengambil daftar lokasi rak milik tenant.
      */
-    private function getTenantLocations(int $tenantId)
+    private function getTenantLocations(int $tenantId, ?int $warehouseId = null)
     {
         $query = DB::table('locations')
             ->join('warehouses', 'locations.warehouse_id', '=', 'warehouses.id')
@@ -55,6 +55,10 @@ class InboundService implements InboundContract
                 'locations.rack_code',
                 'locations.zone'
             );
+
+        if ($warehouseId) {
+            $query->where('locations.warehouse_id', $warehouseId);
+        }
 
         if (Schema::hasColumn('locations', 'is_active')) {
             $query->where('locations.is_active', true);
@@ -110,11 +114,16 @@ class InboundService implements InboundContract
                 $join->on('transactions.user_id', '=', 'users.id')
                     ->where('users.tenant_id', $tenant->id);
             })
+            ->leftJoin('warehouses', function ($join) use ($tenant) {
+                $join->on('transactions.warehouse_id', '=', 'warehouses.id')
+                    ->where('warehouses.tenant_id', $tenant->id);
+            })
             ->leftJoinSub($itemSummary, 'item_summary', 'transactions.id', '=', 'item_summary.transaction_id')
             ->select(
                 'transactions.local_uuid as manifest_code',
                 'transactions.status',
                 'suppliers.name as supplier_name',
+                'warehouses.name as warehouse_name',
                 'users.name as created_by',
                 'transactions.created_at',
                 DB::raw('COALESCE(item_summary.total_skus, 0) as total_skus'),
@@ -202,6 +211,7 @@ class InboundService implements InboundContract
                 'tenant_id'        => $tenant->id,
                 'user_id'          => $userId,
                 'supplier_id'      => $data['supplier_id'] ?? null,
+                'warehouse_id'     => $data['warehouse_id'] ?? null,
                 'local_uuid'       => $manifestCode,
                 'status'           => 'DRAFT',
                 'sync_status'      => 'SYNCED',
@@ -264,9 +274,11 @@ class InboundService implements InboundContract
             })
             ->leftJoin('suppliers', 'transactions.supplier_id', '=', 'suppliers.id')
             ->leftJoin('users', 'transactions.user_id', '=', 'users.id')
+            ->leftJoin('warehouses', 'transactions.warehouse_id', '=', 'warehouses.id')
             ->select(
                 'transactions.*',
                 'suppliers.name as supplier_name',
+                'warehouses.name as warehouse_name',
                 'users.name as operator_name'
             )
             ->first();
@@ -339,8 +351,8 @@ class InboundService implements InboundContract
         $totalGood = array_sum(array_column($items, 'good_qty'));
         $totalDamaged = array_sum(array_column($items, 'damaged_qty'));
 
-        // Sertakan daftar lokasi rak beserta stok saat ini agar Flutter bisa menyimpan cache offline
-        $locations = $this->getTenantLocations($tenant->id)->map(function ($loc) {
+        // Sertakan daftar lokasi rak terfilter sesuai gudang tujuan agar Flutter/Web konsisten
+        $locations = $this->getTenantLocations($tenant->id, $transaction->warehouse_id ?? null)->map(function ($loc) {
             $currentStock = DB::table('inventory_stocks')
                 ->where('location_id', $loc->id)
                 ->sum('quantity');
@@ -360,7 +372,8 @@ class InboundService implements InboundContract
                 'status' => strtoupper($transaction->status),
                 'supplier_id' => (int) ($transaction->supplier_id ?? 0),
                 'supplier_name' => $transaction->supplier_name ?? '-',
-                'warehouse_name' => $tenant->name,
+                'warehouse_id' => (int) ($transaction->warehouse_id ?? 0),
+                'warehouse_name' => $transaction->warehouse_name ?? $tenant->name,
                 'operator_name' => $transaction->operator_name ?? 'Operator',
                 'total_skus' => count($items),
                 'total_units' => $totalPo,

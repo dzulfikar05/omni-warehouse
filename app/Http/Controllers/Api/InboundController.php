@@ -125,9 +125,14 @@ class InboundController extends Controller
     {
         $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
         $data = $this->service->getManifestDetail($tenant_slug, $manifest_code);
-        $locations = Location::whereHas('warehouse', fn($q) => $q->where('tenant_id', $tenant->id))
-            ->where('is_active', true)
-            ->get(['id', 'rack_code', 'zone']);
+        $warehouseId = $data['manifest']['warehouse_id'] ?? null;
+        $locationsQuery = Location::where('is_active', true);
+        if ($warehouseId) {
+            $locationsQuery->where('warehouse_id', $warehouseId);
+        } else {
+            $locationsQuery->whereHas('warehouse', fn($q) => $q->where('tenant_id', $tenant->id));
+        }
+        $locations = $locationsQuery->get(['id', 'rack_code', 'zone']);
 
         return response()->json([
             'success' => true,

@@ -15,6 +15,7 @@ export interface InboundManifest {
     vehicle_type: string;
     driver_name: string;
     driver_phone: string;
+    warehouse_id?: number;
     warehouse_name: string;
     dock_bay: string;
     operator_name: string;

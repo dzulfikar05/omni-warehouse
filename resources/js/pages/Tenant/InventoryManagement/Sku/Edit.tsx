@@ -180,21 +180,27 @@ export default function SkuEdit({ sku, products, units }: EditProps) {
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {/* Current Stock */}
+                            {/* Current Stock (Read-Only WMS Ledger) */}
                             <div className="space-y-1.5">
-                                <Label htmlFor="current_stock" className="text-xs font-semibold">
-                                    {t("Stok Saat Ini")}</Label>
+                                <div className="flex items-center justify-between">
+                                    <Label htmlFor="current_stock" className="text-xs font-semibold">
+                                        {t("Stok Saat Ini")}
+                                    </Label>
+                                    <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded border border-border">
+                                        {t("Otomatis")}
+                                    </span>
+                                </div>
                                 <Input
                                     id="current_stock"
                                     type="number"
                                     min="0"
                                     value={data.current_stock}
-                                    onChange={(e) => setData('current_stock', e.target.value)}
-                                    className="h-10 text-xs border-border bg-background rounded-xl font-mono"
+                                    disabled
+                                    className="h-10 text-xs border-border bg-muted/60 text-foreground font-bold rounded-xl font-mono cursor-not-allowed select-none"
                                 />
-                                {errors.current_stock && (
-                                    <span className="text-xs text-destructive">{errors.current_stock}</span>
-                                )}
+                                <p className="text-[10px] text-muted-foreground">
+                                    {t("*Stok dihitung otomatis dari mutasi fisik (Inbound, Outbound, dan Stock Opname).")}
+                                </p>
                             </div>
 
                             {/* Min Stock */}

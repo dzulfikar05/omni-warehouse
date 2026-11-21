@@ -370,7 +370,7 @@ class TenantSeeder extends Seeder
         foreach ($locationsData as $loc) {
             $locations[$loc['rack']] = Location::firstOrCreate(
                 ['warehouse_id' => $loc['wh']->id, 'rack_code' => $loc['rack']],
-                ['zone' => $loc['zone'], 'created_by' => $user->id]
+                ['tenant_id' => $tenant->id, 'zone' => $loc['zone'], 'created_by' => $user->id]
             );
         }
 
