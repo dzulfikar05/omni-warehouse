@@ -71,40 +71,17 @@ class InboundController extends Controller
         ]);
     }
 
-    public function store(Request $request, string $tenant_slug): JsonResponse
-    {
-        $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
-
-        $validated = $request->validate([
-            'local_uuid'     => ['nullable', 'string', 'max:64'],
-            'supplier_id'    => ['required', 'integer', Rule::exists('suppliers', 'id')->where('tenant_id', $tenant->id)],
-            'items'          => ['required', 'array', 'min:1'],
-            'items.*.sku_id' => ['required', 'integer', Rule::exists('skus', 'id')],
-            'items.*.po_qty' => ['required', 'integer', 'min:1'],
-        ]);
-
-        $res = $this->service->createManifest($tenant_slug, $validated, (int) $request->user()->id);
-        $statusCode = ! empty($res['already_synced']) ? 200 : 201;
-
-        return response()->json([
-            'success' => true,
-            'message' => ! empty($res['already_synced'])
-                ? 'Manifest Inbound sudah tersinkronisasi sebelumnya.'
-                : 'Manifest Inbound PO berhasil dibuat.',
-            'data'    => $res,
-        ], $statusCode);
-    }
-
     public function syncOffline(Request $request, string $tenant_slug): JsonResponse
     {
         $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
 
         $validated = $request->validate([
-            'local_uuid'          => ['required', 'string', 'max:64'],
+            'manifest_code'       => ['required_without:local_uuid', 'string', 'max:100'],
+            'local_uuid'          => ['required_without:manifest_code', 'string', 'max:100'],
             'supplier_id'         => ['nullable', 'integer', Rule::exists('suppliers', 'id')->where('tenant_id', $tenant->id)],
             'should_commit'       => ['nullable', 'boolean'],
             'items'               => ['required', 'array', 'min:1'],
-            'items.*.sku_id'      => ['required', 'integer', Rule::exists('skus', 'id')],
+            'items.*.sku_id'      => ['required', 'integer'],
             'items.*.po_qty'      => ['nullable', 'integer', 'min:0'],
             'items.*.good_qty'    => ['required', 'integer', 'min:0'],
             'items.*.damaged_qty' => ['nullable', 'integer', 'min:0'],

@@ -492,10 +492,14 @@ class OutboundService implements OutboundContract
 
         $shouldCommit = (bool) ($payload['should_commit'] ?? false);
 
-        return DB::transaction(function () use ($tenantSlug, $tenant, $payload, $userId, $incomingCode, $shouldCommit) {
+        return DB::transaction(function () use ($tenantSlug, $tenant, $payload, $incomingCode, $shouldCommit) {
             $tx = $this->findOutboundTransaction($tenant->id, $incomingCode, true);
 
-            if ($tx && strtoupper($tx->status) === 'COMMITTED') {
+            if (!$tx) {
+                abort(404, "Manifest outbound '{$incomingCode}' tidak ditemukan.");
+            }
+
+            if (strtoupper($tx->status) === 'COMMITTED') {
                 return [
                     'manifest_code'  => $tx->local_uuid,
                     'status'         => 'COMMITTED',
@@ -504,36 +508,29 @@ class OutboundService implements OutboundContract
                 ];
             }
 
-            if (!$tx) {
-                $tx = Transaction::create([
-                    'tenant_id'        => $tenant->id,
-                    'user_id'          => $userId,
-                    'customer_id'      => $payload['customer_id'] ?? null,
-                    'local_uuid'       => $incomingCode,
-                    'status'           => 'PICKING',
-                    'sync_status'      => 'SYNCED',
-                    'transaction_type' => 'OUTBOUND',
-                    'created_by'       => $userId,
-                    'vehicle_no'       => $payload['vehicle_no'] ?? null,
-                    'driver_name'      => $payload['driver_name'] ?? null,
-                    'notes'            => $payload['notes'] ?? null,
-                ]);
-            } else {
-                $tx->status = 'PICKING';
-                $tx->sync_status = 'SYNCED';
-                $tx->save();
-            }
+            $tx->status = 'PICKING';
+            $tx->sync_status = 'SYNCED';
+            $tx->save();
 
             $rackMap = Location::whereHas('warehouse', fn($q) => $q->where('tenant_id', $tenant->id))
                 ->where('is_active', true)
                 ->pluck('id', 'rack_code');
 
-            foreach ($payload['items'] as $itemData) {
+            foreach ($payload['items'] as $index => $itemData) {
                 $skuId = (int) $itemData['sku_id'];
+                $skuBelongsToTenant = DB::table('skus')
+                    ->join('products', 'skus.product_id', '=', 'products.id')
+                    ->where('skus.id', $skuId)
+                    ->where('products.tenant_id', $tenant->id)
+                    ->exists();
+                if (!$skuBelongsToTenant) {
+                    throw ValidationException::withMessages([
+                        "items.{$index}.sku_id" => 'SKU tidak terdaftar pada tenant ini.',
+                    ]);
+                }
+
                 $goodQty = (int) ($itemData['good_qty'] ?? 0);
                 $damagedQty = (int) ($itemData['damaged_qty'] ?? 0);
-                $soQty = (int) ($itemData['so_qty'] ?? ($goodQty + $damagedQty));
-
                 $fromLocationId = $itemData['source_rack_id'] ?? null;
                 if (!$fromLocationId && !empty($itemData['source_rack'])) {
                     $fromLocationId = $rackMap[trim((string) $itemData['source_rack'])] ?? null;
@@ -544,24 +541,17 @@ class OutboundService implements OutboundContract
                     ->lockForUpdate()
                     ->first();
 
-                if ($existingItem) {
-                    $existingItem->from_location_id = $fromLocationId ?? $existingItem->from_location_id;
-                    $existingItem->good_qty = $goodQty;
-                    $existingItem->damaged_qty = $damagedQty;
-                    $existingItem->damage_note = $itemData['damage_note'] ?? $existingItem->damage_note;
-                    $existingItem->save();
-                } else {
-                    TransactionItem::create([
-                        'transaction_id'   => $tx->id,
-                        'sku_id'           => $skuId,
-                        'from_location_id' => $fromLocationId,
-                        'quantity'         => max(1, $soQty),
-                        'good_qty'         => $goodQty,
-                        'damaged_qty'      => $damagedQty,
-                        'damage_note'      => $itemData['damage_note'] ?? null,
-                        'created_by'       => $userId,
+                if (!$existingItem) {
+                    throw ValidationException::withMessages([
+                        "items.{$index}.sku_id" => 'SKU tidak termasuk dalam manifest outbound ini.',
                     ]);
                 }
+
+                $existingItem->from_location_id = $fromLocationId ?? $existingItem->from_location_id;
+                $existingItem->good_qty = $goodQty;
+                $existingItem->damaged_qty = $damagedQty;
+                $existingItem->damage_note = $itemData['damage_note'] ?? $existingItem->damage_note;
+                $existingItem->save();
             }
 
             if ($shouldCommit) {
