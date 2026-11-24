@@ -108,22 +108,7 @@ class OutboundController extends Controller
 
     public function show(string $tenant_slug, string $manifest_code): JsonResponse
     {
-        $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
         $data = $this->service->getManifestDetail($tenant_slug, $manifest_code);
-
-        $locations = Location::whereHas('warehouse', fn($q) => $q->where('tenant_id', $tenant->id))
-            ->where('is_active', true)
-            ->get(['id', 'rack_code', 'zone'])
-            ->map(function ($loc) {
-                $stockQty = (int) InventoryStock::where('location_id', $loc->id)->sum('quantity');
-
-                return [
-                    'id'             => $loc->id,
-                    'rack_code'      => $loc->rack_code,
-                    'zone'           => $loc->zone,
-                    'stock_quantity' => $stockQty,
-                ];
-            });
 
         return response()->json([
             'success' => true,
@@ -131,8 +116,8 @@ class OutboundController extends Controller
             'data'    => [
                 'manifest'            => $data['manifest'],
                 'items'               => $data['items'],
-                'locations'           => $locations,
-                'available_locations' => $locations,
+                'locations'           => $data['locations'],
+                'available_locations' => $data['locations'],
             ],
         ]);
     }
