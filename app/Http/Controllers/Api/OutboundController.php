@@ -11,7 +11,6 @@ use App\Models\Sku;
 use App\Models\Tenant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class OutboundController extends Controller
 {
@@ -77,35 +76,11 @@ class OutboundController extends Controller
         ]);
     }
 
-    public function store(Request $request, string $tenant_slug): JsonResponse
-    {
-        $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
-
-        $validated = $request->validate([
-            'local_uuid'     => ['nullable', 'string', 'max:100'],
-            'customer_id'    => ['required', 'integer', Rule::exists('customers', 'id')->where('tenant_id', $tenant->id)],
-            'vehicle_no'     => ['nullable', 'string'],
-            'driver_name'    => ['nullable', 'string'],
-            'notes'          => ['nullable', 'string'],
-            'items'          => ['required', 'array', 'min:1'],
-            'items.*.sku_id' => ['required', 'integer', Rule::exists('skus', 'id')],
-            'items.*.so_qty' => ['required', 'integer', 'min:1'],
-        ]);
-
-        $res = $this->service->createManifest($tenant_slug, $validated, auth()->id());
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Manifest Outbound SO berhasil dibuat.',
-            'data'    => $res,
-        ], 201);
-    }
-
     public function syncOffline(Request $request, string $tenant_slug): JsonResponse
     {
         $validated = $request->validate([
-            'manifest_code'          => ['nullable', 'string', 'max:100'],
-            'local_uuid'             => ['nullable', 'string', 'max:100'],
+            'manifest_code'          => ['required_without:local_uuid', 'string', 'max:100'],
+            'local_uuid'             => ['required_without:manifest_code', 'string', 'max:100'],
             'transaction_uuid'       => ['nullable', 'string', 'max:100'],
             'customer_id'            => ['nullable', 'integer'],
             'vehicle_no'             => ['nullable', 'string'],
@@ -133,22 +108,7 @@ class OutboundController extends Controller
 
     public function show(string $tenant_slug, string $manifest_code): JsonResponse
     {
-        $tenant = Tenant::where('slug', $tenant_slug)->firstOrFail();
         $data = $this->service->getManifestDetail($tenant_slug, $manifest_code);
-
-        $locations = Location::whereHas('warehouse', fn($q) => $q->where('tenant_id', $tenant->id))
-            ->where('is_active', true)
-            ->get(['id', 'rack_code', 'zone'])
-            ->map(function ($loc) {
-                $stockQty = (int) InventoryStock::where('location_id', $loc->id)->sum('quantity');
-
-                return [
-                    'id'             => $loc->id,
-                    'rack_code'      => $loc->rack_code,
-                    'zone'           => $loc->zone,
-                    'stock_quantity' => $stockQty,
-                ];
-            });
 
         return response()->json([
             'success' => true,
@@ -156,8 +116,8 @@ class OutboundController extends Controller
             'data'    => [
                 'manifest'            => $data['manifest'],
                 'items'               => $data['items'],
-                'locations'           => $locations,
-                'available_locations' => $locations,
+                'locations'           => $data['locations'],
+                'available_locations' => $data['locations'],
             ],
         ]);
     }

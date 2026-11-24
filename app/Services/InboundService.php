@@ -9,6 +9,7 @@ use App\Models\Tenant;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class InboundService implements InboundContract
 {
@@ -621,10 +622,14 @@ class InboundService implements InboundContract
 
         $shouldCommit = (bool) ($payload['should_commit'] ?? false);
 
-        return DB::transaction(function () use ($tenant_slug, $tenant, $payload, $userId, $incomingCode, $shouldCommit) {
+        return DB::transaction(function () use ($tenant_slug, $tenant, $payload, $incomingCode, $shouldCommit) {
             $transaction = $this->findManifestTransaction($tenant->id, $incomingCode, true);
 
-            if ($transaction && strtoupper($transaction->status) === 'COMMITTED') {
+            if (!$transaction) {
+                abort(404, "Manifest inbound '{$incomingCode}' tidak ditemukan.");
+            }
+
+            if (strtoupper($transaction->status) === 'COMMITTED') {
                 return [
                     'manifest_code'  => $transaction->local_uuid,
                     'status'         => 'COMMITTED',
@@ -633,40 +638,33 @@ class InboundService implements InboundContract
                 ];
             }
 
-            if (!$transaction) {
-                $transactionId = DB::table('transactions')->insertGetId([
-                    'tenant_id'        => $tenant->id,
-                    'user_id'          => $userId,
-                    'supplier_id'      => $payload['supplier_id'] ?? null,
-                    'local_uuid'       => $incomingCode,
-                    'status'           => 'RECEIVING',
-                    'sync_status'      => 'SYNCED',
-                    'transaction_type' => 'INBOUND',
-                    'created_by'       => $userId,
-                    'created_at'       => now(),
-                    'updated_at'       => now(),
+            $transactionId = $transaction->id;
+            $persistedCode = $transaction->local_uuid;
+            DB::table('transactions')
+                ->where('id', $transactionId)
+                ->update([
+                    'status'      => 'RECEIVING',
+                    'sync_status' => 'SYNCED',
+                    'updated_at'  => now(),
                 ]);
-                $persistedCode = $incomingCode;
-            } else {
-                $transactionId = $transaction->id;
-                $persistedCode = $transaction->local_uuid;
-                DB::table('transactions')
-                    ->where('id', $transactionId)
-                    ->update([
-                        'status'      => 'RECEIVING',
-                        'sync_status' => 'SYNCED',
-                        'updated_at'  => now(),
-                    ]);
-            }
 
-            // Perbaikan bug join warehouses.tenant_id (sebelumnya locations.tenant_id yang berisiko SQL error)
             $rackMap = $this->getTenantLocations($tenant->id)->pluck('id', 'rack_code');
 
-            foreach ($payload['items'] as $itemData) {
+            foreach ($payload['items'] as $index => $itemData) {
                 $skuId = (int) $itemData['sku_id'];
+                $skuBelongsToTenant = DB::table('skus')
+                    ->join('products', 'skus.product_id', '=', 'products.id')
+                    ->where('skus.id', $skuId)
+                    ->where('products.tenant_id', $tenant->id)
+                    ->exists();
+                if (!$skuBelongsToTenant) {
+                    throw ValidationException::withMessages([
+                        "items.{$index}.sku_id" => 'SKU tidak terdaftar pada tenant ini.',
+                    ]);
+                }
+
                 $goodQty = (int) ($itemData['good_qty'] ?? 0);
                 $damagedQty = (int) ($itemData['damaged_qty'] ?? 0);
-                $poQty = (int) ($itemData['po_qty'] ?? ($goodQty + $damagedQty));
                 $targetRack = isset($itemData['target_rack']) ? trim((string) $itemData['target_rack']) : null;
                 $toLocationId = $targetRack ? ($rackMap[$targetRack] ?? null) : null;
 
@@ -676,30 +674,21 @@ class InboundService implements InboundContract
                     ->lockForUpdate()
                     ->first();
 
-                if ($existingItem) {
-                    DB::table('transaction_items')
-                        ->where('id', $existingItem->id)
-                        ->update([
-                            'to_location_id' => $toLocationId ?? $existingItem->to_location_id,
-                            'good_qty'       => $goodQty,
-                            'damaged_qty'    => $damagedQty,
-                            'damage_note'    => $itemData['damage_note'] ?? $existingItem->damage_note,
-                            'updated_at'     => now(),
-                        ]);
-                } else {
-                    DB::table('transaction_items')->insert([
-                        'transaction_id' => $transactionId,
-                        'sku_id'         => $skuId,
-                        'to_location_id' => $toLocationId,
-                        'quantity'       => max(1, $poQty),
-                        'good_qty'       => $goodQty,
-                        'damaged_qty'    => $damagedQty,
-                        'damage_note'    => $itemData['damage_note'] ?? null,
-                        'created_by'     => $userId,
-                        'created_at'     => now(),
-                        'updated_at'     => now(),
+                if (!$existingItem) {
+                    throw ValidationException::withMessages([
+                        "items.{$index}.sku_id" => 'SKU tidak termasuk dalam manifest inbound ini.',
                     ]);
                 }
+
+                DB::table('transaction_items')
+                    ->where('id', $existingItem->id)
+                    ->update([
+                        'to_location_id' => $toLocationId ?? $existingItem->to_location_id,
+                        'good_qty'       => $goodQty,
+                        'damaged_qty'    => $damagedQty,
+                        'damage_note'    => $itemData['damage_note'] ?? $existingItem->damage_note,
+                        'updated_at'     => now(),
+                    ]);
             }
 
             if ($shouldCommit) {

@@ -48,8 +48,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [InboundController::class, 'index']);
         Route::get('/manifests/{manifest_code}', [InboundController::class, 'show']);
 
-        Route::post('/store', [InboundController::class, 'store']);
-        Route::post('/adhoc', [InboundController::class, 'storeAdhoc']);
         Route::post('/sync-offline', [InboundController::class, 'syncOffline']);
 
         Route::post('/scan-item', [InboundController::class, 'scanItem']);
@@ -65,7 +63,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/', [OutboundController::class, 'index']);
         Route::get('/manifests/{manifest_code}', [OutboundController::class, 'show']);
-        Route::post('/store', [OutboundController::class, 'store']);
         Route::post('/sync-offline', [OutboundController::class, 'syncOffline']);
         Route::post('/verify-barcode', [OutboundController::class, 'verifyBarcode']);
         Route::post('/picking', [OutboundController::class, 'updatePicking']);

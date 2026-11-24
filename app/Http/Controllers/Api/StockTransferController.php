@@ -187,9 +187,9 @@ class StockTransferController extends Controller
         Tenant::where('slug', $tenant_slug)->firstOrFail();
 
         $validated = $request->validate([
-            'transfer_code'            => ['nullable', 'string', 'max:100'],
-            'local_uuid'               => ['nullable', 'string', 'max:100'],
-            'transaction_uuid'         => ['nullable', 'string', 'max:100'],
+            'transfer_code'            => ['required_without_all:local_uuid,transaction_uuid', 'string', 'max:100'],
+            'local_uuid'               => ['required_without_all:transfer_code,transaction_uuid', 'string', 'max:100'],
+            'transaction_uuid'         => ['required_without_all:transfer_code,local_uuid', 'string', 'max:100'],
             'notes'                    => ['nullable', 'string', 'max:2000'],
             'client_timestamp'         => ['nullable', 'string'],
             'items'                    => ['required', 'array', 'min:1'],

@@ -2,6 +2,8 @@
 
 use App\Services\StockOpnameService;
 use App\Services\StockTransferService;
+use App\Services\InboundService;
+use App\Services\OutboundService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
@@ -451,6 +453,96 @@ test('syncs stock transfer using transaction uuid idempotently', function () {
         ->and(DB::table('transactions')
             ->where('local_uuid', 'offline-transfer-uuid-1')
             ->count())->toBe(1);
+});
+
+test('offline inbound and outbound sync existing manifests and commit without adding manifest items', function () {
+    [$warehouseId] = stockOpnameFixture();
+    $locationId = DB::table('locations')->where('rack_code', 'A-01')->value('id');
+    $skuId = DB::table('skus')->value('id');
+
+    $inboundId = DB::table('transactions')->insertGetId([
+        'tenant_id' => DB::table('tenants')->value('id'),
+        'user_id' => 1,
+        'created_by' => 1,
+        'local_uuid' => 'INBOUND-EXISTING',
+        'status' => 'DRAFT',
+        'sync_status' => 'PENDING',
+        'transaction_type' => 'INBOUND',
+        'warehouse_id' => $warehouseId,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+    $inboundItemId = DB::table('transaction_items')->insertGetId([
+        'transaction_id' => $inboundId,
+        'sku_id' => $skuId,
+        'to_location_id' => $locationId,
+        'quantity' => 2,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $outboundId = DB::table('transactions')->insertGetId([
+        'tenant_id' => DB::table('tenants')->value('id'),
+        'user_id' => 1,
+        'created_by' => 1,
+        'local_uuid' => 'OUTBOUND-EXISTING',
+        'status' => 'DRAFT',
+        'sync_status' => 'PENDING',
+        'transaction_type' => 'OUTBOUND',
+        'warehouse_id' => $warehouseId,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+    $outboundItemId = DB::table('transaction_items')->insertGetId([
+        'transaction_id' => $outboundId,
+        'sku_id' => $skuId,
+        'from_location_id' => $locationId,
+        'quantity' => 1,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    (new InboundService)->syncOfflineManifest('tenant-a', [
+        'manifest_code' => 'INBOUND-EXISTING',
+        'should_commit' => true,
+        'items' => [[
+            'sku_id' => $skuId,
+            'good_qty' => 2,
+            'damaged_qty' => 0,
+            'target_rack' => 'A-01',
+        ]],
+    ], 1);
+    (new OutboundService)->syncOfflineManifest('tenant-a', [
+        'manifest_code' => 'OUTBOUND-EXISTING',
+        'should_commit' => true,
+        'items' => [[
+            'sku_id' => $skuId,
+            'good_qty' => 1,
+            'damaged_qty' => 0,
+            'source_rack' => 'A-01',
+        ]],
+    ], 1);
+
+    expect(DB::table('transactions')->where('transaction_type', 'INBOUND')->count())->toBe(1)
+        ->and(DB::table('transactions')->where('transaction_type', 'OUTBOUND')->count())->toBe(1)
+        ->and(DB::table('transaction_items')->where('transaction_id', $inboundId)->count())->toBe(1)
+        ->and(DB::table('transaction_items')->where('transaction_id', $outboundId)->count())->toBe(1)
+        ->and(DB::table('transaction_items')->where('id', $inboundItemId)->value('good_qty'))->toBe(2)
+        ->and(DB::table('transaction_items')->where('id', $outboundItemId)->value('good_qty'))->toBe(1)
+        ->and(DB::table('transactions')->where('id', $inboundId)->value('status'))->toBe('COMMITTED')
+        ->and(DB::table('transactions')->where('id', $outboundId)->value('status'))->toBe('COMMITTED');
+
+    expect(fn () => (new InboundService)->syncOfflineManifest('tenant-a', [
+        'manifest_code' => 'UNKNOWN-INBOUND',
+        'items' => [['sku_id' => $skuId, 'good_qty' => 1]],
+    ], 1))->toThrow(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+    expect(fn () => (new OutboundService)->syncOfflineManifest('tenant-a', [
+        'manifest_code' => 'UNKNOWN-OUTBOUND',
+        'items' => [['sku_id' => $skuId, 'good_qty' => 1]],
+    ], 1))->toThrow(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+
+    expect(DB::table('transactions')->where('local_uuid', 'UNKNOWN-INBOUND')->exists())->toBeFalse()
+        ->and(DB::table('transactions')->where('local_uuid', 'UNKNOWN-OUTBOUND')->exists())->toBeFalse();
 });
 
 test('requires every line to be counted and adjusts only the matching stock batches', function () {

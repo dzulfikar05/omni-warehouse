@@ -730,6 +730,17 @@ class StockOpnameService implements StockOpnameContract
                     ]);
                 }
 
+                $skuBelongsToTenant = DB::table('skus')
+                    ->join('products', 'skus.product_id', '=', 'products.id')
+                    ->where('skus.id', $skuId)
+                    ->where('products.tenant_id', $tenant->id)
+                    ->exists();
+                if (! $skuBelongsToTenant) {
+                    throw ValidationException::withMessages([
+                        "items.{$index}.sku_id" => 'SKU tidak terdaftar pada tenant ini.',
+                    ]);
+                }
+
                 $locationId = $this->resolveSessionLocationId($tenant->id, $session, $itemData);
 
                 $existingBySku = DB::table('transaction_items')

@@ -176,9 +176,9 @@ class StockOpnameController extends Controller
     public function syncOffline(Request $request, string $tenant_slug): JsonResponse
     {
         $validated = $request->validate([
-            'session_id' => ['nullable', 'integer'],
-            'session_code' => ['nullable', 'string', 'max:100'],
-            'local_uuid' => ['nullable', 'string', 'max:100'],
+            'session_id' => ['required_without_all:session_code,local_uuid', 'integer'],
+            'session_code' => ['required_without_all:session_id,local_uuid', 'string', 'max:100'],
+            'local_uuid' => ['required_without_all:session_id,session_code', 'string', 'max:100'],
             'transaction_uuid' => ['nullable', 'string', 'max:100'],
             'should_submit_review' => ['nullable', 'boolean'],
             'items' => ['required', 'array', 'min:1'],

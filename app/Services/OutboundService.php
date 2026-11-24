@@ -236,7 +236,82 @@ class OutboundService implements OutboundContract
             'progress_pct'   => $pct,
         ];
 
-        $items = $tx->items->map(function ($ti) {
+        $manifestSkuIds = $tx->items
+            ->pluck('sku_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        // Ambil semua lokasi aktif milik tenant beserta relasi gudangnya dalam 1 query
+        $activeLocations = Location::query()
+            ->where('is_active', true)
+            ->whereHas('warehouse', fn($q) => $q->where('tenant_id', $tenant->id))
+            ->with('warehouse:id,name')
+            ->orderBy('warehouse_id')
+            ->orderBy('rack_code')
+            ->get(['id', 'warehouse_id', 'rack_code', 'zone']);
+
+        $locationIds = $activeLocations->pluck('id');
+
+        // Agregasi stok per kombinasi (location_id, sku_id) untuk SKU di manifes (1 query, anti N+1)
+        $stockByLocationAndSku = [];
+        if ($locationIds->isNotEmpty() && $manifestSkuIds->isNotEmpty()) {
+            $stockRows = InventoryStock::query()
+                ->selectRaw('location_id, sku_id, SUM(quantity) as total_qty')
+                ->whereIn('location_id', $locationIds)
+                ->whereIn('sku_id', $manifestSkuIds)
+                ->whereHas('sku.product', fn($q) => $q->where('tenant_id', $tenant->id))
+                ->groupBy('location_id', 'sku_id')
+                ->get();
+
+            foreach ($stockRows as $row) {
+                $stockByLocationAndSku[(int) $row->location_id][(int) $row->sku_id] = (int) $row->total_qty;
+            }
+        }
+
+        // Agregasi total seluruh stok per lokasi untuk kompatibilitas field stock_quantity (1 query)
+        $totalStockByLocation = [];
+        if ($locationIds->isNotEmpty()) {
+            $totalStockByLocation = InventoryStock::query()
+                ->selectRaw('location_id, SUM(quantity) as total_qty')
+                ->whereIn('location_id', $locationIds)
+                ->groupBy('location_id')
+                ->pluck('total_qty', 'location_id')
+                ->map(fn($qty) => (int) $qty)
+                ->all();
+        }
+
+        // Agregasi total stok global per SKU di tenant untuk item detail (1 query)
+        $totalStockBySku = [];
+        if ($manifestSkuIds->isNotEmpty()) {
+            $totalStockBySku = InventoryStock::query()
+                ->selectRaw('sku_id, SUM(quantity) as total_qty')
+                ->whereIn('sku_id', $manifestSkuIds)
+                ->whereHas('location.warehouse', fn($q) => $q->where('tenant_id', $tenant->id))
+                ->groupBy('sku_id')
+                ->pluck('total_qty', 'sku_id')
+                ->map(fn($qty) => (int) $qty)
+                ->all();
+        }
+
+        $locations = $activeLocations->map(function ($loc) use ($manifestSkuIds, $stockByLocationAndSku, $totalStockByLocation) {
+            $stockBySku = [];
+            foreach ($manifestSkuIds as $skuId) {
+                $stockBySku[(string) $skuId] = $stockByLocationAndSku[(int) $loc->id][(int) $skuId] ?? 0;
+            }
+
+            return [
+                'id'             => $loc->id,
+                'rack_code'      => $loc->rack_code,
+                'zone'           => $loc->zone,
+                'warehouse_id'   => (int) $loc->warehouse_id,
+                'warehouse_name' => $loc->warehouse->name ?? '-',
+                'stock_by_sku'   => $stockBySku,
+                'stock_quantity' => $totalStockByLocation[(int) $loc->id] ?? 0,
+            ];
+        })->values();
+
+        $items = $tx->items->map(function ($ti) use ($stockByLocationAndSku, $totalStockBySku) {
             $status = 'pending';
             $statusLabel = 'Pending Picking';
 
@@ -250,10 +325,10 @@ class OutboundService implements OutboundContract
 
             $rackStock = 0;
             if ($ti->from_location_id) {
-                $stockRecord = InventoryStock::where('sku_id', $ti->sku_id)
-                    ->where('location_id', $ti->from_location_id)
-                    ->first();
-                $rackStock = (int) ($stockRecord?->quantity ?? 0);
+                $rackStock = $stockByLocationAndSku[(int) $ti->from_location_id][(int) $ti->sku_id]
+                    ?? (int) InventoryStock::where('sku_id', $ti->sku_id)
+                        ->where('location_id', $ti->from_location_id)
+                        ->sum('quantity');
             }
 
             return [
@@ -276,7 +351,7 @@ class OutboundService implements OutboundContract
                 'target_rack'    => $ti->fromLocation->rack_code ?? null,
                 'source_rack_id' => $ti->from_location_id,
                 'rack_stock'     => $rackStock,
-                'current_stock'  => (int) InventoryStock::where('sku_id', $ti->sku_id)->sum('quantity'),
+                'current_stock'  => $totalStockBySku[(int) $ti->sku_id] ?? 0,
                 'damage_note'    => $ti->damage_note,
                 'status'         => $status,
                 'status_label'   => $statusLabel,
@@ -284,8 +359,9 @@ class OutboundService implements OutboundContract
         });
 
         return [
-            'manifest' => $manifest,
-            'items'    => $items,
+            'manifest'  => $manifest,
+            'items'     => $items,
+            'locations' => $locations,
         ];
     }
 
@@ -345,7 +421,6 @@ class OutboundService implements OutboundContract
     {
         $tenant = Tenant::where('slug', $tenantSlug)->firstOrFail();
 
-        // Security fix: wajib pastikan item milik tenant yang sedang login
         $item = TransactionItem::where('id', $data['item_id'])
             ->whereHas('transaction', fn($q) => $q->where('tenant_id', $tenant->id))
             ->with('transaction')
@@ -361,20 +436,22 @@ class OutboundService implements OutboundContract
 
         if (!empty($data['source_rack_id'])) {
             $location = Location::where('id', $data['source_rack_id'])
+                ->where('is_active', true)
                 ->whereHas('warehouse', fn($q) => $q->where('tenant_id', $tenant->id))
                 ->first();
 
             if (!$location) {
-                abort(422, 'Lokasi rak asal tidak valid untuk tenant ini.');
+                abort(422, 'Lokasi rak asal tidak valid atau tidak aktif untuk tenant ini.');
             }
             $item->from_location_id = $location->id;
         } elseif (!empty($data['source_rack'])) {
             $location = Location::where('rack_code', trim($data['source_rack']))
+                ->where('is_active', true)
                 ->whereHas('warehouse', fn($q) => $q->where('tenant_id', $tenant->id))
                 ->first();
 
             if (!$location) {
-                abort(422, "Lokasi rak '{$data['source_rack']}' tidak ditemukan.");
+                abort(422, "Lokasi rak '{$data['source_rack']}' tidak ditemukan atau tidak aktif.");
             }
             $item->from_location_id = $location->id;
         }
@@ -492,10 +569,14 @@ class OutboundService implements OutboundContract
 
         $shouldCommit = (bool) ($payload['should_commit'] ?? false);
 
-        return DB::transaction(function () use ($tenantSlug, $tenant, $payload, $userId, $incomingCode, $shouldCommit) {
+        return DB::transaction(function () use ($tenantSlug, $tenant, $payload, $incomingCode, $shouldCommit) {
             $tx = $this->findOutboundTransaction($tenant->id, $incomingCode, true);
 
-            if ($tx && strtoupper($tx->status) === 'COMMITTED') {
+            if (!$tx) {
+                abort(404, "Manifest outbound '{$incomingCode}' tidak ditemukan.");
+            }
+
+            if (strtoupper($tx->status) === 'COMMITTED') {
                 return [
                     'manifest_code'  => $tx->local_uuid,
                     'status'         => 'COMMITTED',
@@ -504,36 +585,29 @@ class OutboundService implements OutboundContract
                 ];
             }
 
-            if (!$tx) {
-                $tx = Transaction::create([
-                    'tenant_id'        => $tenant->id,
-                    'user_id'          => $userId,
-                    'customer_id'      => $payload['customer_id'] ?? null,
-                    'local_uuid'       => $incomingCode,
-                    'status'           => 'PICKING',
-                    'sync_status'      => 'SYNCED',
-                    'transaction_type' => 'OUTBOUND',
-                    'created_by'       => $userId,
-                    'vehicle_no'       => $payload['vehicle_no'] ?? null,
-                    'driver_name'      => $payload['driver_name'] ?? null,
-                    'notes'            => $payload['notes'] ?? null,
-                ]);
-            } else {
-                $tx->status = 'PICKING';
-                $tx->sync_status = 'SYNCED';
-                $tx->save();
-            }
+            $tx->status = 'PICKING';
+            $tx->sync_status = 'SYNCED';
+            $tx->save();
 
             $rackMap = Location::whereHas('warehouse', fn($q) => $q->where('tenant_id', $tenant->id))
                 ->where('is_active', true)
                 ->pluck('id', 'rack_code');
 
-            foreach ($payload['items'] as $itemData) {
+            foreach ($payload['items'] as $index => $itemData) {
                 $skuId = (int) $itemData['sku_id'];
+                $skuBelongsToTenant = DB::table('skus')
+                    ->join('products', 'skus.product_id', '=', 'products.id')
+                    ->where('skus.id', $skuId)
+                    ->where('products.tenant_id', $tenant->id)
+                    ->exists();
+                if (!$skuBelongsToTenant) {
+                    throw ValidationException::withMessages([
+                        "items.{$index}.sku_id" => 'SKU tidak terdaftar pada tenant ini.',
+                    ]);
+                }
+
                 $goodQty = (int) ($itemData['good_qty'] ?? 0);
                 $damagedQty = (int) ($itemData['damaged_qty'] ?? 0);
-                $soQty = (int) ($itemData['so_qty'] ?? ($goodQty + $damagedQty));
-
                 $fromLocationId = $itemData['source_rack_id'] ?? null;
                 if (!$fromLocationId && !empty($itemData['source_rack'])) {
                     $fromLocationId = $rackMap[trim((string) $itemData['source_rack'])] ?? null;
@@ -544,24 +618,17 @@ class OutboundService implements OutboundContract
                     ->lockForUpdate()
                     ->first();
 
-                if ($existingItem) {
-                    $existingItem->from_location_id = $fromLocationId ?? $existingItem->from_location_id;
-                    $existingItem->good_qty = $goodQty;
-                    $existingItem->damaged_qty = $damagedQty;
-                    $existingItem->damage_note = $itemData['damage_note'] ?? $existingItem->damage_note;
-                    $existingItem->save();
-                } else {
-                    TransactionItem::create([
-                        'transaction_id'   => $tx->id,
-                        'sku_id'           => $skuId,
-                        'from_location_id' => $fromLocationId,
-                        'quantity'         => max(1, $soQty),
-                        'good_qty'         => $goodQty,
-                        'damaged_qty'      => $damagedQty,
-                        'damage_note'      => $itemData['damage_note'] ?? null,
-                        'created_by'       => $userId,
+                if (!$existingItem) {
+                    throw ValidationException::withMessages([
+                        "items.{$index}.sku_id" => 'SKU tidak termasuk dalam manifest outbound ini.',
                     ]);
                 }
+
+                $existingItem->from_location_id = $fromLocationId ?? $existingItem->from_location_id;
+                $existingItem->good_qty = $goodQty;
+                $existingItem->damaged_qty = $damagedQty;
+                $existingItem->damage_note = $itemData['damage_note'] ?? $existingItem->damage_note;
+                $existingItem->save();
             }
 
             if ($shouldCommit) {

@@ -24,26 +24,35 @@ class DashboardController extends Controller
     public function summary(Request $request)
     {
         $user = $request->user();
-        $tenantId = $user->tenant_id;
+        $tenantId = $user?->tenant_id;
+
+        if (!$tenantId) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Pengguna tidak terhubung ke tenant aktif.',
+            ], 403);
+        }
 
         // 1. KPI Counts
         $activeInboundCount = Transaction::where('tenant_id', $tenantId)
-            ->whereIn('transaction_type', ['IN', 'INBOUND'])
-            ->whereIn('status', ['pending', 'receiving', 'draft', 'in_progress'])
+            ->whereRaw('LOWER(transaction_type) IN (?, ?)', ['in', 'inbound'])
+            ->whereRaw('LOWER(status) IN (?, ?, ?, ?)', ['pending', 'receiving', 'draft', 'in_progress'])
             ->count();
 
         $activeOutboundCount = Transaction::where('tenant_id', $tenantId)
-            ->whereIn('transaction_type', ['OUT', 'OUTBOUND'])
-            ->whereIn('status', ['pending', 'picking', 'packing', 'draft', 'in_progress'])
+            ->whereRaw('LOWER(transaction_type) IN (?, ?)', ['out', 'outbound'])
+            ->whereRaw('LOWER(status) IN (?, ?, ?, ?, ?)', ['pending', 'picking', 'packing', 'draft', 'in_progress'])
             ->count();
 
         $pendingTransferCount = Transaction::where('tenant_id', $tenantId)
-            ->whereIn('transaction_type', ['TRANSFER', 'transfer'])
-            ->whereIn('status', ['pending', 'draft', 'in_progress'])
+            ->whereRaw('LOWER(transaction_type) IN (?, ?)', ['transfer', 'internal_transfer'])
+            ->whereRaw('LOWER(status) IN (?, ?, ?)', ['pending', 'draft', 'in_progress'])
             ->count();
 
-        // Jika data operasional masih seimbang/completed di database demo, hitung juga total aktif & pending
-        $activeOpnameCount = 0;
+        $activeOpnameCount = Transaction::where('tenant_id', $tenantId)
+            ->whereRaw('LOWER(transaction_type) = ?', ['stock_opname'])
+            ->whereRaw('LOWER(status) IN (?, ?, ?, ?, ?)', ['pending', 'draft', 'counting', 'in_progress', 'review'])
+            ->count();
 
         // 2. Tentukan Shift Berdasarkan Jam Server
         $hour = (int) now()->format('H');
@@ -58,7 +67,10 @@ class DashboardController extends Controller
         // 3. Ambil Daftar Transaksi / Tugas Lapangan (HANYA Antrean Aktif / Belum Selesai)
         $transactions = Transaction::with(['supplier:id,name', 'customer:id,name', 'items.sku.product'])
             ->where('tenant_id', $tenantId)
-            ->whereIn('status', ['pending', 'receiving', 'picking', 'packing', 'draft', 'in_progress'])
+            ->whereRaw('LOWER(status) IN (?, ?, ?, ?, ?, ?, ?, ?)', [
+                'pending', 'receiving', 'picking', 'packing', 'draft',
+                'in_progress', 'counting', 'review',
+            ])
             ->latest()
             ->take(8)
             ->get();
@@ -68,7 +80,8 @@ class DashboardController extends Controller
             $type = match ($rawType) {
                 'IN', 'INBOUND' => 'inbound',
                 'OUT', 'OUTBOUND' => 'outbound',
-                'TRANSFER' => 'transfer',
+                'TRANSFER', 'INTERNAL_TRANSFER' => 'transfer',
+                'STOCK_OPNAME' => 'opname',
                 default => 'opname',
             };
 
@@ -79,6 +92,8 @@ class DashboardController extends Controller
                 'packing'     => 'PACKING',
                 'draft'       => 'DRAFT',
                 'in_progress' => 'PROSES',
+                'counting'    => 'COUNTING',
+                'review'      => 'REVIEW',
                 'completed'   => ($type === 'outbound' ? 'TERKIRIM' : 'SELESAI'),
                 default       => ($type === 'inbound' ? 'PO INBOUND' : ($type === 'outbound' ? 'SO OUTBOUND' : 'MUTASI RAK')),
             };
@@ -112,7 +127,7 @@ class DashboardController extends Controller
 
             // Format kode referensi ramah manusia jika nilai di database berupa raw UUID
             $code = $tx->local_uuid ?? "TX-{$tx->id}";
-            if (str_contains($code, '-') && strlen($code) >= 32) {
+            if (is_string($code) && str_contains($code, '-') && strlen($code) >= 32) {
                 $prefix = match ($type) {
                     'inbound'  => 'PO',
                     'outbound' => 'SO',
