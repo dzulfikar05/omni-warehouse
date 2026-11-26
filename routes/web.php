@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Tenant\AuthController as TenantAuthController;
+use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
 use App\Http\Middleware\EnsureCentralUser;
 use App\Models\Plan;
 use Illuminate\Support\Facades\Route;
@@ -103,9 +104,9 @@ Route::prefix('{tenant_slug}')->middleware(['identify_tenant'])->group(function 
     Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/logout', [TenantAuthController::class, 'logout'])->name('tenant.logout');
 
-        Route::get('/dashboard', function () {
-            return Inertia::render('Tenant/Dashboard');
-        })->name('tenant.dashboard');
+        Route::get('/dashboard', [TenantDashboardController::class, 'index'])
+            ->name('tenant.dashboard')
+            ->middleware('permission:tenant.dashboard.view');
 
         require __DIR__ . '/web/tenant/settings.php';
     });

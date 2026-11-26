@@ -17,6 +17,7 @@ use App\Contracts\LocationsContract;
 use App\Contracts\ProductContract;
 use App\Contracts\CategoryContract;
 use App\Contracts\CentralDashboardContract;
+use App\Contracts\DashboardContract;
 use App\Contracts\WarehousesContract;
 use App\Contracts\StockOpnameContract;
 use App\Contracts\SupplierContract;
@@ -29,6 +30,7 @@ use App\Services\CategoryService;
 use App\Services\CentralDashboardService;
 use App\Services\CompanyProfileService;
 use App\Services\CustomerService;
+use App\Services\DashboardService;
 use App\Services\GeneralSettingsService;
 use App\Services\InboundOutboundReportService;
 use App\Services\InboundService;
@@ -83,6 +85,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(CategoryContract::class, CategoryService::class);
         $this->app->bind(UnitContract::class, UnitService::class);
         $this->app->bind(CentralDashboardContract::class, CentralDashboardService::class);
+        $this->app->bind(DashboardContract::class, DashboardService::class);
     }
 
     /**
@@ -94,7 +97,7 @@ class AppServiceProvider extends ServiceProvider
 
        ResetPassword::createUrlUsing(function (User $user, string $token) {
             $currentTenant = app()->bound('current_tenant') ? app('current_tenant') : null;
-            
+
             $tenantSlug = $user->tenant?->slug ?? $currentTenant?->slug;
 
             if ($tenantSlug) {

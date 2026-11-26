@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\Admin\TenantController;
-use App\Http\Controllers\Tenant\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->prefix('tenants')->name('admin.tenants.')->group(function () {
@@ -21,10 +20,4 @@ Route::middleware(['auth', 'verified'])->prefix('tenants')->name('admin.tenants.
     Route::get('export/pdf', [TenantController::class, 'exportPdf'])
         ->middleware('permission:central.tenants.export')
         ->name('export.pdf');
-});
-
-Route::prefix('{tenant_slug}')->middleware(['identify_tenant', 'auth', 'verified'])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])
-        ->name('tenant.dashboard')
-        ->middleware('permission:tenant.dashboard.view');
 });
