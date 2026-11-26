@@ -1,22 +1,22 @@
-import React from 'react';
 import { Head, usePage, Link } from '@inertiajs/react';
-import { useTranslation } from '@/context/language-context';
-import { usePermission } from '@/utils/permission';
 import {
-    Building2,
-    Boxes,
     ArrowDownLeft,
+    ArrowRight,
     ArrowUpRight,
     AlertTriangle,
-    History,
-    Package,
-    ArrowRight,
-    TrendingUp,
-    PieChart,
-    CheckCircle2,
-    Inbox,
     BarChart3,
+    Boxes,
+    Building2,
+    CheckCircle2,
+    History,
+    Inbox,
+    Package,
+    PieChart,
+    TrendingUp,
 } from 'lucide-react';
+import React from 'react';
+import { useTranslation } from '@/context/language-context';
+import { usePermission } from '@/utils/permission';
 
 interface StatsProps {
     total_skus: number;
@@ -424,14 +424,19 @@ export default function TenantDashboard({
                                                             className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${
                                                                 m.type === 'inbound'
                                                                     ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border-emerald-800'
-                                                                    : 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/60 dark:text-rose-400 dark:border-rose-800'
+                                                                    : m.type === 'outbound'
+                                                                      ? 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/60 dark:text-rose-400 dark:border-rose-800'
+                                                                      : 'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-400 dark:border-blue-800'
                                                             }`}
                                                         >
                                                             {m.type}
                                                         </span>
                                                     </td>
                                                     <td className="p-3 font-mono font-bold text-foreground">{m.quantity}</td>
-                                                    <td className="p-3 text-muted-foreground whitespace-nowrap">{m.created_at}</td>
+                                                    <td className="p-3 text-muted-foreground whitespace-nowrap">
+                                                        <span className="block">{m.created_at}</span>
+                                                        <span className="text-[11px]">{t("by")} {m.user}</span>
+                                                    </td>
                                                 </tr>
                                             ))}
                                         </tbody>

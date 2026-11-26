@@ -16,35 +16,37 @@ class DashboardController extends Controller
 
     public function index(Request $request): Response
     {
-        $tenant = app('current_tenant');
-        $user = auth()->user();
+        $tenant = app()->bound('current_tenant') ? app('current_tenant') : null;
+        abort_if(!$tenant, 404, 'Tenant tidak ditemukan.');
 
-        $stats = $user->can('tenant.dashboard.stats_cards')
+        $user = $request->user();
+
+        $stats = $user?->can('tenant.dashboard.stats_cards')
             ? $this->dashboardService->getSummaryStats($tenant->id)
             : null;
 
-        $movementTrend = $user->can('tenant.dashboard.stock_trend_chart')
+        $movementTrend = $user?->can('tenant.dashboard.stock_trend_chart')
             ? $this->dashboardService->getStockMovementTrend($tenant->id)
             : [];
 
-        $comparison = $user->can('tenant.dashboard.inbound_outbound_chart')
+        $comparison = $user?->can('tenant.dashboard.inbound_outbound_chart')
             ? $this->dashboardService->getInboundVsOutboundComparison($tenant->id)
             : [];
 
-        $lowStockAlerts = $user->can('tenant.dashboard.low_stock_table')
+        $lowStockAlerts = $user?->can('tenant.dashboard.low_stock_table')
             ? $this->dashboardService->getLowStockAlerts($tenant->id)
             : [];
 
-        $recentMovements = $user->can('tenant.dashboard.recent_movements_table')
+        $recentMovements = $user?->can('tenant.dashboard.recent_movements_table')
             ? $this->dashboardService->getRecentStockMovements($tenant->id)
             : [];
 
-        return Inertia::render('Tenant/Dashboard/Index', [
-            'stats'            => $stats,
-            'movementTrend'    => $movementTrend,
-            'comparison'       => $comparison,
-            'lowStockAlerts'   => $lowStockAlerts,
-            'recentMovements'  => $recentMovements,
+        return Inertia::render('Tenant/Dashboard', [
+            'stats'           => $stats,
+            'movementTrend'   => $movementTrend,
+            'comparison'      => $comparison,
+            'lowStockAlerts'  => $lowStockAlerts,
+            'recentMovements' => $recentMovements,
         ]);
     }
 }
